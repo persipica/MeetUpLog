@@ -1,3 +1,24 @@
+server:
+  port: 8080
+
 spring:
   application:
-    name: MeetupLog
+    name: meetuplog
+
+  datasource:
+    url: jdbc:mysql://localhost:3306/meetuplog_db?useSSL=false&serverTimezone=Asia/Seoul&characterEncoding=UTF-8
+    username: root
+    password: 1234
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+
+jwt:
+  secret: meetuplog_secret_key_for_jwt_authentication_token_2026_ver
+  access-token-validity-in-seconds: 86400 # 24시간
