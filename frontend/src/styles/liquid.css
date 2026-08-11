@@ -1,0 +1,11287 @@
+/* =========================================================
+   MEETUPLOG LIQUID GLASS DESIGN SYSTEM
+   Imported AFTER chat.css.
+========================================================= */
+
+:root {
+  --liquid-x: 52%;
+  --liquid-y: 18%;
+
+  --glass-bg:
+    rgba(255, 255, 255, 0.52);
+
+  --glass-bg-soft:
+    rgba(255, 255, 255, 0.40);
+
+  --glass-bg-strong:
+    rgba(255, 255, 255, 0.68);
+
+  --glass-border:
+    rgba(255, 255, 255, 0.68);
+
+  --glass-border-soft:
+    rgba(255, 255, 255, 0.42);
+
+  --glass-edge:
+    rgba(255, 255, 255, 0.88);
+
+  --glass-shadow:
+    0 18px 46px
+    rgba(27, 31, 48, 0.10);
+
+  --glass-shadow-soft:
+    0 10px 28px
+    rgba(27, 31, 48, 0.07);
+
+  --glass-shadow-floating:
+    0 28px 72px
+    rgba(21, 25, 42, 0.20);
+
+  --glass-blur: 24px;
+  --glass-blur-soft: 16px;
+
+  --liquid-duration: 720ms;
+  --liquid-spring:
+    cubic-bezier(
+      0.16,
+      1,
+      0.3,
+      1
+    );
+}
+
+/* =========================================================
+   APP BACKDROP / AMBIENT LIGHT
+========================================================= */
+
+body {
+  background:
+    #f3f5fb !important;
+}
+
+.chat-page {
+  isolation: isolate;
+
+  background:
+    linear-gradient(
+      145deg,
+      rgba(
+        var(
+          --theme-accent-rgb,
+          116,
+          103,
+          232
+        ),
+        0.08
+      ),
+      rgba(
+        255,
+        255,
+        255,
+        0.60
+      )
+      36%,
+      rgba(
+        126,
+        186,
+        255,
+        0.07
+      )
+      72%,
+      rgba(
+        255,
+        255,
+        255,
+        0.44
+      )
+    ) !important;
+
+  transition:
+    background
+    900ms
+    ease;
+}
+
+.chat-page::before,
+.chat-page::after {
+  position: absolute;
+
+  z-index: -2;
+
+  border-radius: 50%;
+
+  pointer-events: none;
+
+  content: "";
+
+  filter:
+    blur(2px);
+
+  will-change:
+    transform;
+}
+
+.chat-page::before {
+  top: -20%;
+  left: -9%;
+
+  width: 48vw;
+  height: 48vw;
+
+  background:
+    radial-gradient(
+      circle,
+      rgba(
+        var(
+          --theme-accent-rgb,
+          116,
+          103,
+          232
+        ),
+        0.24
+      )
+      0%,
+      rgba(
+        var(
+          --theme-accent-rgb,
+          116,
+          103,
+          232
+        ),
+        0.10
+      )
+      38%,
+      transparent
+      72%
+    );
+
+  animation:
+    liquidAmbientOne
+    15s
+    ease-in-out
+    infinite;
+}
+
+.chat-page::after {
+  right: -16%;
+  bottom: -32%;
+
+  width: 58vw;
+  height: 58vw;
+
+  background:
+    radial-gradient(
+      circle,
+      rgba(
+        99,
+        190,
+        255,
+        0.18
+      ),
+      rgba(
+        120,
+        229,
+        207,
+        0.08
+      )
+      42%,
+      transparent
+      72%
+    );
+
+  animation:
+    liquidAmbientTwo
+    18s
+    ease-in-out
+    infinite;
+}
+
+@keyframes liquidAmbientOne {
+  0%,
+  100% {
+    transform:
+      translate3d(
+        -2%,
+        0,
+        0
+      )
+      scale(1);
+  }
+
+  45% {
+    transform:
+      translate3d(
+        9%,
+        8%,
+        0
+      )
+      scale(1.08);
+  }
+
+  72% {
+    transform:
+      translate3d(
+        2%,
+        15%,
+        0
+      )
+      scale(0.96);
+  }
+}
+
+@keyframes liquidAmbientTwo {
+  0%,
+  100% {
+    transform:
+      translate3d(
+        0,
+        3%,
+        0
+      )
+      scale(1);
+  }
+
+  50% {
+    transform:
+      translate3d(
+        -12%,
+        -10%,
+        0
+      )
+      scale(1.10);
+  }
+}
+
+/* =========================================================
+   GLASS MATERIAL HELPERS VIA EXISTING COMPONENT CLASSES
+========================================================= */
+
+.chat-sidebar,
+.chat-header,
+.member-panel,
+.message-composer,
+.profile-popover,
+.person-profile-popover,
+.app-modal,
+.home-room-card,
+.main-home-room-card,
+.friend-add-panel,
+.workspace-notification-item,
+.friend-card,
+.profile-edit-preview,
+.profile-photo-control,
+.profile-field-group > input,
+.profile-field-group > textarea,
+.room-menu-list button,
+.notification-item,
+.ai-result-card {
+  position: relative;
+
+  border-color:
+    var(
+      --glass-border-soft
+    ) !important;
+
+  background:
+    linear-gradient(
+      145deg,
+      rgba(
+        255,
+        255,
+        255,
+        0.72
+      ),
+      rgba(
+        255,
+        255,
+        255,
+        0.38
+      )
+    ) !important;
+
+  box-shadow:
+    var(
+      --glass-shadow-soft
+    ),
+    inset
+    0
+    1px
+    0
+    rgba(
+      255,
+      255,
+      255,
+      0.82
+    ) !important;
+
+  backdrop-filter:
+    blur(
+      var(
+        --glass-blur
+      )
+    )
+    saturate(150%) !important;
+
+  -webkit-backdrop-filter:
+    blur(
+      var(
+        --glass-blur
+      )
+    )
+    saturate(150%) !important;
+}
+
+/* Top-layer reflective sheen */
+.chat-sidebar::after,
+.chat-header::after,
+.member-panel::after,
+.profile-popover::after,
+.person-profile-popover::after,
+.app-modal::after,
+.ai-result-card::after,
+.message-composer::after,
+.home-room-card::before,
+.main-home-room-card::before {
+  position: absolute;
+
+  inset: 0;
+
+  z-index: 0;
+
+  border-radius: inherit;
+
+  background:
+    radial-gradient(
+      circle at
+      var(--liquid-x)
+      var(--liquid-y),
+      rgba(
+        255,
+        255,
+        255,
+        0.60
+      ),
+      rgba(
+        255,
+        255,
+        255,
+        0.13
+      )
+      20%,
+      transparent
+      44%
+    );
+
+  opacity: 0.52;
+
+  pointer-events: none;
+
+  content: "";
+
+  transition:
+    opacity
+    300ms
+    ease;
+}
+
+.chat-sidebar > *,
+.chat-header > *,
+.member-panel > *,
+.profile-popover > *,
+.person-profile-popover > *,
+.app-modal > *,
+.ai-result-card > *,
+.message-composer > *,
+.home-room-card > *,
+.main-home-room-card > * {
+  position: relative;
+
+  z-index: 1;
+}
+
+/* =========================================================
+   FLOATING SHELL
+========================================================= */
+
+.chat-sidebar {
+  border-right:
+    1px solid
+    rgba(
+      255,
+      255,
+      255,
+      0.58
+    ) !important;
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(
+        255,
+        255,
+        255,
+        0.66
+      ),
+      rgba(
+        246,
+        248,
+        255,
+        0.46
+      )
+    ) !important;
+
+  box-shadow:
+    18px
+    0
+    54px
+    rgba(
+      31,
+      37,
+      60,
+      0.065
+    ) !important;
+}
+
+.chat-header {
+  border-bottom:
+    1px solid
+    rgba(
+      255,
+      255,
+      255,
+      0.56
+    ) !important;
+
+  background:
+    rgba(
+      255,
+      255,
+      255,
+      0.46
+    ) !important;
+
+  box-shadow:
+    0
+    12px
+    36px
+    rgba(
+      31,
+      37,
+      60,
+      0.045
+    ) !important;
+}
+
+.member-panel {
+  border-left:
+    1px solid
+    rgba(
+      255,
+      255,
+      255,
+      0.54
+    ) !important;
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(
+        255,
+        255,
+        255,
+        0.58
+      ),
+      rgba(
+        247,
+        249,
+        255,
+        0.43
+      )
+    ) !important;
+}
+
+.conversation-column,
+.main-home-column,
+.utility-conversation-column {
+  background:
+    linear-gradient(
+      145deg,
+      rgba(
+        255,
+        255,
+        255,
+        0.18
+      ),
+      rgba(
+        var(
+          --theme-accent-rgb,
+          116,
+          103,
+          232
+        ),
+        0.035
+      ),
+      rgba(
+        255,
+        255,
+        255,
+        0.16
+      )
+    ) !important;
+
+  transition:
+    background
+    900ms
+    ease !important;
+}
+
+/* =========================================================
+   SIDEBAR / NAVIGATION LIQUID CONTROLS
+========================================================= */
+
+.sidebar-tabs {
+  border:
+    1px solid
+    rgba(
+      255,
+      255,
+      255,
+      0.58
+    );
+
+  background:
+    rgba(
+      255,
+      255,
+      255,
+      0.30
+    ) !important;
+
+  box-shadow:
+    inset
+    0
+    1px
+    0
+    rgba(
+      255,
+      255,
+      255,
+      0.72
+    );
+
+  backdrop-filter:
+    blur(14px)
+    saturate(145%);
+}
+
+.sidebar-tabs button,
+.room-item,
+.sidebar-friend-item,
+.sidebar-utility-button,
+.sidebar-user,
+.invite-button,
+.member-count-button,
+.header-more-button,
+.home-header-create,
+.utility-close-button,
+.new-room-button,
+.member-add-button,
+.workspace-primary-button,
+.workspace-secondary-button,
+.workspace-danger-button,
+.primary-action,
+.secondary-action,
+.danger-action,
+.profile-edit-save,
+.profile-edit-cancel,
+.profile-photo-button,
+.profile-photo-remove {
+  transition:
+    transform
+      340ms
+      var(
+        --liquid-spring
+      ),
+    box-shadow
+      340ms
+      ease,
+    background
+      340ms
+      ease,
+    border-color
+      340ms
+      ease,
+    color
+      260ms
+      ease !important;
+}
+
+.sidebar-tabs button:hover,
+.room-item:hover,
+.sidebar-friend-item:hover,
+.sidebar-utility-button:hover,
+.sidebar-user:hover,
+.invite-button:hover,
+.member-count-button:hover,
+.header-more-button:hover,
+.home-header-create:hover,
+.utility-close-button:hover,
+.workspace-primary-button:hover,
+.workspace-secondary-button:hover,
+.workspace-danger-button:hover,
+.primary-action:hover,
+.secondary-action:hover,
+.profile-edit-save:hover,
+.profile-edit-cancel:hover {
+  transform:
+    translateY(-2px)
+    scale(1.012) !important;
+
+  box-shadow:
+    0
+    12px
+    26px
+    rgba(
+      36,
+      42,
+      68,
+      0.08
+    ) !important;
+}
+
+.sidebar-tabs button:active,
+.room-item:active,
+.sidebar-friend-item:active,
+.sidebar-utility-button:active,
+.sidebar-user:active,
+.invite-button:active,
+.member-count-button:active,
+.header-more-button:active,
+.home-header-create:active,
+.new-room-button:active,
+.member-add-button:active,
+.workspace-primary-button:active,
+.primary-action:active,
+.profile-edit-save:active {
+  transform:
+    scale(0.965) !important;
+
+  transition-duration:
+    110ms !important;
+}
+
+.sidebar-tabs button.active,
+.room-item.selected,
+.sidebar-friend-item.profile-selected,
+.member-item.profile-selected {
+  border:
+    1px solid
+    rgba(
+      var(
+        --theme-accent-rgb,
+        116,
+        103,
+        232
+      ),
+      0.16
+    ) !important;
+
+  background:
+    linear-gradient(
+      145deg,
+      rgba(
+        255,
+        255,
+        255,
+        0.68
+      ),
+      rgba(
+        var(
+          --theme-accent-rgb,
+          116,
+          103,
+          232
+        ),
+        0.11
+      )
+    ) !important;
+
+  box-shadow:
+    0
+    10px
+    26px
+    rgba(
+      var(
+        --theme-accent-rgb,
+        116,
+        103,
+        232
+      ),
+      0.08
+    ),
+    inset
+    0
+    1px
+    0
+    rgba(
+      255,
+      255,
+      255,
+      0.88
+    ) !important;
+}
+
+/* =========================================================
+   LIQUID CHAT BUBBLES
+========================================================= */
+
+.message-bubble {
+  border:
+    1px solid
+    rgba(
+      255,
+      255,
+      255,
+      0.72
+    ) !important;
+
+  background:
+    linear-gradient(
+      145deg,
+      rgba(
+        255,
+        255,
+        255,
+        0.78
+      ),
+      rgba(
+        249,
+        250,
+        255,
+        0.52
+      )
+    ) !important;
+
+  box-shadow:
+    0
+    7px
+    22px
+    rgba(
+      28,
+      33,
+      52,
+      0.055
+    ),
+    inset
+    0
+    1px
+    0
+    rgba(
+      255,
+      255,
+      255,
+      0.92
+    ) !important;
+
+  backdrop-filter:
+    blur(12px)
+    saturate(140%);
+
+  -webkit-backdrop-filter:
+    blur(12px)
+    saturate(140%);
+}
+
+.message-row.mine
+  .message-bubble {
+  border:
+    1px solid
+    rgba(
+      255,
+      255,
+      255,
+      0.30
+    ) !important;
+
+  background:
+    linear-gradient(
+      145deg,
+      rgba(
+        var(
+          --theme-accent-rgb,
+          116,
+          103,
+          232
+        ),
+        0.86
+      ),
+      rgba(
+        var(
+          --theme-accent-rgb,
+          116,
+          103,
+          232
+        ),
+        0.67
+      )
+    ) !important;
+
+  box-shadow:
+    0
+    10px
+    28px
+    rgba(
+      var(
+        --theme-accent-rgb,
+        116,
+        103,
+        232
+      ),
+      0.18
+    ),
+    inset
+    0
+    1px
+    0
+    rgba(
+      255,
+      255,
+      255,
+      0.32
+    ) !important;
+}
+
+.system-message,
+.chat-date-divider span {
+  border:
+    1px solid
+    rgba(
+      255,
+      255,
+      255,
+      0.56
+    );
+
+  background:
+    rgba(
+      255,
+      255,
+      255,
+      0.42
+    ) !important;
+
+  box-shadow:
+    0
+    6px
+    18px
+    rgba(
+      28,
+      33,
+      52,
+      0.04
+    );
+
+  backdrop-filter:
+    blur(12px);
+}
+
+/* =========================================================
+   COMPOSER — LIQUID INPUT BAR
+========================================================= */
+
+.composer-wrapper {
+  background:
+    linear-gradient(
+      180deg,
+      rgba(
+        255,
+        255,
+        255,
+        0
+      ),
+      rgba(
+        255,
+        255,
+        255,
+        0.16
+      )
+    ) !important;
+}
+
+.message-composer,
+.message-composer:focus-within {
+  overflow: hidden;
+
+  border:
+    1px solid
+    rgba(
+      255,
+      255,
+      255,
+      0.72
+    ) !important;
+
+  background:
+    linear-gradient(
+      145deg,
+      rgba(
+        255,
+        255,
+        255,
+        0.74
+      ),
+      rgba(
+        255,
+        255,
+        255,
+        0.46
+      )
+    ) !important;
+
+  box-shadow:
+    0
+    14px
+    36px
+    rgba(
+      29,
+      34,
+      54,
+      0.075
+    ),
+    inset
+    0
+    1px
+    0
+    rgba(
+      255,
+      255,
+      255,
+      0.90
+    ) !important;
+}
+
+.composer-plus-button,
+.send-button {
+  border:
+    1px solid
+    rgba(
+      255,
+      255,
+      255,
+      0.48
+    ) !important;
+
+  box-shadow:
+    inset
+    0
+    1px
+    0
+    rgba(
+      255,
+      255,
+      255,
+      0.44
+    ),
+    0
+    7px
+    18px
+    rgba(
+      37,
+      42,
+      67,
+      0.08
+    );
+}
+
+.composer-plus-button {
+  background:
+    rgba(
+      255,
+      255,
+      255,
+      0.44
+    ) !important;
+
+  backdrop-filter:
+    blur(12px);
+}
+
+.composer-plus-button.opened {
+  background:
+    rgba(
+      var(
+        --theme-accent-rgb,
+        116,
+        103,
+        232
+      ),
+      0.16
+    ) !important;
+
+  transform:
+    rotate(45deg)
+    scale(1.04) !important;
+}
+
+.send-button {
+  background:
+    linear-gradient(
+      145deg,
+      rgba(
+        var(
+          --theme-accent-rgb,
+          116,
+          103,
+          232
+        ),
+        0.92
+      ),
+      rgba(
+        var(
+          --theme-accent-rgb,
+          116,
+          103,
+          232
+        ),
+        0.72
+      )
+    ) !important;
+}
+
+.send-button:disabled {
+  background:
+    rgba(
+      205,
+      209,
+      220,
+      0.48
+    ) !important;
+}
+
+/* =========================================================
+   TYPING / AI ANALYSIS LIQUID WAVE
+========================================================= */
+
+.typing-indicator {
+  overflow: visible;
+
+  background:
+    transparent !important;
+}
+
+.typing-indicator.visible
+  .typing-indicator-inner {
+  position: relative;
+
+  min-height: 24px;
+
+  padding:
+    0 11px;
+
+  overflow: hidden;
+
+  border:
+    1px solid
+    rgba(
+      255,
+      255,
+      255,
+      0.55
+    );
+
+  border-radius: 12px;
+
+  background:
+    rgba(
+      255,
+      255,
+      255,
+      0.30
+    );
+
+  box-shadow:
+    0
+    6px
+    18px
+    rgba(
+      28,
+      33,
+      52,
+      0.04
+    );
+
+  backdrop-filter:
+    blur(12px)
+    saturate(140%);
+}
+
+.typing-indicator.visible
+  .typing-indicator-inner::before {
+  position: absolute;
+
+  top: -100%;
+  bottom: -100%;
+  left: -28%;
+
+  width: 24%;
+
+  background:
+    linear-gradient(
+      90deg,
+      transparent,
+      rgba(
+        255,
+        255,
+        255,
+        0.68
+      ),
+      transparent
+    );
+
+  content: "";
+
+  transform:
+    skewX(-18deg);
+
+  animation:
+    liquidTypingWave
+    2.1s
+    ease-in-out
+    infinite;
+}
+
+@keyframes liquidTypingWave {
+  0% {
+    left: -30%;
+  }
+
+  70%,
+  100% {
+    left: 116%;
+  }
+}
+
+/* =========================================================
+   AI RESULT — STRONG GLASS
+========================================================= */
+
+.ai-result-card {
+  overflow: hidden;
+
+  border:
+    1px solid
+    rgba(
+      255,
+      255,
+      255,
+      0.78
+    ) !important;
+
+  background:
+    linear-gradient(
+      135deg,
+      rgba(
+        255,
+        255,
+        255,
+        0.76
+      ),
+      rgba(
+        var(
+          --theme-accent-rgb,
+          116,
+          103,
+          232
+        ),
+        0.10
+      ),
+      rgba(
+        255,
+        255,
+        255,
+        0.48
+      )
+    ) !important;
+
+  box-shadow:
+    0
+    24px
+    58px
+    rgba(
+      var(
+        --theme-accent-rgb,
+        116,
+        103,
+        232
+      ),
+      0.12
+    ),
+    inset
+    0
+    1px
+    0
+    rgba(
+      255,
+      255,
+      255,
+      0.92
+    ) !important;
+}
+
+.ai-result-wrapper {
+  animation:
+    liquidAiReveal
+    760ms
+    var(
+      --liquid-spring
+    ) !important;
+}
+
+@keyframes liquidAiReveal {
+  0% {
+    opacity: 0;
+
+    filter:
+      blur(10px);
+
+    transform:
+      translateY(18px)
+      scale(0.90);
+  }
+
+  58% {
+    opacity: 1;
+
+    filter:
+      blur(0);
+
+    transform:
+      translateY(-3px)
+      scale(1.018);
+  }
+
+  100% {
+    transform:
+      translateY(0)
+      scale(1);
+  }
+}
+
+.ai-movie-item {
+  border:
+    1px solid
+    rgba(
+      255,
+      255,
+      255,
+      0.52
+    ) !important;
+
+  background:
+    rgba(
+      255,
+      255,
+      255,
+      0.36
+    ) !important;
+
+  backdrop-filter:
+    blur(10px);
+}
+
+.ai-movie-item:hover {
+  background:
+    rgba(
+      255,
+      255,
+      255,
+      0.67
+    ) !important;
+
+  box-shadow:
+    0
+    9px
+    20px
+    rgba(
+      27,
+      32,
+      51,
+      0.06
+    );
+}
+
+/* =========================================================
+   HOME / DASHBOARD CARDS
+========================================================= */
+
+.main-home-column {
+  background:
+    transparent !important;
+}
+
+.main-home-content {
+  overflow: visible !important;
+}
+
+.main-home-ambient span {
+  filter:
+    blur(16px) !important;
+
+  opacity:
+    0.42 !important;
+}
+
+.main-home-room-card,
+.home-room-card {
+  overflow: hidden;
+
+  border:
+    1px solid
+    rgba(
+      255,
+      255,
+      255,
+      0.65
+    ) !important;
+
+  background:
+    linear-gradient(
+      145deg,
+      rgba(
+        255,
+        255,
+        255,
+        0.66
+      ),
+      rgba(
+        255,
+        255,
+        255,
+        0.34
+      )
+    ) !important;
+
+  backdrop-filter:
+    blur(20px)
+    saturate(150%);
+}
+
+.main-home-room-card:hover,
+.home-room-card:hover {
+  transform:
+    translateY(-6px)
+    scale(1.015) !important;
+
+  box-shadow:
+    0
+    24px
+    56px
+    rgba(
+      31,
+      36,
+      58,
+      0.10
+    ) !important;
+}
+
+.main-home-create,
+.home-create-button {
+  border:
+    1px solid
+    rgba(
+      255,
+      255,
+      255,
+      0.40
+    ) !important;
+
+  background:
+    linear-gradient(
+      145deg,
+      rgba(
+        var(
+          --theme-accent-rgb,
+          116,
+          103,
+          232
+        ),
+        0.92
+      ),
+      rgba(
+        var(
+          --theme-accent-rgb,
+          116,
+          103,
+          232
+        ),
+        0.70
+      )
+    ) !important;
+
+  box-shadow:
+    0
+    16px
+    34px
+    rgba(
+      var(
+        --theme-accent-rgb,
+        116,
+        103,
+        232
+      ),
+      0.20
+    ),
+    inset
+    0
+    1px
+    0
+    rgba(
+      255,
+      255,
+      255,
+      0.32
+    ) !important;
+}
+
+/* =========================================================
+   MODAL / PROFILE / PERSON CARD GLASS
+========================================================= */
+
+.app-modal-backdrop {
+  background:
+    rgba(
+      27,
+      30,
+      44,
+      0.20
+    ) !important;
+
+  backdrop-filter:
+    blur(12px)
+    saturate(120%) !important;
+}
+
+.app-modal,
+.profile-popover,
+.person-profile-popover {
+  overflow: hidden;
+
+  border:
+    1px solid
+    rgba(
+      255,
+      255,
+      255,
+      0.76
+    ) !important;
+
+  background:
+    linear-gradient(
+      145deg,
+      rgba(
+        255,
+        255,
+        255,
+        0.72
+      ),
+      rgba(
+        248,
+        250,
+        255,
+        0.44
+      )
+    ) !important;
+
+  box-shadow:
+    var(
+      --glass-shadow-floating
+    ),
+    inset
+    0
+    1px
+    0
+    rgba(
+      255,
+      255,
+      255,
+      0.90
+    ) !important;
+}
+
+.profile-popover,
+.person-profile-popover {
+  animation:
+    liquidMorphOpen
+    460ms
+    var(
+      --liquid-spring
+    ) !important;
+}
+
+@keyframes liquidMorphOpen {
+  0% {
+    opacity: 0;
+
+    filter:
+      blur(8px);
+
+    border-radius: 30px;
+
+    transform:
+      translateY(12px)
+      scale(0.90);
+  }
+
+  62% {
+    opacity: 1;
+
+    filter:
+      blur(0);
+
+    border-radius: 16px;
+
+    transform:
+      translateY(-2px)
+      scale(1.02);
+  }
+
+  100% {
+    border-radius: 18px;
+
+    transform:
+      translateY(0)
+      scale(1);
+  }
+}
+
+.profile-popover-banner,
+.person-profile-banner,
+.profile-preview-banner {
+  position: relative;
+
+  overflow: hidden;
+
+  background:
+    linear-gradient(
+      135deg,
+      rgba(
+        var(
+          --theme-accent-rgb,
+          116,
+          103,
+          232
+        ),
+        0.82
+      ),
+      rgba(
+        88,
+        110,
+        190,
+        0.66
+      ),
+      rgba(
+        30,
+        42,
+        72,
+        0.78
+      )
+    ) !important;
+}
+
+.profile-popover-banner::before,
+.person-profile-banner::before,
+.profile-preview-banner::before {
+  position: absolute;
+
+  inset: -40%;
+
+  background:
+    radial-gradient(
+      circle at
+      var(--liquid-x)
+      var(--liquid-y),
+      rgba(
+        255,
+        255,
+        255,
+        0.54
+      ),
+      transparent
+      32%
+    );
+
+  content: "";
+
+  animation:
+    liquidBannerDrift
+    5s
+    ease-in-out
+    infinite;
+}
+
+@keyframes liquidBannerDrift {
+  0%,
+  100% {
+    transform:
+      translate3d(
+        -5%,
+        0,
+        0
+      );
+  }
+
+  50% {
+    transform:
+      translate3d(
+        8%,
+        6%,
+        0
+      );
+  }
+}
+
+/* =========================================================
+   PROFILE EDIT / UTILITY WORKSPACES
+========================================================= */
+
+.profile-edit-workspace,
+.friend-add-workspace,
+.notifications-workspace {
+  background:
+    transparent !important;
+}
+
+.profile-edit-preview,
+.friend-add-panel,
+.workspace-notification-item {
+  border:
+    1px solid
+    rgba(
+      255,
+      255,
+      255,
+      0.68
+    ) !important;
+
+  background:
+    linear-gradient(
+      145deg,
+      rgba(
+        255,
+        255,
+        255,
+        0.64
+      ),
+      rgba(
+        255,
+        255,
+        255,
+        0.36
+      )
+    ) !important;
+}
+
+.profile-field-group > input,
+.profile-field-group > textarea,
+.form-input,
+.friend-add-search,
+.room-search {
+  border:
+    1px solid
+    rgba(
+      255,
+      255,
+      255,
+      0.68
+    ) !important;
+
+  background:
+    rgba(
+      255,
+      255,
+      255,
+      0.42
+    ) !important;
+
+  box-shadow:
+    inset
+    0
+    1px
+    0
+    rgba(
+      255,
+      255,
+      255,
+      0.72
+    ) !important;
+
+  backdrop-filter:
+    blur(12px);
+}
+
+.profile-field-group > input:focus,
+.profile-field-group > textarea:focus,
+.form-input:focus,
+.friend-add-search:focus-within,
+.room-search:focus-within {
+  border-color:
+    rgba(
+      var(
+        --theme-accent-rgb,
+        116,
+        103,
+        232
+      ),
+      0.22
+    ) !important;
+
+  box-shadow:
+    inset
+    0
+    1px
+    0
+    rgba(
+      255,
+      255,
+      255,
+      0.80
+    ),
+    0
+    7px
+    18px
+    rgba(
+      var(
+        --theme-accent-rgb,
+        116,
+        103,
+        232
+      ),
+      0.05
+    ) !important;
+
+  outline:
+    none !important;
+}
+
+/* Keep chat composer focus subtle, per prior request */
+.chat-page
+  .message-composer:focus-within,
+.chat-page
+  .message-composer
+  textarea:focus,
+.chat-page
+  .message-composer
+  textarea:focus-visible {
+  outline:
+    none !important;
+
+  border-color:
+    rgba(
+      255,
+      255,
+      255,
+      0.72
+    ) !important;
+}
+
+/* =========================================================
+   PRESENCE LIQUID AURA
+========================================================= */
+
+.presence-large,
+.presence-hero {
+  box-shadow:
+    0
+    0
+    0
+    1px
+    rgba(
+      255,
+      255,
+      255,
+      0.20
+    ),
+    0
+    12px
+    34px
+    rgba(
+      14,
+      20,
+      38,
+      0.18
+    ) !important;
+}
+
+.presence-online.presence-large,
+.presence-online.presence-hero {
+  box-shadow:
+    0
+    0
+    28px
+    rgba(
+      255,
+      196,
+      62,
+      0.42
+    ) !important;
+}
+
+.presence-away.presence-large,
+.presence-away.presence-hero {
+  box-shadow:
+    0
+    0
+    28px
+    rgba(
+      101,
+      126,
+      207,
+      0.30
+    ) !important;
+}
+
+.presence-offline.presence-large,
+.presence-offline.presence-hero {
+  box-shadow:
+    0
+    0
+    28px
+    rgba(
+      33,
+      43,
+      74,
+      0.44
+    ) !important;
+}
+
+/* =========================================================
+   THEME CHANGE = LIQUID COLOR TRANSITION
+========================================================= */
+
+.chat-room-avatar,
+.room-avatar,
+.main-home-create,
+.home-create-button,
+.send-button,
+.ai-detail-button,
+.new-room-button,
+.member-add-button,
+.member-typing-bubble,
+.typing-dots span {
+  transition:
+    background
+      900ms
+      ease,
+    color
+      700ms
+      ease,
+    border-color
+      700ms
+      ease,
+    box-shadow
+      700ms
+      ease,
+    transform
+      340ms
+      var(
+        --liquid-spring
+      ) !important;
+}
+
+/* =========================================================
+   SCROLLBARS — SUBTLE GLASS
+========================================================= */
+
+.room-list,
+.sidebar-friend-list,
+.message-list,
+.member-list,
+.main-home-column,
+.utility-conversation-column,
+.app-modal-content {
+  scrollbar-width: thin;
+
+  scrollbar-color:
+    rgba(
+      119,
+      126,
+      151,
+      0.24
+    )
+    transparent;
+}
+
+.room-list::-webkit-scrollbar,
+.sidebar-friend-list::-webkit-scrollbar,
+.message-list::-webkit-scrollbar,
+.member-list::-webkit-scrollbar,
+.main-home-column::-webkit-scrollbar,
+.utility-conversation-column::-webkit-scrollbar,
+.app-modal-content::-webkit-scrollbar {
+  width: 7px;
+}
+
+.room-list::-webkit-scrollbar-thumb,
+.sidebar-friend-list::-webkit-scrollbar-thumb,
+.message-list::-webkit-scrollbar-thumb,
+.member-list::-webkit-scrollbar-thumb,
+.main-home-column::-webkit-scrollbar-thumb,
+.utility-conversation-column::-webkit-scrollbar-thumb,
+.app-modal-content::-webkit-scrollbar-thumb {
+  border:
+    2px solid
+    transparent;
+
+  border-radius: 20px;
+
+  background:
+    rgba(
+      107,
+      115,
+      143,
+      0.22
+    );
+
+  background-clip:
+    padding-box;
+}
+
+/* =========================================================
+   MOBILE
+========================================================= */
+
+@media (max-width: 767px) {
+  :root {
+    --glass-blur: 20px;
+    --glass-blur-soft: 13px;
+  }
+
+  .chat-sidebar,
+  .chat-header,
+  .member-panel,
+  .app-modal,
+  .profile-popover,
+  .person-profile-popover {
+    backdrop-filter:
+      blur(20px)
+      saturate(145%) !important;
+
+    -webkit-backdrop-filter:
+      blur(20px)
+      saturate(145%) !important;
+  }
+
+  .app-modal,
+  .composer-menu {
+    border:
+      1px solid
+      rgba(
+        255,
+        255,
+        255,
+        0.68
+      ) !important;
+
+    background:
+      linear-gradient(
+        180deg,
+        rgba(
+          255,
+          255,
+          255,
+          0.72
+        ),
+        rgba(
+          248,
+          250,
+          255,
+          0.52
+        )
+      ) !important;
+
+    backdrop-filter:
+      blur(22px)
+      saturate(150%);
+  }
+}
+
+/* =========================================================
+   REDUCED MOTION
+========================================================= */
+
+@media (
+  prefers-reduced-motion:
+  reduce
+) {
+  .chat-page::before,
+  .chat-page::after,
+  .profile-popover-banner::before,
+  .person-profile-banner::before,
+  .profile-preview-banner::before,
+  .typing-indicator.visible
+    .typing-indicator-inner::before {
+    animation:
+      none !important;
+  }
+
+  .profile-popover,
+  .person-profile-popover,
+  .ai-result-wrapper {
+    animation:
+      none !important;
+  }
+}
+
+
+/* =========================================================
+   V12 — iOS / iPhone-inspired Liquid Glass refinement
+========================================================= */
+
+:root {
+  --ios-radius-xs: 10px;
+  --ios-radius-sm: 14px;
+  --ios-radius-md: 18px;
+  --ios-radius-lg: 22px;
+  --ios-radius-xl: 28px;
+
+  --ios-hairline:
+    rgba(
+      60,
+      60,
+      67,
+      0.10
+    );
+
+  --ios-label:
+    #1c1c1e;
+
+  --ios-secondary:
+    rgba(
+      60,
+      60,
+      67,
+      0.62
+    );
+
+  --ios-tertiary:
+    rgba(
+      60,
+      60,
+      67,
+      0.38
+    );
+
+  --ios-fill:
+    rgba(
+      118,
+      118,
+      128,
+      0.10
+    );
+
+  --ios-blue:
+    #007aff;
+
+  --ios-red:
+    #ff3b30;
+
+  --ios-spring:
+    cubic-bezier(
+      0.22,
+      1,
+      0.36,
+      1
+    );
+}
+
+html,
+body,
+button,
+input,
+textarea,
+select {
+  font-family:
+    -apple-system,
+    BlinkMacSystemFont,
+    "SF Pro Text",
+    "SF Pro Display",
+    "Segoe UI",
+    sans-serif !important;
+
+  -webkit-font-smoothing:
+    antialiased;
+
+  text-rendering:
+    optimizeLegibility;
+}
+
+button,
+a,
+input,
+textarea {
+  -webkit-tap-highlight-color:
+    transparent;
+}
+
+/* ---------------------------------------------------------
+   iOS glass: less "shiny web glass", more material-like.
+--------------------------------------------------------- */
+
+.chat-sidebar,
+.chat-header,
+.member-panel {
+  border-color:
+    rgba(
+      255,
+      255,
+      255,
+      0.52
+    ) !important;
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(
+        250,
+        250,
+        252,
+        0.64
+      ),
+      rgba(
+        246,
+        247,
+        251,
+        0.48
+      )
+    ) !important;
+
+  box-shadow:
+    inset
+    0
+    0.5px
+    0
+    rgba(
+      255,
+      255,
+      255,
+      0.92
+    ),
+    0
+    10px
+    34px
+    rgba(
+      0,
+      0,
+      0,
+      0.045
+    ) !important;
+
+  backdrop-filter:
+    blur(28px)
+    saturate(165%) !important;
+
+  -webkit-backdrop-filter:
+    blur(28px)
+    saturate(165%) !important;
+}
+
+/*
+ * 포인터 반사는 iPhone 감성을 해치지 않도록
+ * v11보다 훨씬 약하게.
+ */
+.chat-sidebar::after,
+.chat-header::after,
+.member-panel::after,
+.profile-popover::after,
+.person-profile-popover::after,
+.app-modal::after,
+.message-composer::after {
+  opacity:
+    0.22 !important;
+}
+
+/* ---------------------------------------------------------
+   Segmented Control
+--------------------------------------------------------- */
+
+.sidebar-tabs {
+  padding: 3px !important;
+
+  border:
+    1px solid
+    rgba(
+      255,
+      255,
+      255,
+      0.48
+    ) !important;
+
+  border-radius:
+    13px !important;
+
+  background:
+    rgba(
+      118,
+      118,
+      128,
+      0.08
+    ) !important;
+
+  box-shadow:
+    inset
+    0
+    0.5px
+    0
+    rgba(
+      255,
+      255,
+      255,
+      0.70
+    ) !important;
+}
+
+.sidebar-tabs button {
+  min-height: 34px;
+
+  border-radius:
+    10px !important;
+
+  font-weight: 650;
+}
+
+.sidebar-tabs button.active {
+  background:
+    rgba(
+      255,
+      255,
+      255,
+      0.80
+    ) !important;
+
+  box-shadow:
+    0
+    2px
+    7px
+    rgba(
+      0,
+      0,
+      0,
+      0.08
+    ),
+    inset
+    0
+    0.5px
+    0
+    white !important;
+}
+
+/* ---------------------------------------------------------
+   Lists: iOS grouped-list feeling
+--------------------------------------------------------- */
+
+.room-item,
+.sidebar-friend-item,
+.member-item {
+  border-radius:
+    var(
+      --ios-radius-sm
+    ) !important;
+}
+
+.room-item:hover,
+.sidebar-friend-item:hover,
+.member-item:hover {
+  transform:
+    none !important;
+
+  background:
+    rgba(
+      118,
+      118,
+      128,
+      0.075
+    ) !important;
+
+  box-shadow:
+    none !important;
+}
+
+.room-item:active,
+.sidebar-friend-item:active,
+.member-profile-button:active {
+  transform:
+    scale(0.985) !important;
+
+  background:
+    rgba(
+      118,
+      118,
+      128,
+      0.12
+    ) !important;
+}
+
+/* ---------------------------------------------------------
+   Chat header / buttons
+--------------------------------------------------------- */
+
+.chat-header {
+  min-height: 82px;
+}
+
+.invite-button,
+.member-count-button,
+.header-more-button,
+.home-header-create,
+.utility-close-button,
+.new-room-button,
+.member-add-button,
+.composer-plus-button,
+.send-button {
+  border-radius:
+    999px !important;
+}
+
+.header-more-button,
+.member-count-button,
+.new-room-button,
+.member-add-button,
+.composer-plus-button {
+  background:
+    rgba(
+      118,
+      118,
+      128,
+      0.09
+    ) !important;
+
+  color:
+    var(
+      --ios-label
+    ) !important;
+
+  box-shadow:
+    inset
+    0
+    0.5px
+    0
+    rgba(
+      255,
+      255,
+      255,
+      0.78
+    ) !important;
+}
+
+.invite-button,
+.home-header-create {
+  background:
+    rgba(
+      var(
+        --theme-accent-rgb,
+        116,
+        103,
+        232
+      ),
+      0.13
+    ) !important;
+
+  color:
+    var(
+      --theme-accent
+    ) !important;
+}
+
+/* ---------------------------------------------------------
+   Message bubbles: softer, iMessage-inspired silhouette
+--------------------------------------------------------- */
+
+.message-bubble {
+  border:
+    0.5px solid
+    rgba(
+      60,
+      60,
+      67,
+      0.08
+    ) !important;
+
+  border-radius:
+    19px !important;
+
+  background:
+    rgba(
+      255,
+      255,
+      255,
+      0.74
+    ) !important;
+
+  box-shadow:
+    0
+    1px
+    2px
+    rgba(
+      0,
+      0,
+      0,
+      0.035
+    ),
+    inset
+    0
+    0.5px
+    0
+    rgba(
+      255,
+      255,
+      255,
+      0.86
+    ) !important;
+}
+
+.message-row.mine
+  .message-bubble {
+  border:
+    0.5px solid
+    rgba(
+      255,
+      255,
+      255,
+      0.22
+    ) !important;
+
+  border-radius:
+    19px
+    19px
+    6px
+    19px !important;
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(
+        var(
+          --theme-accent-rgb,
+          116,
+          103,
+          232
+        ),
+        0.88
+      ),
+      rgba(
+        var(
+          --theme-accent-rgb,
+          116,
+          103,
+          232
+        ),
+        0.76
+      )
+    ) !important;
+
+  box-shadow:
+    0
+    3px
+    10px
+    rgba(
+      var(
+        --theme-accent-rgb,
+        116,
+        103,
+        232
+      ),
+      0.13
+    ) !important;
+}
+
+/* ---------------------------------------------------------
+   Composer: iOS floating input capsule
+--------------------------------------------------------- */
+
+.composer-wrapper {
+  padding-bottom:
+    max(
+      10px,
+      env(
+        safe-area-inset-bottom
+      )
+    ) !important;
+}
+
+.message-composer,
+.message-composer:focus-within {
+  min-height: 58px;
+
+  border:
+    0.5px solid
+    rgba(
+      60,
+      60,
+      67,
+      0.10
+    ) !important;
+
+  border-radius:
+    29px !important;
+
+  background:
+    rgba(
+      250,
+      250,
+      252,
+      0.72
+    ) !important;
+
+  box-shadow:
+    0
+    8px
+    24px
+    rgba(
+      0,
+      0,
+      0,
+      0.065
+    ),
+    inset
+    0
+    0.5px
+    0
+    rgba(
+      255,
+      255,
+      255,
+      0.95
+    ) !important;
+
+  backdrop-filter:
+    blur(28px)
+    saturate(165%) !important;
+
+  -webkit-backdrop-filter:
+    blur(28px)
+    saturate(165%) !important;
+}
+
+.message-composer textarea {
+  color:
+    var(
+      --ios-label
+    );
+
+  font-size: 14px !important;
+
+  letter-spacing:
+    -0.1px;
+}
+
+/* ---------------------------------------------------------
+   Cards
+--------------------------------------------------------- */
+
+.main-home-room-card,
+.ai-result-card,
+.profile-edit-preview,
+.profile-photo-control,
+.friend-add-panel,
+.workspace-notification-item {
+  border:
+    0.5px solid
+    rgba(
+      60,
+      60,
+      67,
+      0.085
+    ) !important;
+
+  border-radius:
+    var(
+      --ios-radius-lg
+    ) !important;
+
+  background:
+    rgba(
+      255,
+      255,
+      255,
+      0.62
+    ) !important;
+
+  box-shadow:
+    0
+    12px
+    36px
+    rgba(
+      0,
+      0,
+      0,
+      0.055
+    ),
+    inset
+    0
+    0.5px
+    0
+    rgba(
+      255,
+      255,
+      255,
+      0.92
+    ) !important;
+}
+
+.main-home-room-card:hover {
+  transform:
+    translateY(-3px)
+    scale(1.006) !important;
+}
+
+/* ---------------------------------------------------------
+   Popover portal layer — critical functional fix
+--------------------------------------------------------- */
+
+.ios-popover-backdrop {
+  position:
+    fixed !important;
+
+  inset:
+    0 !important;
+
+  z-index:
+    20000 !important;
+
+  margin: 0 !important;
+
+  padding: 0 !important;
+
+  border: 0 !important;
+
+  background:
+    transparent !important;
+
+  backdrop-filter:
+    none !important;
+
+  -webkit-backdrop-filter:
+    none !important;
+}
+
+.ios-floating-popover {
+  position:
+    fixed !important;
+
+  z-index:
+    20010 !important;
+
+  width:
+    296px;
+
+  max-width:
+    calc(
+      100vw - 24px
+    );
+
+  overflow:
+    hidden !important;
+
+  border:
+    0.5px solid
+    rgba(
+      255,
+      255,
+      255,
+      0.72
+    ) !important;
+
+  border-radius:
+    24px !important;
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(
+        252,
+        252,
+        254,
+        0.83
+      ),
+      rgba(
+        246,
+        247,
+        251,
+        0.70
+      )
+    ) !important;
+
+  box-shadow:
+    0
+    28px
+    80px
+    rgba(
+      0,
+      0,
+      0,
+      0.18
+    ),
+    0
+    4px
+    20px
+    rgba(
+      0,
+      0,
+      0,
+      0.08
+    ),
+    inset
+    0
+    0.5px
+    0
+    rgba(
+      255,
+      255,
+      255,
+      0.96
+    ) !important;
+
+  backdrop-filter:
+    blur(36px)
+    saturate(180%) !important;
+
+  -webkit-backdrop-filter:
+    blur(36px)
+    saturate(180%) !important;
+
+  animation:
+    iosPopoverIn
+    420ms
+    var(
+      --ios-spring
+    ) !important;
+
+  transform-origin:
+    center;
+}
+
+@keyframes iosPopoverIn {
+  0% {
+    opacity: 0;
+
+    filter:
+      blur(8px);
+
+    transform:
+      scale(0.91)
+      translateY(8px);
+  }
+
+  62% {
+    opacity: 1;
+
+    filter:
+      blur(0);
+
+    transform:
+      scale(1.012)
+      translateY(-1px);
+  }
+
+  100% {
+    transform:
+      scale(1)
+      translateY(0);
+  }
+}
+
+/*
+ * body portal로 나왔기 때문에
+ * backdrop-filter가 있는 sidebar/member-panel의
+ * containing block 영향을 더 이상 받지 않는다.
+ */
+body
+  > .ios-floating-popover,
+body
+  > .ios-popover-backdrop {
+  contain:
+    layout style;
+}
+
+.profile-popover {
+  width:
+    304px;
+}
+
+.ios-profile-hero {
+  position:
+    relative;
+
+  height:
+    92px !important;
+
+  overflow:
+    hidden !important;
+
+  border-radius:
+    23px 23px 0 0 !important;
+
+  background:
+    linear-gradient(
+      145deg,
+      rgba(
+        var(
+          --theme-accent-rgb,
+          116,
+          103,
+          232
+        ),
+        0.76
+      ),
+      rgba(
+        98,
+        124,
+        194,
+        0.62
+      ),
+      rgba(
+        46,
+        57,
+        91,
+        0.76
+      )
+    ) !important;
+}
+
+.ios-profile-hero-light {
+  position:
+    absolute;
+
+  top: -45px;
+  left: -20px;
+
+  width: 180px;
+  height: 130px;
+
+  border-radius:
+    50%;
+
+  background:
+    radial-gradient(
+      circle,
+      rgba(
+        255,
+        255,
+        255,
+        0.52
+      ),
+      rgba(
+        255,
+        255,
+        255,
+        0.10
+      )
+      45%,
+      transparent
+      70%
+    );
+
+  filter:
+    blur(3px);
+
+  pointer-events:
+    none;
+}
+
+.profile-popover-user,
+.person-profile-main {
+  padding:
+    14px 16px !important;
+}
+
+.profile-popover-divider,
+.person-profile-divider {
+  height:
+    0.5px !important;
+
+  margin:
+    0 16px !important;
+
+  background:
+    var(
+      --ios-hairline
+    ) !important;
+}
+
+.ios-profile-action-group {
+  margin:
+    8px;
+
+  overflow:
+    hidden;
+
+  border:
+    0.5px solid
+    rgba(
+      60,
+      60,
+      67,
+      0.07
+    );
+
+  border-radius:
+    16px;
+
+  background:
+    rgba(
+      255,
+      255,
+      255,
+      0.38
+    );
+}
+
+.profile-popover-action {
+  width:
+    100% !important;
+
+  min-height:
+    55px !important;
+
+  margin:
+    0 !important;
+
+  padding:
+    9px 11px !important;
+
+  border-radius:
+    0 !important;
+}
+
+.profile-popover-action:hover {
+  transform:
+    none !important;
+
+  background:
+    rgba(
+      118,
+      118,
+      128,
+      0.075
+    ) !important;
+}
+
+.profile-popover-action:active {
+  background:
+    rgba(
+      118,
+      118,
+      128,
+      0.13
+    ) !important;
+}
+
+.profile-action-icon {
+  border-radius:
+    11px !important;
+
+  background:
+    rgba(
+      var(
+        --theme-accent-rgb,
+        116,
+        103,
+        232
+      ),
+      0.11
+    ) !important;
+}
+
+.profile-action-chevron {
+  color:
+    var(
+      --ios-tertiary
+    ) !important;
+}
+
+.presence-select-menu.open
+  > button {
+  margin:
+    2px 8px 5px !important;
+
+  border:
+    0.5px solid
+    rgba(
+      60,
+      60,
+      67,
+      0.06
+    );
+
+  border-radius:
+    13px !important;
+
+  background:
+    rgba(
+      118,
+      118,
+      128,
+      0.065
+    ) !important;
+}
+
+.presence-select-menu.open
+  > button.selected {
+  background:
+    rgba(
+      var(
+        --theme-accent-rgb,
+        116,
+        103,
+        232
+      ),
+      0.11
+    ) !important;
+}
+
+.person-profile-status {
+  margin:
+    8px;
+
+  padding:
+    12px !important;
+
+  border:
+    0.5px solid
+    rgba(
+      60,
+      60,
+      67,
+      0.06
+    );
+
+  border-radius:
+    15px;
+
+  background:
+    rgba(
+      255,
+      255,
+      255,
+      0.34
+    );
+}
+
+/* ---------------------------------------------------------
+   Form controls
+--------------------------------------------------------- */
+
+.profile-field-group > input,
+.profile-field-group > textarea,
+.form-input {
+  border:
+    0.5px solid
+    rgba(
+      60,
+      60,
+      67,
+      0.10
+    ) !important;
+
+  border-radius:
+    12px !important;
+
+  background:
+    rgba(
+      255,
+      255,
+      255,
+      0.68
+    ) !important;
+
+  box-shadow:
+    inset
+    0
+    0.5px
+    0
+    rgba(
+      255,
+      255,
+      255,
+      0.90
+    ) !important;
+}
+
+.profile-edit-save,
+.primary-action {
+  border-radius:
+    12px !important;
+
+  background:
+    var(
+      --ios-blue
+    ) !important;
+
+  box-shadow:
+    none !important;
+}
+
+.danger-action,
+.profile-danger-zone > button {
+  background:
+    var(
+      --ios-red
+    ) !important;
+}
+
+/* ---------------------------------------------------------
+   Motion: iOS-like = shorter travel, more spring, less scale
+--------------------------------------------------------- */
+
+.room-item,
+.sidebar-friend-item,
+.sidebar-user,
+.invite-button,
+.home-header-create,
+.member-count-button,
+.header-more-button,
+.composer-plus-button,
+.send-button,
+.main-home-room-card,
+.ai-movie-item {
+  transition:
+    transform
+    320ms
+    var(
+      --ios-spring
+    ),
+    background
+    260ms
+    ease,
+    box-shadow
+    260ms
+    ease,
+    opacity
+    220ms
+    ease !important;
+}
+
+/* ---------------------------------------------------------
+   Mobile: popovers become iOS action-card / sheet
+--------------------------------------------------------- */
+
+@media (max-width: 767px) {
+  .ios-floating-popover {
+    right:
+      10px !important;
+
+    bottom:
+      calc(
+        10px +
+        env(
+          safe-area-inset-bottom
+        )
+      ) !important;
+
+    left:
+      10px !important;
+
+    top:
+      auto !important;
+
+    width:
+      auto !important;
+
+    max-height:
+      calc(
+        100dvh -
+        24px -
+        env(
+          safe-area-inset-top
+        )
+      );
+
+    overflow-y:
+      auto !important;
+
+    border-radius:
+      26px !important;
+
+    transform-origin:
+      center bottom;
+  }
+
+  .ios-popover-backdrop {
+    background:
+      rgba(
+        0,
+        0,
+        0,
+        0.12
+      ) !important;
+
+    backdrop-filter:
+      blur(6px) !important;
+
+    -webkit-backdrop-filter:
+      blur(6px) !important;
+  }
+
+  @keyframes iosPopoverIn {
+    0% {
+      opacity: 0;
+
+      transform:
+        translateY(34px)
+        scale(0.97);
+    }
+
+    100% {
+      opacity: 1;
+
+      transform:
+        translateY(0)
+        scale(1);
+    }
+  }
+}
+
+/* ---------------------------------------------------------
+   Hover only where hover actually exists.
+--------------------------------------------------------- */
+
+@media (hover: none) {
+  .room-item:hover,
+  .sidebar-friend-item:hover,
+  .sidebar-user:hover,
+  .main-home-room-card:hover,
+  .invite-button:hover,
+  .header-more-button:hover {
+    transform:
+      none !important;
+
+    box-shadow:
+      inherit !important;
+  }
+}
+
+
+/* =========================================================
+   V13 — OWN PROFILE POPOVER LAYER FIX
+   v12 Portal 자체는 정상이나, 기존 chat.css의
+   .profile-popover { left/right/bottom } 규칙이 남아
+   내 프로필 카드에만 좌표가 중복 적용되던 문제 수정.
+========================================================= */
+
+/*
+ * Portal 팝오버는 React가 계산한 left/top만 사용한다.
+ * 기존 Sidebar용 right/bottom 좌표를 반드시 제거.
+ */
+body > .ios-floating-popover,
+body > .own-profile-popover,
+body > .person-profile-popover {
+  position:
+    fixed !important;
+
+  right:
+    auto !important;
+
+  bottom:
+    auto !important;
+
+  margin:
+    0 !important;
+
+  z-index:
+    2147483000 !important;
+}
+
+/*
+ * backdrop 역시 app 내부의 알림/사이드바/헤더보다
+ * 항상 위에 위치한다.
+ */
+body > .ios-popover-backdrop {
+  position:
+    fixed !important;
+
+  inset:
+    0 !important;
+
+  z-index:
+    2147482000 !important;
+}
+
+/*
+ * 내 프로필 메뉴는 이전 .profile-popover의
+ * sidebar anchor 규칙을 일절 사용하지 않는다.
+ */
+body > .own-profile-popover {
+  width:
+    304px !important;
+
+  max-width:
+    calc(
+      100vw - 24px
+    ) !important;
+
+  left:
+    var(
+      --own-profile-left,
+      auto
+    );
+
+  top:
+    var(
+      --own-profile-top,
+      auto
+    );
+
+  transform:
+    translateZ(0);
+
+  isolation:
+    isolate;
+}
+
+/*
+ * 알림 row나 sidebar utility 영역이 자체 stacking context를
+ * 가지고 있어도 Portal보다 앞으로 올 수 없도록 app chrome의
+ * z-index 상한을 명시한다.
+ */
+.chat-page,
+.chat-sidebar,
+.sidebar-utility-row,
+.sidebar-profile-anchor,
+.sidebar-user,
+.chat-header,
+.member-panel {
+  z-index:
+    auto !important;
+}
+
+/*
+ * Sidebar 아래쪽에서 열릴 때 카드 하단이 프로필 버튼 바로 위에
+ * 떠 있는 느낌을 유지한다.
+ */
+.own-profile-popover.ios-popover-desktop {
+  transform-origin:
+    left bottom;
+}
+
+/*
+ * 상태 메뉴가 열리며 카드 높이가 늘어날 때
+ * 알림 버튼 아래로 숨어 보이지 않도록 opacity/clip 문제도 제거.
+ */
+.own-profile-popover,
+.own-profile-popover
+  .profile-presence-section,
+.own-profile-popover
+  .presence-select-menu {
+  overflow:
+    visible;
+}
+
+.own-profile-popover {
+  overflow:
+    hidden !important;
+}
+
+/*
+ * 프로필 팝오버 내부 메뉴만 자체적으로 layer를 올린다.
+ */
+.own-profile-popover
+  .ios-profile-action-group,
+.own-profile-popover
+  .profile-popover-action,
+.own-profile-popover
+  .profile-presence-section,
+.own-profile-popover
+  .presence-select-menu {
+  position:
+    relative;
+
+  z-index:
+    2;
+}
+
+/*
+ * 모바일은 기존 iOS bottom action-card 배치를 유지.
+ * 이때는 JS의 top/left보다 CSS bottom sheet 좌표를 우선.
+ */
+@media (max-width: 767px) {
+  body > .own-profile-popover,
+  body > .person-profile-popover {
+    right:
+      10px !important;
+
+    bottom:
+      calc(
+        10px +
+        env(
+          safe-area-inset-bottom
+        )
+      ) !important;
+
+    left:
+      10px !important;
+
+    top:
+      auto !important;
+
+    width:
+      auto !important;
+  }
+}
+
+
+/* =========================================================
+   V14 — INTERACTIVE GLASS EDGE / CURSOR REFLECTION
+========================================================= */
+
+:root {
+  --control-reflect-x:
+    50%;
+
+  --control-reflect-y:
+    -35%;
+}
+
+/*
+ * 버튼 표면 자체는 그대로 유지하고,
+ * mask를 사용한 1px 유리 테두리만 포인터를 따라 밝아진다.
+ */
+:is(
+  .sidebar-tabs button,
+  .new-room-button,
+  .sidebar-utility-button,
+  .sidebar-user,
+  .invite-button,
+  .member-count-button,
+  .header-more-button,
+  .home-header-create,
+  .utility-close-button,
+  .composer-plus-button,
+  .send-button,
+  .composer-action,
+  .mobile-sheet-cancel,
+  .profile-popover-action,
+  .presence-select-menu button,
+  .profile-photo-button,
+  .profile-photo-remove,
+  .profile-edit-save,
+  .profile-edit-cancel,
+  .primary-action,
+  .secondary-action,
+  .danger-action,
+  .message-action-button,
+  .composer-context-close
+) {
+  position:
+    relative;
+
+  isolation:
+    isolate;
+}
+
+:is(
+  .sidebar-tabs button,
+  .new-room-button,
+  .sidebar-utility-button,
+  .sidebar-user,
+  .invite-button,
+  .member-count-button,
+  .header-more-button,
+  .home-header-create,
+  .utility-close-button,
+  .composer-plus-button,
+  .send-button,
+  .composer-action,
+  .mobile-sheet-cancel,
+  .profile-popover-action,
+  .presence-select-menu button,
+  .profile-photo-button,
+  .profile-photo-remove,
+  .profile-edit-save,
+  .profile-edit-cancel,
+  .primary-action,
+  .secondary-action,
+  .danger-action,
+  .message-action-button,
+  .composer-context-close
+)::before {
+  position:
+    absolute;
+
+  inset: 0;
+
+  z-index: 5;
+
+  padding: 1px;
+
+  border-radius:
+    inherit;
+
+  background:
+    radial-gradient(
+      circle at
+      var(
+        --control-reflect-x
+      )
+      var(
+        --control-reflect-y
+      ),
+      rgba(
+        255,
+        255,
+        255,
+        1
+      )
+      0%,
+      rgba(
+        255,
+        255,
+        255,
+        0.62
+      )
+      16%,
+      rgba(
+        255,
+        255,
+        255,
+        0.24
+      )
+      34%,
+      rgba(
+        255,
+        255,
+        255,
+        0.08
+      )
+      58%,
+      transparent
+      78%
+    );
+
+  opacity:
+    0.60;
+
+  pointer-events:
+    none;
+
+  content: "";
+
+  -webkit-mask:
+    linear-gradient(
+      #000 0 0
+    )
+    content-box,
+    linear-gradient(
+      #000 0 0
+    );
+
+  -webkit-mask-composite:
+    xor;
+
+  mask-composite:
+    exclude;
+
+  transition:
+    opacity
+    220ms
+    ease;
+}
+
+:is(
+  .sidebar-tabs button,
+  .new-room-button,
+  .sidebar-utility-button,
+  .sidebar-user,
+  .invite-button,
+  .member-count-button,
+  .header-more-button,
+  .home-header-create,
+  .utility-close-button,
+  .composer-plus-button,
+  .send-button,
+  .composer-action,
+  .mobile-sheet-cancel,
+  .profile-popover-action,
+  .presence-select-menu button,
+  .profile-photo-button,
+  .profile-photo-remove,
+  .profile-edit-save,
+  .profile-edit-cancel,
+  .primary-action,
+  .secondary-action,
+  .danger-action,
+  .message-action-button,
+  .composer-context-close
+)[data-liquid-hover="true"]::before {
+  opacity:
+    0.94;
+}
+
+/*
+ * 입력창/검색창은 pseudo element를 쓰기 어려운 경우가 있으므로
+ * Surface 자체에 포인터 기반 얕은 반사를 추가.
+ */
+.message-composer,
+.room-search,
+.friend-add-search,
+.profile-field-group > input,
+.profile-field-group > textarea,
+.form-input {
+  --control-reflect-x:
+    50%;
+
+  --control-reflect-y:
+    -35%;
+
+  border:
+    1px solid
+    rgba(
+      255,
+      255,
+      255,
+      0.54
+    ) !important;
+
+  box-shadow:
+    inset
+    0
+    0.5px
+    0
+    rgba(
+      255,
+      255,
+      255,
+      0.95
+    ),
+    inset
+    0
+    -0.5px
+    0
+    rgba(
+      60,
+      60,
+      67,
+      0.07
+    ),
+    0
+    8px
+    22px
+    rgba(
+      0,
+      0,
+      0,
+      0.045
+    ) !important;
+}
+
+.message-composer[data-liquid-hover="true"],
+.room-search[data-liquid-hover="true"],
+.friend-add-search[data-liquid-hover="true"],
+.profile-field-group > input[data-liquid-hover="true"],
+.profile-field-group > textarea[data-liquid-hover="true"],
+.form-input[data-liquid-hover="true"] {
+  background:
+    radial-gradient(
+      circle at
+      var(
+        --control-reflect-x
+      )
+      var(
+        --control-reflect-y
+      ),
+      rgba(
+        255,
+        255,
+        255,
+        0.56
+      ),
+      rgba(
+        255,
+        255,
+        255,
+        0.13
+      )
+      28%,
+      transparent
+      46%
+    ),
+    rgba(
+      250,
+      250,
+      252,
+      0.70
+    ) !important;
+
+  border-color:
+    rgba(
+      255,
+      255,
+      255,
+      0.86
+    ) !important;
+}
+
+/*
+ * 입력 Focus는 이전 요청대로 별도 파란/보라 Outline을 만들지 않는다.
+ */
+.chat-page
+  .message-composer:focus-within {
+  outline:
+    none !important;
+
+  border-color:
+    rgba(
+      255,
+      255,
+      255,
+      0.62
+    ) !important;
+}
+
+/* =========================================================
+   V14 — MESSAGE READ RECEIPT
+========================================================= */
+
+.message-anchor {
+  position:
+    relative;
+
+  width:
+    100%;
+}
+
+.message-area {
+  position:
+    relative;
+}
+
+.message-content-row {
+  align-items:
+    flex-end !important;
+}
+
+.message-meta {
+  display:
+    flex;
+
+  flex:
+    0 0 auto;
+
+  flex-direction:
+    column;
+
+  align-items:
+    flex-end;
+
+  justify-content:
+    flex-end;
+
+  gap:
+    2px;
+
+  min-width:
+    29px;
+
+  padding-bottom:
+    2px;
+}
+
+.message-row:not(.mine)
+  .message-meta {
+  align-items:
+    flex-start;
+}
+
+.message-unread-count {
+  min-width:
+    11px;
+
+  color:
+    color-mix(
+      in srgb,
+      var(
+        --theme-accent
+      )
+      86%,
+      #b77a00
+      14%
+    );
+
+  font-size:
+    8px;
+
+  font-weight:
+    800;
+
+  line-height:
+    1;
+
+  text-align:
+    center;
+
+  text-shadow:
+    0
+    0
+    10px
+    rgba(
+      var(
+        --theme-accent-rgb
+      ),
+      0.15
+    );
+}
+
+.message-edited-label {
+  color:
+    rgba(
+      60,
+      60,
+      67,
+      0.42
+    );
+
+  font-size:
+    7px;
+
+  white-space:
+    nowrap;
+}
+
+.message-time {
+  color:
+    rgba(
+      60,
+      60,
+      67,
+      0.48
+    ) !important;
+}
+
+/* =========================================================
+   V14 — MESSAGE REPLY PREVIEW
+========================================================= */
+
+.message-bubble-shell {
+  position:
+    relative;
+
+  min-width:
+    0;
+
+  max-width:
+    100%;
+}
+
+.message-bubble {
+  cursor:
+    pointer;
+
+  user-select:
+    text;
+
+  transition:
+    transform
+    220ms
+    var(
+      --ios-spring
+    ),
+    box-shadow
+    220ms
+    ease,
+    filter
+    220ms
+    ease !important;
+}
+
+.message-bubble:active {
+  transform:
+    scale(0.985);
+}
+
+.message-row.message-selected
+  .message-bubble {
+  box-shadow:
+    0
+    0
+    0
+    3px
+    rgba(
+      var(
+        --theme-accent-rgb
+      ),
+      0.10
+    ),
+    0
+    9px
+    26px
+    rgba(
+      var(
+        --theme-accent-rgb
+      ),
+      0.10
+    ) !important;
+}
+
+.message-reply-preview {
+  display:
+    flex;
+
+  align-items:
+    stretch;
+
+  gap:
+    8px;
+
+  width:
+    100%;
+
+  max-width:
+    310px;
+
+  margin:
+    -3px
+    -4px
+    8px;
+
+  padding:
+    7px
+    8px;
+
+  overflow:
+    hidden;
+
+  border:
+    0;
+
+  border-radius:
+    11px;
+
+  background:
+    rgba(
+      118,
+      118,
+      128,
+      0.075
+    );
+
+  text-align:
+    left;
+
+  transition:
+    background
+    180ms
+    ease,
+    transform
+    180ms
+    var(
+      --ios-spring
+    );
+}
+
+.message-row.mine
+  .message-reply-preview {
+  background:
+    rgba(
+      255,
+      255,
+      255,
+      0.14
+    );
+}
+
+.message-reply-preview:hover {
+  background:
+    rgba(
+      118,
+      118,
+      128,
+      0.12
+    );
+
+  transform:
+    translateY(-1px);
+}
+
+.message-row.mine
+  .message-reply-preview:hover {
+  background:
+    rgba(
+      255,
+      255,
+      255,
+      0.20
+    );
+}
+
+.reply-preview-accent {
+  width:
+    3px;
+
+  flex:
+    0 0 3px;
+
+  border-radius:
+    999px;
+
+  background:
+    var(
+      --theme-accent
+    );
+}
+
+.message-row.mine
+  .reply-preview-accent {
+  background:
+    rgba(
+      255,
+      255,
+      255,
+      0.82
+    );
+}
+
+.reply-preview-copy {
+  min-width:
+    0;
+
+  flex:
+    1;
+}
+
+.reply-preview-copy
+  strong,
+.reply-preview-copy
+  > span {
+  display:
+    block;
+
+  overflow:
+    hidden;
+
+  text-overflow:
+    ellipsis;
+
+  white-space:
+    nowrap;
+}
+
+.reply-preview-copy
+  strong {
+  margin-bottom:
+    2px;
+
+  color:
+    var(
+      --theme-accent
+    );
+
+  font-size:
+    8px;
+}
+
+.message-row.mine
+  .reply-preview-copy
+  strong {
+  color:
+    rgba(
+      255,
+      255,
+      255,
+      0.94
+    );
+}
+
+.reply-preview-copy
+  > span {
+  color:
+    rgba(
+      60,
+      60,
+      67,
+      0.62
+    );
+
+  font-size:
+    8px;
+}
+
+.message-row.mine
+  .reply-preview-copy
+  > span {
+  color:
+    rgba(
+      255,
+      255,
+      255,
+      0.72
+    );
+}
+
+/* =========================================================
+   V14 — MESSAGE ACTION MENU
+========================================================= */
+
+.message-action-menu {
+  position:
+    absolute;
+
+  top:
+    calc(
+      100% + 7px
+    );
+  left:
+    0;
+
+  z-index:
+    80;
+
+  display:
+    flex;
+
+  gap:
+    4px;
+
+  padding:
+    4px;
+
+  border:
+    0.5px solid
+    rgba(
+      255,
+      255,
+      255,
+      0.74
+    );
+
+  border-radius:
+    14px;
+
+  background:
+    rgba(
+      248,
+      249,
+      252,
+      0.82
+    );
+
+  box-shadow:
+    0
+    14px
+    36px
+    rgba(
+      0,
+      0,
+      0,
+      0.13
+    ),
+    inset
+    0
+    0.5px
+    0
+    rgba(
+      255,
+      255,
+      255,
+      0.96
+    );
+
+  backdrop-filter:
+    blur(26px)
+    saturate(175%);
+
+  -webkit-backdrop-filter:
+    blur(26px)
+    saturate(175%);
+
+  animation:
+    messageActionIn
+    260ms
+    var(
+      --ios-spring
+    );
+}
+
+.message-action-menu.mine {
+  right:
+    0;
+  left:
+    auto;
+}
+
+.message-action-button {
+  display:
+    inline-flex;
+
+  align-items:
+    center;
+
+  gap:
+    4px;
+
+  min-height:
+    31px;
+
+  padding:
+    0
+    9px;
+
+  border:
+    0;
+
+  border-radius:
+    10px;
+
+  background:
+    rgba(
+      118,
+      118,
+      128,
+      0.055
+    );
+
+  color:
+    #3a3a3c;
+
+  font-size:
+    9px;
+
+  font-weight:
+    650;
+
+  white-space:
+    nowrap;
+}
+
+.message-action-button:hover {
+  background:
+    rgba(
+      118,
+      118,
+      128,
+      0.11
+    );
+}
+
+.message-action-button.danger {
+  color:
+    #ff3b30;
+}
+
+.message-action-button.danger:hover {
+  background:
+    rgba(
+      255,
+      59,
+      48,
+      0.085
+    );
+}
+
+@keyframes messageActionIn {
+  from {
+    opacity:
+      0;
+
+    transform:
+      translateY(-5px)
+      scale(0.94);
+  }
+
+  to {
+    opacity:
+      1;
+
+    transform:
+      translateY(0)
+      scale(1);
+  }
+}
+
+/* =========================================================
+   V14 — JUMP TO ORIGINAL
+========================================================= */
+
+.message-anchor.message-jump-highlight
+  .message-bubble {
+  animation:
+    messageOriginalPulse
+    1.45s
+    var(
+      --ios-spring
+    );
+}
+
+@keyframes messageOriginalPulse {
+  0% {
+    box-shadow:
+      0
+      0
+      0
+      0
+      rgba(
+        var(
+          --theme-accent-rgb
+        ),
+        0
+      );
+  }
+
+  32% {
+    box-shadow:
+      0
+      0
+      0
+      5px
+      rgba(
+        var(
+          --theme-accent-rgb
+        ),
+        0.16
+      ),
+      0
+      12px
+      32px
+      rgba(
+        var(
+          --theme-accent-rgb
+        ),
+        0.12
+      );
+  }
+
+  100% {
+    box-shadow:
+      0
+      0
+      0
+      0
+      rgba(
+        var(
+          --theme-accent-rgb
+        ),
+        0
+      );
+  }
+}
+
+/* =========================================================
+   V14 — EDIT / DELETE
+========================================================= */
+
+.message-row.message-deleted
+  .message-bubble {
+  cursor:
+    default;
+
+  border:
+    0.5px solid
+    rgba(
+      60,
+      60,
+      67,
+      0.08
+    ) !important;
+
+  background:
+    rgba(
+      118,
+      118,
+      128,
+      0.075
+    ) !important;
+
+  box-shadow:
+    none !important;
+}
+
+.message-row.mine.message-deleted
+  .message-bubble {
+  color:
+    rgba(
+      255,
+      255,
+      255,
+      0.70
+    ) !important;
+
+  background:
+    rgba(
+      var(
+        --theme-accent-rgb
+      ),
+      0.42
+    ) !important;
+}
+
+.deleted-message-copy {
+  font-style:
+    italic;
+
+  opacity:
+    0.64;
+}
+
+.delete-message-confirm {
+  text-align:
+    center;
+}
+
+.delete-message-preview {
+  max-height:
+    104px;
+
+  margin-bottom:
+    12px;
+
+  padding:
+    12px;
+
+  overflow:
+    auto;
+
+  border:
+    0.5px solid
+    rgba(
+      60,
+      60,
+      67,
+      0.08
+    );
+
+  border-radius:
+    14px;
+
+  background:
+    rgba(
+      118,
+      118,
+      128,
+      0.065
+    );
+
+  color:
+    #3a3a3c;
+
+  font-size:
+    10px;
+
+  line-height:
+    1.55;
+
+  text-align:
+    left;
+}
+
+.delete-message-confirm
+  > p {
+  margin:
+    0
+    0
+    18px;
+
+  color:
+    rgba(
+      60,
+      60,
+      67,
+      0.56
+    );
+
+  font-size:
+    9px;
+
+  line-height:
+    1.6;
+}
+
+/* =========================================================
+   V14 — COMPOSER REPLY / EDIT CONTEXT
+========================================================= */
+
+.composer-context-bar {
+  position:
+    relative;
+
+  display:
+    flex;
+
+  align-items:
+    center;
+
+  gap:
+    10px;
+
+  min-height:
+    50px;
+
+  margin:
+    0
+    5px
+    7px;
+
+  padding:
+    8px
+    10px;
+
+  overflow:
+    hidden;
+
+  border:
+    0.5px solid
+    rgba(
+      255,
+      255,
+      255,
+      0.68
+    );
+
+  border-radius:
+    15px;
+
+  background:
+    rgba(
+      248,
+      249,
+      252,
+      0.66
+    );
+
+  box-shadow:
+    0
+    7px
+    22px
+    rgba(
+      0,
+      0,
+      0,
+      0.055
+    ),
+    inset
+    0
+    0.5px
+    0
+    rgba(
+      255,
+      255,
+      255,
+      0.92
+    );
+
+  backdrop-filter:
+    blur(22px)
+    saturate(165%);
+
+  -webkit-backdrop-filter:
+    blur(22px)
+    saturate(165%);
+
+  animation:
+    composerContextIn
+    300ms
+    var(
+      --ios-spring
+    );
+}
+
+.composer-context-accent {
+  width:
+    3px;
+
+  height:
+    31px;
+
+  flex:
+    0 0 3px;
+
+  border-radius:
+    999px;
+
+  background:
+    var(
+      --theme-accent
+    );
+}
+
+.composer-context-bar.editing
+  .composer-context-accent {
+  background:
+    #ff9f0a;
+}
+
+.composer-context-copy {
+  min-width:
+    0;
+
+  flex:
+    1;
+}
+
+.composer-context-copy
+  strong,
+.composer-context-copy
+  span {
+  display:
+    block;
+
+  overflow:
+    hidden;
+
+  text-overflow:
+    ellipsis;
+
+  white-space:
+    nowrap;
+}
+
+.composer-context-copy
+  strong {
+  margin-bottom:
+    3px;
+
+  color:
+    var(
+      --theme-accent
+    );
+
+  font-size:
+    9px;
+}
+
+.composer-context-bar.editing
+  .composer-context-copy
+  strong {
+  color:
+    #c57900;
+}
+
+.composer-context-copy
+  span {
+  color:
+    rgba(
+      60,
+      60,
+      67,
+      0.54
+    );
+
+  font-size:
+    8px;
+}
+
+.composer-context-close {
+  display:
+    flex;
+
+  align-items:
+    center;
+
+  justify-content:
+    center;
+
+  width:
+    28px;
+  height:
+    28px;
+
+  flex:
+    0 0 28px;
+
+  border:
+    0;
+
+  border-radius:
+    50%;
+
+  background:
+    rgba(
+      118,
+      118,
+      128,
+      0.10
+    );
+
+  color:
+    rgba(
+      60,
+      60,
+      67,
+      0.58
+    );
+
+  font-size:
+    16px;
+}
+
+.send-edit-check {
+  font-size:
+    16px;
+
+  font-weight:
+    800;
+}
+
+@keyframes composerContextIn {
+  from {
+    opacity:
+      0;
+
+    transform:
+      translateY(8px)
+      scale(0.98);
+  }
+
+  to {
+    opacity:
+      1;
+
+    transform:
+      translateY(0)
+      scale(1);
+  }
+}
+
+/* =========================================================
+   V14 MOBILE
+========================================================= */
+
+@media (max-width: 767px) {
+  .message-action-menu {
+    position:
+      fixed;
+
+    right:
+      12px !important;
+    bottom:
+      calc(
+        84px +
+        env(
+          safe-area-inset-bottom
+        )
+      );
+    left:
+      12px !important;
+    top:
+      auto;
+
+    z-index:
+      120;
+
+    justify-content:
+      center;
+
+    padding:
+      7px;
+
+    border-radius:
+      18px;
+  }
+
+  .message-action-button {
+    flex:
+      1;
+
+    justify-content:
+      center;
+
+    min-height:
+      42px;
+
+    font-size:
+      11px;
+  }
+
+  .composer-context-bar {
+    margin:
+      0
+      2px
+      6px;
+
+    border-radius:
+      14px;
+  }
+
+  .message-reply-preview {
+    max-width:
+      240px;
+  }
+
+  .message-meta {
+    min-width:
+      25px;
+  }
+
+  .message-unread-count {
+    font-size:
+      9px;
+  }
+}
+
+@media (hover: none) {
+  :is(
+    .sidebar-tabs button,
+    .new-room-button,
+    .sidebar-utility-button,
+    .sidebar-user,
+    .invite-button,
+    .member-count-button,
+    .header-more-button,
+    .home-header-create,
+    .utility-close-button,
+    .composer-plus-button,
+    .send-button,
+    .composer-action,
+    .mobile-sheet-cancel,
+    .profile-popover-action,
+    .presence-select-menu button,
+    .profile-photo-button,
+    .profile-photo-remove,
+    .profile-edit-save,
+    .profile-edit-cancel,
+    .primary-action,
+    .secondary-action,
+    .danger-action,
+    .message-action-button,
+    .composer-context-close
+  )::before {
+    opacity:
+      0.46;
+  }
+}
+
+
+/* =========================================================
+   V15 — TRUE GLASS EDGE FOR MENUS / INPUTS / PANELS
+========================================================= */
+
+.liquid-menu-surface,
+.profile-setting-card,
+.profile-edit-preview,
+.profile-danger-zone,
+.profile-photo-control,
+.room-search,
+.friend-add-search,
+.message-composer,
+.sidebar-tabs,
+.composer-context-bar,
+.message-action-menu {
+  --surface-reflect-x:
+    var(
+      --control-reflect-x,
+      50%
+    );
+
+  --surface-reflect-y:
+    var(
+      --control-reflect-y,
+      -30%
+    );
+
+  position:
+    relative;
+
+  isolation:
+    isolate;
+
+  border:
+    1px solid
+    rgba(
+      255,
+      255,
+      255,
+      0.58
+    ) !important;
+
+  box-shadow:
+    inset
+    0
+    1px
+    0
+    rgba(
+      255,
+      255,
+      255,
+      0.95
+    ),
+    inset
+    0
+    -1px
+    0
+    rgba(
+      74,
+      84,
+      120,
+      0.055
+    ),
+    0
+    12px
+    34px
+    rgba(
+      38,
+      44,
+      72,
+      0.055
+    ) !important;
+}
+
+/*
+ * 얇은 유리 가장자리 위로 작은 광점이 따라간다.
+ * 전체 테두리가 번쩍이지 않고 커서 주변만 밝아지도록 범위를 좁힘.
+ */
+.liquid-menu-surface::before,
+.profile-setting-card::before,
+.profile-edit-preview::before,
+.profile-danger-zone::before,
+.profile-photo-control::before,
+.room-search::before,
+.friend-add-search::before,
+.message-composer::before,
+.sidebar-tabs::before,
+.composer-context-bar::before,
+.message-action-menu::before {
+  position:
+    absolute;
+
+  inset:
+    -1px;
+
+  z-index:
+    7;
+
+  padding:
+    1px;
+
+  border-radius:
+    inherit;
+
+  background:
+    radial-gradient(
+      circle
+      90px
+      at
+      var(
+        --surface-reflect-x
+      )
+      var(
+        --surface-reflect-y
+      ),
+      rgba(
+        255,
+        255,
+        255,
+        1
+      )
+      0%,
+      rgba(
+        255,
+        255,
+        255,
+        0.74
+      )
+      20%,
+      rgba(
+        255,
+        255,
+        255,
+        0.22
+      )
+      50%,
+      transparent
+      72%
+    );
+
+  opacity:
+    0.58;
+
+  pointer-events:
+    none;
+
+  content:
+    "";
+
+  -webkit-mask:
+    linear-gradient(
+      #000 0 0
+    )
+    content-box,
+    linear-gradient(
+      #000 0 0
+    );
+
+  -webkit-mask-composite:
+    xor;
+
+  mask-composite:
+    exclude;
+
+  transition:
+    opacity
+    220ms
+    ease;
+}
+
+.liquid-menu-surface[data-liquid-hover="true"]::before,
+.profile-setting-card[data-liquid-hover="true"]::before,
+.profile-edit-preview[data-liquid-hover="true"]::before,
+.profile-danger-zone[data-liquid-hover="true"]::before,
+.profile-photo-control[data-liquid-hover="true"]::before,
+.room-search[data-liquid-hover="true"]::before,
+.friend-add-search[data-liquid-hover="true"]::before,
+.message-composer[data-liquid-hover="true"]::before,
+.sidebar-tabs[data-liquid-hover="true"]::before,
+.composer-context-bar[data-liquid-hover="true"]::before,
+.message-action-menu[data-liquid-hover="true"]::before {
+  opacity:
+    0.96;
+}
+
+/*
+ * z-index를 올린 border layer가 컨텐츠를 가리지 않도록
+ * 실제 컨텐츠는 별도 stacking context 유지.
+ */
+.profile-setting-card > *,
+.profile-edit-preview > *,
+.profile-danger-zone > *,
+.profile-photo-control > *,
+.room-search > *,
+.friend-add-search > *,
+.message-composer > *,
+.sidebar-tabs > *,
+.composer-context-bar > *,
+.message-action-menu > * {
+  position:
+    relative;
+
+  z-index:
+    2;
+}
+
+/* =========================================================
+   V15 — GLOBAL LIGHT / DARK MODE BUTTON
+========================================================= */
+
+.global-theme-toggle {
+  --control-reflect-x:
+    50%;
+
+  --control-reflect-y:
+    10%;
+
+  position:
+    fixed;
+
+  top:
+    max(
+      14px,
+      env(
+        safe-area-inset-top
+      )
+    );
+
+  right:
+    max(
+      16px,
+      env(
+        safe-area-inset-right
+      )
+    );
+
+  z-index:
+    1500;
+
+  width:
+    46px;
+  height:
+    46px;
+
+  overflow:
+    hidden;
+
+  border:
+    1px solid
+    rgba(
+      255,
+      255,
+      255,
+      0.68
+    );
+
+  border-radius:
+    50%;
+
+  background:
+    rgba(
+      250,
+      250,
+      252,
+      0.66
+    );
+
+  color:
+    #48484a;
+
+  box-shadow:
+    0
+    10px
+    30px
+    rgba(
+      0,
+      0,
+      0,
+      0.08
+    ),
+    inset
+    0
+    1px
+    0
+    rgba(
+      255,
+      255,
+      255,
+      0.96
+    );
+
+  backdrop-filter:
+    blur(28px)
+    saturate(175%);
+
+  -webkit-backdrop-filter:
+    blur(28px)
+    saturate(175%);
+
+  transition:
+    transform
+    360ms
+    var(
+      --ios-spring
+    ),
+    background
+    480ms
+    ease,
+    color
+    480ms
+    ease,
+    box-shadow
+    480ms
+    ease;
+}
+
+.global-theme-toggle:hover {
+  transform:
+    translateY(-2px)
+    scale(1.035);
+}
+
+.global-theme-toggle:active {
+  transform:
+    scale(0.93);
+}
+
+.theme-toggle-icon {
+  position:
+    absolute;
+
+  inset:
+    0;
+
+  display:
+    flex;
+
+  align-items:
+    center;
+
+  justify-content:
+    center;
+
+  transition:
+    opacity
+    480ms
+    ease,
+    transform
+    560ms
+    var(
+      --ios-spring
+    );
+}
+
+.theme-toggle-icon
+  svg {
+  width:
+    22px;
+
+  height:
+    22px;
+}
+
+.global-theme-toggle.light
+  .sun {
+  opacity:
+    1;
+
+  transform:
+    rotate(0deg)
+    scale(1);
+}
+
+.global-theme-toggle.light
+  .moon {
+  opacity:
+    0;
+
+  transform:
+    translateY(12px)
+    rotate(-24deg)
+    scale(0.7);
+}
+
+.global-theme-toggle.dark
+  .sun {
+  opacity:
+    0;
+
+  transform:
+    translateY(-12px)
+    rotate(45deg)
+    scale(0.7);
+}
+
+.global-theme-toggle.dark
+  .moon {
+  opacity:
+    1;
+
+  transform:
+    rotate(0)
+    scale(1);
+}
+
+.theme-toggle-glow {
+  position:
+    absolute;
+
+  inset:
+    -45%;
+
+  border-radius:
+    50%;
+
+  background:
+    radial-gradient(
+      circle at
+      var(
+        --control-reflect-x
+      )
+      var(
+        --control-reflect-y
+      ),
+      rgba(
+        255,
+        255,
+        255,
+        0.64
+      ),
+      transparent
+      48%
+    );
+
+  pointer-events:
+    none;
+}
+
+/*
+ * 우측 상단 고정 버튼과 기존 Header Action이 겹치지 않도록
+ * Header에 여유 공간 확보.
+ */
+.chat-main
+  .chat-header {
+  padding-right:
+    78px !important;
+}
+
+/* =========================================================
+   V15 — PROFILE EDIT CONSISTENCY
+========================================================= */
+
+.profile-settings-stack {
+  display:
+    grid;
+
+  gap:
+    14px;
+}
+
+.profile-setting-card {
+  margin:
+    0 !important;
+
+  padding:
+    16px;
+
+  overflow:
+    hidden;
+
+  border-radius:
+    18px !important;
+
+  background:
+    rgba(
+      255,
+      255,
+      255,
+      0.52
+    ) !important;
+
+  backdrop-filter:
+    blur(22px)
+    saturate(155%);
+
+  -webkit-backdrop-filter:
+    blur(22px)
+    saturate(155%);
+}
+
+.profile-setting-heading {
+  display:
+    flex;
+
+  align-items:
+    flex-start;
+
+  justify-content:
+    space-between;
+
+  gap:
+    16px;
+
+  margin-bottom:
+    11px;
+}
+
+.profile-setting-heading
+  > div {
+  min-width:
+    0;
+}
+
+.profile-setting-heading
+  strong {
+  display:
+    block;
+
+  color:
+    #3a3a3c;
+
+  font-size:
+    11px;
+
+  font-weight:
+    760;
+}
+
+.profile-setting-heading
+  span {
+  display:
+    block;
+
+  margin-top:
+    4px;
+
+  color:
+    rgba(
+      60,
+      60,
+      67,
+      0.54
+    );
+
+  font-size:
+    8px;
+}
+
+.profile-setting-heading
+  small {
+  flex:
+    0 0 auto;
+
+  color:
+    rgba(
+      60,
+      60,
+      67,
+      0.42
+    );
+
+  font-size:
+    8px;
+}
+
+.profile-setting-card
+  > input,
+.profile-setting-card
+  > textarea {
+  width:
+    100%;
+
+  margin:
+    0 !important;
+
+  border:
+    1px solid
+    rgba(
+      255,
+      255,
+      255,
+      0.58
+    ) !important;
+
+  border-radius:
+    14px !important;
+
+  outline:
+    none !important;
+
+  background:
+    rgba(
+      255,
+      255,
+      255,
+      0.48
+    ) !important;
+
+  color:
+    #2c2c2e !important;
+
+  box-shadow:
+    inset
+    0
+    1px
+    0
+    rgba(
+      255,
+      255,
+      255,
+      0.92
+    ),
+    inset
+    0
+    -1px
+    0
+    rgba(
+      60,
+      60,
+      67,
+      0.05
+    ) !important;
+
+  backdrop-filter:
+    blur(16px);
+
+  -webkit-backdrop-filter:
+    blur(16px);
+}
+
+.profile-setting-card
+  > input {
+  min-height:
+    46px;
+
+  padding:
+    0
+    14px !important;
+}
+
+.profile-setting-card
+  > textarea {
+  min-height:
+    104px;
+
+  padding:
+    13px
+    14px !important;
+
+  resize:
+    vertical;
+}
+
+.profile-setting-card
+  > input:focus,
+.profile-setting-card
+  > input:focus-visible,
+.profile-setting-card
+  > textarea:focus,
+.profile-setting-card
+  > textarea:focus-visible {
+  outline:
+    none !important;
+
+  border-color:
+    rgba(
+      255,
+      255,
+      255,
+      0.66
+    ) !important;
+
+  box-shadow:
+    inset
+    0
+    1px
+    0
+    rgba(
+      255,
+      255,
+      255,
+      0.92
+    ),
+    inset
+    0
+    -1px
+    0
+    rgba(
+      60,
+      60,
+      67,
+      0.05
+    ) !important;
+}
+
+.profile-photo-control {
+  min-height:
+    84px;
+
+  padding:
+    10px !important;
+
+  border:
+    0 !important;
+
+  border-radius:
+    15px !important;
+
+  background:
+    rgba(
+      118,
+      118,
+      128,
+      0.055
+    ) !important;
+
+  box-shadow:
+    inset
+    0
+    0.5px
+    0
+    rgba(
+      255,
+      255,
+      255,
+      0.72
+    ) !important;
+}
+
+.profile-photo-control-avatar {
+  width:
+    58px !important;
+
+  height:
+    58px !important;
+
+  flex-basis:
+    58px !important;
+
+  border:
+    2px solid
+    rgba(
+      255,
+      255,
+      255,
+      0.74
+    );
+}
+
+.profile-photo-actions {
+  display:
+    flex;
+
+  gap:
+    8px;
+}
+
+.profile-unified-button {
+  min-height:
+    42px !important;
+
+  padding:
+    0
+    15px !important;
+
+  border:
+    1px solid
+    rgba(
+      255,
+      255,
+      255,
+      0.60
+    ) !important;
+
+  border-radius:
+    13px !important;
+
+  font-size:
+    9px !important;
+
+  font-weight:
+    720 !important;
+
+  box-shadow:
+    inset
+    0
+    1px
+    0
+    rgba(
+      255,
+      255,
+      255,
+      0.52
+    ),
+    0
+    7px
+    18px
+    rgba(
+      0,
+      0,
+      0,
+      0.045
+    ) !important;
+}
+
+.profile-unified-button.primary {
+  background:
+    linear-gradient(
+      180deg,
+      rgba(
+        var(
+          --theme-accent-rgb
+        ),
+        0.94
+      ),
+      rgba(
+        var(
+          --theme-accent-rgb
+        ),
+        0.80
+      )
+    ) !important;
+
+  color:
+    white !important;
+}
+
+.profile-unified-button.secondary {
+  background:
+    rgba(
+      255,
+      255,
+      255,
+      0.50
+    ) !important;
+
+  color:
+    #4a4a4c !important;
+}
+
+.profile-unified-button.danger {
+  border-color:
+    rgba(
+      255,
+      255,
+      255,
+      0.46
+    ) !important;
+
+  background:
+    linear-gradient(
+      180deg,
+      #ff5148,
+      #ff3b30
+    ) !important;
+
+  color:
+    white !important;
+}
+
+.profile-edit-actions {
+  margin-top:
+    18px !important;
+}
+
+.profile-danger-zone {
+  margin-top:
+    28px !important;
+
+  padding:
+    16px !important;
+
+  border:
+    1px solid
+    rgba(
+      255,
+      109,
+      100,
+      0.30
+    ) !important;
+
+  border-radius:
+    18px !important;
+
+  background:
+    linear-gradient(
+      145deg,
+      rgba(
+        255,
+        255,
+        255,
+        0.52
+      ),
+      rgba(
+        255,
+        82,
+        72,
+        0.07
+      )
+    ) !important;
+}
+
+/* =========================================================
+   V15 — NO FOCUS HIGHLIGHT ON ROOM / FRIEND SEARCH
+========================================================= */
+
+.room-search,
+.room-search:focus,
+.room-search:focus-within,
+.friend-add-search,
+.friend-add-search:focus,
+.friend-add-search:focus-within {
+  outline:
+    none !important;
+
+  border-color:
+    rgba(
+      255,
+      255,
+      255,
+      0.58
+    ) !important;
+
+  box-shadow:
+    inset
+    0
+    1px
+    0
+    rgba(
+      255,
+      255,
+      255,
+      0.90
+    ),
+    inset
+    0
+    -1px
+    0
+    rgba(
+      60,
+      60,
+      67,
+      0.05
+    ),
+    0
+    8px
+    22px
+    rgba(
+      0,
+      0,
+      0,
+      0.04
+    ) !important;
+}
+
+.room-search
+  input,
+.room-search
+  input:focus,
+.room-search
+  input:focus-visible,
+.friend-add-search
+  input,
+.friend-add-search
+  input:focus,
+.friend-add-search
+  input:focus-visible {
+  outline:
+    none !important;
+
+  border:
+    0 !important;
+
+  box-shadow:
+    none !important;
+}
+
+/* =========================================================
+   V15 — DARK MODE
+   html selector is required because profile popovers use Portal.
+========================================================= */
+
+html[data-color-mode="dark"] {
+  background:
+    #0c0d11;
+
+  color-scheme:
+    dark;
+}
+
+html[data-color-mode="dark"]
+  body {
+  background:
+    #0c0d11 !important;
+
+  color:
+    #f2f2f7;
+}
+
+html[data-color-mode="dark"]
+  .chat-page {
+  background:
+    radial-gradient(
+      circle at
+      21%
+      10%,
+      rgba(
+        var(
+          --theme-accent-rgb,
+          116,
+          103,
+          232
+        ),
+        0.20
+      ),
+      transparent
+      36%
+    ),
+    radial-gradient(
+      circle at
+      88%
+      88%,
+      rgba(
+        53,
+        125,
+        255,
+        0.13
+      ),
+      transparent
+      42%
+    ),
+    #0e1016 !important;
+
+  color:
+    #f2f2f7;
+}
+
+html[data-color-mode="dark"]
+  .chat-page::before {
+  opacity:
+    0.62;
+}
+
+html[data-color-mode="dark"]
+  .chat-page::after {
+  opacity:
+    0.50;
+}
+
+html[data-color-mode="dark"]
+  .chat-sidebar,
+html[data-color-mode="dark"]
+  .chat-header,
+html[data-color-mode="dark"]
+  .member-panel {
+  border-color:
+    rgba(
+      255,
+      255,
+      255,
+      0.08
+    ) !important;
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(
+        37,
+        39,
+        47,
+        0.72
+      ),
+      rgba(
+        22,
+        24,
+        31,
+        0.62
+      )
+    ) !important;
+
+  box-shadow:
+    inset
+    0
+    0.5px
+    0
+    rgba(
+      255,
+      255,
+      255,
+      0.11
+    ),
+    0
+    14px
+    44px
+    rgba(
+      0,
+      0,
+      0,
+      0.22
+    ) !important;
+}
+
+html[data-color-mode="dark"]
+  .conversation-column,
+html[data-color-mode="dark"]
+  .main-home-column,
+html[data-color-mode="dark"]
+  .utility-conversation-column {
+  background:
+    linear-gradient(
+      145deg,
+      rgba(
+        255,
+        255,
+        255,
+        0.015
+      ),
+      rgba(
+        var(
+          --theme-accent-rgb,
+          116,
+          103,
+          232
+        ),
+        0.025
+      )
+    ) !important;
+}
+
+html[data-color-mode="dark"]
+  :is(
+    .main-home-room-card,
+    .profile-edit-preview,
+    .profile-setting-card,
+    .profile-danger-zone,
+    .profile-photo-control,
+    .workspace-notification-item,
+    .friend-add-panel,
+    .ai-result-card,
+    .message-composer,
+    .room-search,
+    .friend-add-search,
+    .composer-context-bar,
+    .message-action-menu
+  ) {
+  border-color:
+    rgba(
+      255,
+      255,
+      255,
+      0.11
+    ) !important;
+
+  background:
+    linear-gradient(
+      145deg,
+      rgba(
+        54,
+        57,
+        68,
+        0.68
+      ),
+      rgba(
+        27,
+        29,
+        36,
+        0.58
+      )
+    ) !important;
+
+  box-shadow:
+    inset
+    0
+    1px
+    0
+    rgba(
+      255,
+      255,
+      255,
+      0.09
+    ),
+    inset
+    0
+    -1px
+    0
+    rgba(
+      0,
+      0,
+      0,
+      0.30
+    ),
+    0
+    14px
+    38px
+    rgba(
+      0,
+      0,
+      0,
+      0.18
+    ) !important;
+}
+
+html[data-color-mode="dark"]
+  :is(
+    .profile-setting-card > input,
+    .profile-setting-card > textarea,
+    .profile-field-group > input,
+    .profile-field-group > textarea,
+    .form-input
+  ) {
+  border-color:
+    rgba(
+      255,
+      255,
+      255,
+      0.10
+    ) !important;
+
+  background:
+    rgba(
+      32,
+      34,
+      42,
+      0.70
+    ) !important;
+
+  color:
+    #f2f2f7 !important;
+
+  caret-color:
+    #ffffff;
+}
+
+html[data-color-mode="dark"]
+  :is(
+    .profile-setting-card > input,
+    .profile-setting-card > textarea,
+    .form-input
+  )::placeholder {
+  color:
+    rgba(
+      235,
+      235,
+      245,
+      0.34
+    ) !important;
+}
+
+html[data-color-mode="dark"]
+  .profile-setting-heading
+  strong,
+html[data-color-mode="dark"]
+  .profile-edit-form
+  h1,
+html[data-color-mode="dark"]
+  .profile-preview-card
+  > strong {
+  color:
+    #f2f2f7 !important;
+}
+
+html[data-color-mode="dark"]
+  .profile-setting-heading
+  span,
+html[data-color-mode="dark"]
+  .profile-setting-heading
+  small,
+html[data-color-mode="dark"]
+  .profile-edit-form
+  > header
+  p,
+html[data-color-mode="dark"]
+  .profile-preview-card
+  > p {
+  color:
+    rgba(
+      235,
+      235,
+      245,
+      0.50
+    ) !important;
+}
+
+html[data-color-mode="dark"]
+  .profile-unified-button.secondary {
+  border-color:
+    rgba(
+      255,
+      255,
+      255,
+      0.10
+    ) !important;
+
+  background:
+    rgba(
+      118,
+      118,
+      128,
+      0.14
+    ) !important;
+
+  color:
+    #f2f2f7 !important;
+}
+
+html[data-color-mode="dark"]
+  .profile-danger-zone {
+  background:
+    linear-gradient(
+      145deg,
+      rgba(
+        55,
+        38,
+        40,
+        0.72
+      ),
+      rgba(
+        255,
+        59,
+        48,
+        0.08
+      )
+    ) !important;
+}
+
+html[data-color-mode="dark"]
+  .sidebar-tabs {
+  background:
+    rgba(
+      118,
+      118,
+      128,
+      0.14
+    ) !important;
+}
+
+html[data-color-mode="dark"]
+  .sidebar-tabs
+  button {
+  color:
+    rgba(
+      235,
+      235,
+      245,
+      0.66
+    ) !important;
+}
+
+html[data-color-mode="dark"]
+  .sidebar-tabs
+  button.active {
+  background:
+    rgba(
+      99,
+      99,
+      108,
+      0.34
+    ) !important;
+
+  color:
+    #ffffff !important;
+
+  box-shadow:
+    0
+    2px
+    8px
+    rgba(
+      0,
+      0,
+      0,
+      0.24
+    ),
+    inset
+    0
+    0.5px
+    0
+    rgba(
+      255,
+      255,
+      255,
+      0.12
+    ) !important;
+}
+
+html[data-color-mode="dark"]
+  :is(
+    .room-item,
+    .sidebar-friend-item,
+    .member-item,
+    .sidebar-utility-button,
+    .sidebar-user
+  ) {
+  color:
+    #f2f2f7 !important;
+}
+
+html[data-color-mode="dark"]
+  :is(
+    .room-item:hover,
+    .sidebar-friend-item:hover,
+    .member-item:hover,
+    .sidebar-utility-button:hover,
+    .sidebar-user:hover
+  ) {
+  background:
+    rgba(
+      118,
+      118,
+      128,
+      0.12
+    ) !important;
+}
+
+html[data-color-mode="dark"]
+  :is(
+    .room-item strong,
+    .sidebar-friend-info strong,
+    .member-info strong,
+    .sidebar-user-copy strong,
+    .sidebar-brand h1
+  ) {
+  color:
+    #f2f2f7 !important;
+}
+
+html[data-color-mode="dark"]
+  :is(
+    .room-item p,
+    .room-category,
+    .sidebar-friend-info span,
+    .member-info > span,
+    .sidebar-user-copy span,
+    .sidebar-brand span,
+    .room-theme-description
+  ) {
+  color:
+    rgba(
+      235,
+      235,
+      245,
+      0.48
+    ) !important;
+}
+
+html[data-color-mode="dark"]
+  .message-bubble {
+  border-color:
+    rgba(
+      255,
+      255,
+      255,
+      0.08
+    ) !important;
+
+  background:
+    rgba(
+      48,
+      50,
+      58,
+      0.76
+    ) !important;
+
+  color:
+    #f2f2f7 !important;
+
+  box-shadow:
+    inset
+    0
+    0.5px
+    0
+    rgba(
+      255,
+      255,
+      255,
+      0.08
+    ),
+    0
+    5px
+    16px
+    rgba(
+      0,
+      0,
+      0,
+      0.16
+    ) !important;
+}
+
+html[data-color-mode="dark"]
+  .message-row.mine
+  .message-bubble {
+  background:
+    linear-gradient(
+      180deg,
+      rgba(
+        var(
+          --theme-accent-rgb
+        ),
+        0.92
+      ),
+      rgba(
+        var(
+          --theme-accent-rgb
+        ),
+        0.72
+      )
+    ) !important;
+
+  color:
+    white !important;
+}
+
+html[data-color-mode="dark"]
+  :is(
+    .sender-name,
+    .message-time,
+    .message-edited-label,
+    .typing-indicator,
+    .chat-date-divider span
+  ) {
+  color:
+    rgba(
+      235,
+      235,
+      245,
+      0.46
+    ) !important;
+}
+
+html[data-color-mode="dark"]
+  .message-composer
+  textarea {
+  color:
+    #f2f2f7 !important;
+
+  caret-color:
+    #ffffff;
+}
+
+html[data-color-mode="dark"]
+  .message-composer
+  textarea::placeholder {
+  color:
+    rgba(
+      235,
+      235,
+      245,
+      0.34
+    ) !important;
+}
+
+html[data-color-mode="dark"]
+  :is(
+    .profile-popover,
+    .person-profile-popover,
+    .app-modal
+  ) {
+  border-color:
+    rgba(
+      255,
+      255,
+      255,
+      0.12
+    ) !important;
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(
+        48,
+        50,
+        59,
+        0.90
+      ),
+      rgba(
+        24,
+        26,
+        32,
+        0.88
+      )
+    ) !important;
+
+  color:
+    #f2f2f7 !important;
+
+  box-shadow:
+    0
+    30px
+    80px
+    rgba(
+      0,
+      0,
+      0,
+      0.42
+    ),
+    inset
+    0
+    0.5px
+    0
+    rgba(
+      255,
+      255,
+      255,
+      0.10
+    ) !important;
+}
+
+html[data-color-mode="dark"]
+  :is(
+    .profile-popover-user strong,
+    .profile-popover-action strong,
+    .person-profile-name-row > strong,
+    .person-profile-status > p
+  ) {
+  color:
+    #f2f2f7 !important;
+}
+
+html[data-color-mode="dark"]
+  :is(
+    .profile-popover-user span,
+    .profile-popover-action small,
+    .person-profile-context,
+    .person-profile-status > span
+  ) {
+  color:
+    rgba(
+      235,
+      235,
+      245,
+      0.48
+    ) !important;
+}
+
+html[data-color-mode="dark"]
+  .profile-popover-divider,
+html[data-color-mode="dark"]
+  .person-profile-divider {
+  background:
+    rgba(
+      255,
+      255,
+      255,
+      0.08
+    ) !important;
+}
+
+html[data-color-mode="dark"]
+  .profile-popover-action:hover {
+  background:
+    rgba(
+      118,
+      118,
+      128,
+      0.14
+    ) !important;
+}
+
+html[data-color-mode="dark"]
+  .presence-select-menu.open
+  > button {
+  border-color:
+    rgba(
+      255,
+      255,
+      255,
+      0.08
+    ) !important;
+
+  background:
+    rgba(
+      118,
+      118,
+      128,
+      0.12
+    ) !important;
+}
+
+html[data-color-mode="dark"]
+  .global-theme-toggle {
+  border-color:
+    rgba(
+      255,
+      255,
+      255,
+      0.12
+    );
+
+  background:
+    rgba(
+      37,
+      39,
+      47,
+      0.76
+    );
+
+  color:
+    #ffd35c;
+
+  box-shadow:
+    0
+    12px
+    34px
+    rgba(
+      0,
+      0,
+      0,
+      0.30
+    ),
+    inset
+    0
+    1px
+    0
+    rgba(
+      255,
+      255,
+      255,
+      0.12
+    );
+}
+
+html[data-color-mode="dark"]
+  .room-search,
+html[data-color-mode="dark"]
+  .room-search:focus,
+html[data-color-mode="dark"]
+  .room-search:focus-within,
+html[data-color-mode="dark"]
+  .friend-add-search,
+html[data-color-mode="dark"]
+  .friend-add-search:focus,
+html[data-color-mode="dark"]
+  .friend-add-search:focus-within {
+  border-color:
+    rgba(
+      255,
+      255,
+      255,
+      0.10
+    ) !important;
+
+  background:
+    rgba(
+      31,
+      33,
+      40,
+      0.66
+    ) !important;
+
+  box-shadow:
+    inset
+    0
+    1px
+    0
+    rgba(
+      255,
+      255,
+      255,
+      0.08
+    ),
+    inset
+    0
+    -1px
+    0
+    rgba(
+      0,
+      0,
+      0,
+      0.28
+    ) !important;
+}
+
+html[data-color-mode="dark"]
+  .room-search
+  input,
+html[data-color-mode="dark"]
+  .friend-add-search
+  input {
+  color:
+    #f2f2f7 !important;
+
+  caret-color:
+    #ffffff;
+}
+
+html[data-color-mode="dark"]
+  .room-search
+  input::placeholder,
+html[data-color-mode="dark"]
+  .friend-add-search
+  input::placeholder {
+  color:
+    rgba(
+      235,
+      235,
+      245,
+      0.34
+    ) !important;
+}
+
+/* =========================================================
+   V15 — RESPONSIVE THEME BUTTON
+========================================================= */
+
+@media (max-width: 767px) {
+  .global-theme-toggle {
+    top:
+      max(
+        9px,
+        env(
+          safe-area-inset-top
+        )
+      );
+
+    right:
+      max(
+        9px,
+        env(
+          safe-area-inset-right
+        )
+      );
+
+    width:
+      42px;
+
+    height:
+      42px;
+  }
+
+  .chat-main
+    .chat-header {
+    padding-right:
+      62px !important;
+  }
+
+  .profile-setting-card {
+    padding:
+      14px;
+  }
+
+  .profile-setting-heading {
+    gap:
+      10px;
+  }
+}
+
+@media (hover: none) {
+  .liquid-menu-surface::before,
+  .profile-setting-card::before,
+  .profile-edit-preview::before,
+  .profile-danger-zone::before,
+  .profile-photo-control::before,
+  .room-search::before,
+  .friend-add-search::before,
+  .message-composer::before,
+  .sidebar-tabs::before,
+  .composer-context-bar::before,
+  .message-action-menu::before {
+    opacity:
+      0.42;
+  }
+}
+
+
+/* =========================================================
+   V16 — HEADER CONTROL ALIGNMENT
+========================================================= */
+
+/*
+ * 모든 데스크톱 Header Action의 높이를 36px로 통일.
+ * 전역 테마 버튼도 동일하게 36x36.
+ */
+.invite-button,
+.member-count-button,
+.header-more-button,
+.home-header-create,
+.utility-close-button,
+.global-theme-toggle {
+  height:
+    36px !important;
+
+  min-height:
+    36px !important;
+}
+
+.header-more-button,
+.global-theme-toggle {
+  width:
+    36px !important;
+
+  min-width:
+    36px !important;
+
+  padding:
+    0 !important;
+}
+
+/*
+ * 현재 Main Header는 90px shell이므로
+ * 36px 컨트롤을 정확히 중앙 정렬.
+ */
+.global-theme-toggle {
+  top:
+    27px !important;
+
+  right:
+    21px !important;
+}
+
+.chat-main
+  .chat-header {
+  padding-right:
+    70px !important;
+}
+
+.home-header-create {
+  padding:
+    0
+    14px !important;
+}
+
+/* =========================================================
+   V16 — MESSAGE QUICK REACTIONS
+========================================================= */
+
+.message-action-menu {
+  top:
+    auto !important;
+
+  bottom:
+    calc(
+      100% + 8px
+    ) !important;
+
+  display:
+    block !important;
+
+  min-width:
+    max-content;
+
+  padding:
+    6px !important;
+
+  border-radius:
+    18px !important;
+}
+
+.message-quick-reactions {
+  display:
+    flex;
+
+  align-items:
+    center;
+
+  gap:
+    3px;
+}
+
+.message-quick-reaction {
+  --control-reflect-x:
+    50%;
+
+  --control-reflect-y:
+    10%;
+
+  display:
+    flex;
+
+  align-items:
+    center;
+
+  justify-content:
+    center;
+
+  width:
+    34px;
+  height:
+    34px;
+
+  border:
+    1px solid
+    rgba(
+      255,
+      255,
+      255,
+      0.54
+    );
+
+  border-radius:
+    11px;
+
+  background:
+    rgba(
+      255,
+      255,
+      255,
+      0.36
+    );
+
+  font-size:
+    17px;
+
+  line-height:
+    1;
+
+  box-shadow:
+    inset
+    0
+    0.5px
+    0
+    rgba(
+      255,
+      255,
+      255,
+      0.88
+    );
+
+  transition:
+    transform
+    220ms
+    var(
+      --ios-spring
+    ),
+    background
+    180ms
+    ease;
+}
+
+.message-quick-reaction:hover {
+  transform:
+    translateY(-2px)
+    scale(1.08);
+
+  background:
+    rgba(
+      255,
+      255,
+      255,
+      0.66
+    );
+}
+
+.message-quick-reaction:active {
+  transform:
+    scale(0.90);
+}
+
+.message-quick-reaction.reacted {
+  border-color:
+    rgba(
+      var(
+        --theme-accent-rgb
+      ),
+      0.28
+    );
+
+  background:
+    rgba(
+      var(
+        --theme-accent-rgb
+      ),
+      0.14
+    );
+}
+
+.message-action-divider {
+  height:
+    1px;
+
+  margin:
+    6px
+    2px;
+
+  background:
+    rgba(
+      60,
+      60,
+      67,
+      0.09
+    );
+}
+
+.message-action-buttons {
+  display:
+    flex;
+
+  align-items:
+    center;
+
+  gap:
+    4px;
+}
+
+.message-reaction-chips {
+  display:
+    flex;
+
+  flex-wrap:
+    wrap;
+
+  justify-content:
+    flex-start;
+
+  gap:
+    4px;
+
+  max-width:
+    100%;
+
+  margin-top:
+    5px;
+}
+
+.message-row.mine
+  .message-reaction-chips {
+  justify-content:
+    flex-end;
+}
+
+.message-reaction-chip {
+  --control-reflect-x:
+    50%;
+
+  --control-reflect-y:
+    5%;
+
+  display:
+    inline-flex;
+
+  align-items:
+    center;
+
+  gap:
+    4px;
+
+  min-height:
+    25px;
+
+  padding:
+    2px
+    7px;
+
+  border:
+    1px solid
+    rgba(
+      255,
+      255,
+      255,
+      0.58
+    );
+
+  border-radius:
+    999px;
+
+  background:
+    rgba(
+      255,
+      255,
+      255,
+      0.52
+    );
+
+  color:
+    #5c5c62;
+
+  box-shadow:
+    inset
+    0
+    0.5px
+    0
+    rgba(
+      255,
+      255,
+      255,
+      0.88
+    ),
+    0
+    4px
+    12px
+    rgba(
+      0,
+      0,
+      0,
+      0.045
+    );
+
+  backdrop-filter:
+    blur(14px)
+    saturate(150%);
+
+  -webkit-backdrop-filter:
+    blur(14px)
+    saturate(150%);
+
+  transition:
+    transform
+    180ms
+    var(
+      --ios-spring
+    ),
+    background
+    180ms
+    ease;
+}
+
+.message-reaction-chip:hover {
+  transform:
+    translateY(-1px);
+}
+
+.message-reaction-chip.reacted {
+  border-color:
+    rgba(
+      var(
+        --theme-accent-rgb
+      ),
+      0.28
+    );
+
+  background:
+    rgba(
+      var(
+        --theme-accent-rgb
+      ),
+      0.13
+    );
+
+  color:
+    var(
+      --theme-accent
+    );
+}
+
+.message-reaction-chip
+  > span {
+  font-size:
+    13px;
+}
+
+.message-reaction-chip
+  > strong {
+  font-size:
+    8px;
+
+  font-weight:
+    760;
+}
+
+/* =========================================================
+   V16 — COMPOSER EMOJI PICKER
+========================================================= */
+
+.composer-emoji-button {
+  --control-reflect-x:
+    50%;
+
+  --control-reflect-y:
+    10%;
+
+  display:
+    flex;
+
+  align-items:
+    center;
+
+  justify-content:
+    center;
+
+  width:
+    38px;
+  height:
+    38px;
+
+  flex:
+    0 0 38px;
+
+  border:
+    1px solid
+    rgba(
+      255,
+      255,
+      255,
+      0.56
+    );
+
+  border-radius:
+    50%;
+
+  background:
+    rgba(
+      118,
+      118,
+      128,
+      0.075
+    );
+
+  color:
+    rgba(
+      60,
+      60,
+      67,
+      0.64
+    );
+
+  font-size:
+    18px;
+
+  box-shadow:
+    inset
+    0
+    0.5px
+    0
+    rgba(
+      255,
+      255,
+      255,
+      0.86
+    );
+
+  transition:
+    transform
+    220ms
+    var(
+      --ios-spring
+    ),
+    background
+    200ms
+    ease,
+    color
+    200ms
+    ease;
+}
+
+.composer-emoji-button:hover,
+.composer-emoji-button.opened {
+  transform:
+    scale(1.05);
+
+  background:
+    rgba(
+      var(
+        --theme-accent-rgb
+      ),
+      0.12
+    );
+
+  color:
+    var(
+      --theme-accent
+    );
+}
+
+.composer-emoji-button:active {
+  transform:
+    scale(0.90);
+}
+
+.composer-emoji-picker {
+  position:
+    absolute;
+
+  right:
+    55px;
+
+  bottom:
+    calc(
+      100% + 9px
+    );
+
+  z-index:
+    80;
+
+  width:
+    282px;
+
+  overflow:
+    hidden;
+
+  border:
+    1px solid
+    rgba(
+      255,
+      255,
+      255,
+      0.72
+    );
+
+  border-radius:
+    20px;
+
+  background:
+    rgba(
+      249,
+      250,
+      253,
+      0.82
+    );
+
+  box-shadow:
+    0
+    22px
+    58px
+    rgba(
+      0,
+      0,
+      0,
+      0.16
+    ),
+    inset
+    0
+    0.5px
+    0
+    rgba(
+      255,
+      255,
+      255,
+      0.98
+    );
+
+  backdrop-filter:
+    blur(30px)
+    saturate(180%);
+
+  -webkit-backdrop-filter:
+    blur(30px)
+    saturate(180%);
+
+  animation:
+    iosPopoverIn
+    330ms
+    var(
+      --ios-spring
+    );
+}
+
+.emoji-picker-header {
+  display:
+    flex;
+
+  align-items:
+    center;
+
+  justify-content:
+    space-between;
+
+  min-height:
+    42px;
+
+  padding:
+    0
+    11px
+    0
+    14px;
+
+  border-bottom:
+    1px solid
+    rgba(
+      60,
+      60,
+      67,
+      0.08
+    );
+}
+
+.emoji-picker-header
+  strong {
+  color:
+    #3a3a3c;
+
+  font-size:
+    10px;
+}
+
+.emoji-picker-header
+  button {
+  display:
+    flex;
+
+  align-items:
+    center;
+
+  justify-content:
+    center;
+
+  width:
+    28px;
+  height:
+    28px;
+
+  border-radius:
+    50%;
+
+  background:
+    rgba(
+      118,
+      118,
+      128,
+      0.08
+    );
+
+  color:
+    rgba(
+      60,
+      60,
+      67,
+      0.58
+    );
+
+  font-size:
+    17px;
+}
+
+.emoji-picker-grid {
+  display:
+    grid;
+
+  grid-template-columns:
+    repeat(
+      6,
+      1fr
+    );
+
+  gap:
+    4px;
+
+  padding:
+    10px;
+}
+
+.emoji-picker-grid
+  button {
+  display:
+    flex;
+
+  align-items:
+    center;
+
+  justify-content:
+    center;
+
+  aspect-ratio:
+    1;
+
+  border:
+    1px solid
+    transparent;
+
+  border-radius:
+    11px;
+
+  background:
+    transparent;
+
+  font-size:
+    21px;
+
+  transition:
+    transform
+    180ms
+    var(
+      --ios-spring
+    ),
+    background
+    160ms
+    ease;
+}
+
+.emoji-picker-grid
+  button:hover {
+  transform:
+    scale(1.14);
+
+  background:
+    rgba(
+      118,
+      118,
+      128,
+      0.08
+    );
+}
+
+.emoji-picker-grid
+  button:active {
+  transform:
+    scale(0.92);
+}
+
+/* =========================================================
+   V16 — DARK MODE FULL COVERAGE
+========================================================= */
+
+html[data-color-mode="dark"] {
+  --surface:
+    #1c1d23;
+
+  --background:
+    #0e1016;
+
+  --text-main:
+    #f5f5f7;
+
+  --text-secondary:
+    rgba(
+      235,
+      235,
+      245,
+      0.66
+    );
+
+  --text-light:
+    rgba(
+      235,
+      235,
+      245,
+      0.42
+    );
+
+  --border:
+    rgba(
+      255,
+      255,
+      255,
+      0.09
+    );
+
+  --danger:
+    #ff6961;
+
+  --success:
+    #55d68b;
+}
+
+/* Sidebar hard-coded light backgrounds */
+html[data-color-mode="dark"]
+  .sidebar-user {
+  border-top-color:
+    rgba(
+      255,
+      255,
+      255,
+      0.08
+    ) !important;
+
+  background:
+    rgba(
+      25,
+      27,
+      34,
+      0.82
+    ) !important;
+}
+
+html[data-color-mode="dark"]
+  .sidebar-utility-row {
+  border-top-color:
+    rgba(
+      255,
+      255,
+      255,
+      0.08
+    ) !important;
+
+  background:
+    rgba(
+      18,
+      20,
+      26,
+      0.34
+    ) !important;
+}
+
+html[data-color-mode="dark"]
+  .sidebar-utility-button {
+  color:
+    rgba(
+      245,
+      245,
+      247,
+      0.78
+    ) !important;
+}
+
+html[data-color-mode="dark"]
+  .sidebar-user-copy
+  strong,
+html[data-color-mode="dark"]
+  .sidebar-section-header
+  h2,
+html[data-color-mode="dark"]
+  .chat-room-title-row
+  h2 {
+  color:
+    #f5f5f7 !important;
+}
+
+html[data-color-mode="dark"]
+  .sidebar-user-more {
+  color:
+    rgba(
+      235,
+      235,
+      245,
+      0.42
+    ) !important;
+}
+
+/* Room list */
+html[data-color-mode="dark"]
+  .room-item.selected {
+  border-color:
+    rgba(
+      var(
+        --theme-accent-rgb
+      ),
+      0.28
+    ) !important;
+
+  background:
+    linear-gradient(
+      135deg,
+      rgba(
+        var(
+          --theme-accent-rgb
+        ),
+        0.30
+      ),
+      rgba(
+        255,
+        255,
+        255,
+        0.055
+      )
+    ) !important;
+
+  box-shadow:
+    inset
+    0
+    1px
+    0
+    rgba(
+      255,
+      255,
+      255,
+      0.10
+    ),
+    0
+    12px
+    28px
+    rgba(
+      0,
+      0,
+      0,
+      0.20
+    ) !important;
+}
+
+html[data-color-mode="dark"]
+  .room-avatar {
+  background:
+    rgba(
+      245,
+      245,
+      247,
+      0.09
+    ) !important;
+}
+
+html[data-color-mode="dark"]
+  .room-item.selected
+  .room-avatar {
+  background:
+    rgba(
+      var(
+        --theme-accent-rgb
+      ),
+      0.82
+    ) !important;
+}
+
+html[data-color-mode="dark"]
+  .room-item-top
+  strong {
+  color:
+    #f5f5f7 !important;
+}
+
+html[data-color-mode="dark"]
+  .room-item-content
+  p {
+  color:
+    rgba(
+      235,
+      235,
+      245,
+      0.55
+    ) !important;
+}
+
+html[data-color-mode="dark"]
+  .room-category,
+html[data-color-mode="dark"]
+  .sidebar-section-header
+  > div
+  > span {
+  color:
+    rgba(
+      235,
+      235,
+      245,
+      0.38
+    ) !important;
+}
+
+/* Header */
+html[data-color-mode="dark"]
+  .chat-room-avatar {
+  border:
+    1px solid
+    rgba(
+      255,
+      255,
+      255,
+      0.10
+    );
+
+  background:
+    rgba(
+      var(
+        --theme-accent-rgb
+      ),
+      0.22
+    ) !important;
+}
+
+html[data-color-mode="dark"]
+  .owner-badge {
+  background:
+    rgba(
+      255,
+      174,
+      52,
+      0.15
+    ) !important;
+
+  color:
+    #ffcb70 !important;
+}
+
+html[data-color-mode="dark"]
+  .invite-button,
+html[data-color-mode="dark"]
+  .member-count-button,
+html[data-color-mode="dark"]
+  .header-more-button,
+html[data-color-mode="dark"]
+  .home-header-create,
+html[data-color-mode="dark"]
+  .utility-close-button {
+  border-color:
+    rgba(
+      255,
+      255,
+      255,
+      0.12
+    ) !important;
+
+  background:
+    rgba(
+      118,
+      118,
+      128,
+      0.12
+    ) !important;
+
+  color:
+    rgba(
+      245,
+      245,
+      247,
+      0.86
+    ) !important;
+}
+
+/* Participants */
+html[data-color-mode="dark"]
+  .member-panel-header {
+  border-bottom-color:
+    rgba(
+      255,
+      255,
+      255,
+      0.08
+    ) !important;
+}
+
+html[data-color-mode="dark"]
+  .member-panel-header
+  span,
+html[data-color-mode="dark"]
+  .member-panel-footer
+  p {
+  color:
+    rgba(
+      235,
+      235,
+      245,
+      0.46
+    ) !important;
+}
+
+html[data-color-mode="dark"]
+  .member-panel-header
+  strong {
+  color:
+    var(
+      --theme-accent
+    ) !important;
+}
+
+html[data-color-mode="dark"]
+  .member-item.profile-selected,
+html[data-color-mode="dark"]
+  .member-item.typing {
+  background:
+    linear-gradient(
+      135deg,
+      rgba(
+        var(
+          --theme-accent-rgb
+        ),
+        0.20
+      ),
+      rgba(
+        255,
+        255,
+        255,
+        0.045
+      )
+    ) !important;
+}
+
+html[data-color-mode="dark"]
+  .member-avatar,
+html[data-color-mode="dark"]
+  .message-avatar {
+  border:
+    1px solid
+    rgba(
+      255,
+      255,
+      255,
+      0.10
+    ) !important;
+
+  background:
+    #262832 !important;
+
+  color:
+    #f5f5f7 !important;
+
+  box-shadow:
+    inset
+    0
+    0.5px
+    0
+    rgba(
+      255,
+      255,
+      255,
+      0.08
+    ) !important;
+}
+
+html[data-color-mode="dark"]
+  .mini-owner-badge {
+  background:
+    rgba(
+      255,
+      174,
+      52,
+      0.14
+    ) !important;
+
+  color:
+    #ffcb70 !important;
+}
+
+html[data-color-mode="dark"]
+  .guest-badge {
+  background:
+    rgba(
+      140,
+      125,
+      255,
+      0.14
+    ) !important;
+
+  color:
+    #b8adff !important;
+}
+
+/* Conversation details */
+html[data-color-mode="dark"]
+  .chat-date-divider
+  span,
+html[data-color-mode="dark"]
+  .system-message {
+  border-color:
+    rgba(
+      255,
+      255,
+      255,
+      0.08
+    ) !important;
+
+  background:
+    rgba(
+      118,
+      118,
+      128,
+      0.12
+    ) !important;
+
+  color:
+    rgba(
+      235,
+      235,
+      245,
+      0.50
+    ) !important;
+}
+
+html[data-color-mode="dark"]
+  .sender-name {
+  color:
+    rgba(
+      235,
+      235,
+      245,
+      0.52
+    ) !important;
+}
+
+html[data-color-mode="dark"]
+  .typing-indicator.visible
+  .typing-indicator-inner {
+  border-color:
+    rgba(
+      255,
+      255,
+      255,
+      0.10
+    ) !important;
+
+  background:
+    rgba(
+      45,
+      47,
+      56,
+      0.76
+    ) !important;
+}
+
+html[data-color-mode="dark"]
+  .typing-text {
+  color:
+    rgba(
+      235,
+      235,
+      245,
+      0.54
+    ) !important;
+}
+
+/* Composer */
+html[data-color-mode="dark"]
+  .composer-plus-button,
+html[data-color-mode="dark"]
+  .composer-emoji-button {
+  border-color:
+    rgba(
+      255,
+      255,
+      255,
+      0.10
+    ) !important;
+
+  background:
+    rgba(
+      118,
+      118,
+      128,
+      0.13
+    ) !important;
+
+  color:
+    rgba(
+      245,
+      245,
+      247,
+      0.70
+    ) !important;
+}
+
+html[data-color-mode="dark"]
+  .send-button:disabled {
+  border-color:
+    rgba(
+      255,
+      255,
+      255,
+      0.07
+    ) !important;
+
+  background:
+    rgba(
+      118,
+      118,
+      128,
+      0.13
+    ) !important;
+
+  color:
+    rgba(
+      235,
+      235,
+      245,
+      0.28
+    ) !important;
+}
+
+html[data-color-mode="dark"]
+  .composer-menu,
+html[data-color-mode="dark"]
+  .composer-emoji-picker {
+  border-color:
+    rgba(
+      255,
+      255,
+      255,
+      0.12
+    ) !important;
+
+  background:
+    rgba(
+      34,
+      36,
+      44,
+      0.90
+    ) !important;
+
+  box-shadow:
+    0
+    24px
+    64px
+    rgba(
+      0,
+      0,
+      0,
+      0.44
+    ),
+    inset
+    0
+    0.5px
+    0
+    rgba(
+      255,
+      255,
+      255,
+      0.09
+    ) !important;
+}
+
+html[data-color-mode="dark"]
+  .composer-action {
+  color:
+    #f5f5f7 !important;
+}
+
+html[data-color-mode="dark"]
+  .composer-action
+  p {
+  color:
+    rgba(
+      235,
+      235,
+      245,
+      0.45
+    ) !important;
+}
+
+html[data-color-mode="dark"]
+  .emoji-picker-header {
+  border-bottom-color:
+    rgba(
+      255,
+      255,
+      255,
+      0.08
+    ) !important;
+}
+
+html[data-color-mode="dark"]
+  .emoji-picker-header
+  strong {
+  color:
+    #f5f5f7 !important;
+}
+
+html[data-color-mode="dark"]
+  .emoji-picker-header
+  button,
+html[data-color-mode="dark"]
+  .emoji-picker-grid
+  button:hover {
+  background:
+    rgba(
+      118,
+      118,
+      128,
+      0.16
+    ) !important;
+}
+
+/* Message reaction UI */
+html[data-color-mode="dark"]
+  .message-action-menu {
+  border-color:
+    rgba(
+      255,
+      255,
+      255,
+      0.12
+    ) !important;
+
+  background:
+    rgba(
+      34,
+      36,
+      44,
+      0.92
+    ) !important;
+}
+
+html[data-color-mode="dark"]
+  .message-action-divider {
+  background:
+    rgba(
+      255,
+      255,
+      255,
+      0.08
+    ) !important;
+}
+
+html[data-color-mode="dark"]
+  .message-quick-reaction,
+html[data-color-mode="dark"]
+  .message-reaction-chip {
+  border-color:
+    rgba(
+      255,
+      255,
+      255,
+      0.10
+    ) !important;
+
+  background:
+    rgba(
+      118,
+      118,
+      128,
+      0.13
+    ) !important;
+
+  color:
+    rgba(
+      245,
+      245,
+      247,
+      0.78
+    ) !important;
+}
+
+html[data-color-mode="dark"]
+  .message-quick-reaction.reacted,
+html[data-color-mode="dark"]
+  .message-reaction-chip.reacted {
+  border-color:
+    rgba(
+      var(
+        --theme-accent-rgb
+      ),
+      0.38
+    ) !important;
+
+  background:
+    rgba(
+      var(
+        --theme-accent-rgb
+      ),
+      0.22
+    ) !important;
+
+  color:
+    #ffffff !important;
+}
+
+html[data-color-mode="dark"]
+  .message-action-button {
+  background:
+    rgba(
+      118,
+      118,
+      128,
+      0.11
+    ) !important;
+
+  color:
+    rgba(
+      245,
+      245,
+      247,
+      0.82
+    ) !important;
+}
+
+html[data-color-mode="dark"]
+  .message-action-button.danger {
+  color:
+    #ff6961 !important;
+}
+
+/* Home */
+html[data-color-mode="dark"]
+  .main-home-eyebrow {
+  color:
+    #a9a0ff !important;
+}
+
+html[data-color-mode="dark"]
+  .main-home-hero
+  h1,
+html[data-color-mode="dark"]
+  .main-home-section-title
+  h2,
+html[data-color-mode="dark"]
+  .main-home-room-card
+  h3 {
+  color:
+    #f5f5f7 !important;
+}
+
+html[data-color-mode="dark"]
+  .main-home-hero
+  p,
+html[data-color-mode="dark"]
+  .main-home-room-card
+  p,
+html[data-color-mode="dark"]
+  .main-home-room-card
+  footer,
+html[data-color-mode="dark"]
+  .main-home-section-title
+  > span {
+  color:
+    rgba(
+      235,
+      235,
+      245,
+      0.48
+    ) !important;
+}
+
+/* Friend Add / Notifications */
+html[data-color-mode="dark"]
+  :is(
+    .friend-add-guide strong,
+    .workspace-notification-body strong
+  ) {
+  color:
+    #f5f5f7 !important;
+}
+
+html[data-color-mode="dark"]
+  :is(
+    .friend-add-guide p,
+    .workspace-notification-body p,
+    .workspace-notification-body > span
+  ) {
+  color:
+    rgba(
+      235,
+      235,
+      245,
+      0.48
+    ) !important;
+}
+
+html[data-color-mode="dark"]
+  .workspace-notification-item.unread {
+  background:
+    rgba(
+      var(
+        --theme-accent-rgb
+      ),
+      0.12
+    ) !important;
+}
+
+html[data-color-mode="dark"]
+  .workspace-notification-icon {
+  background:
+    rgba(
+      var(
+        --theme-accent-rgb
+      ),
+      0.16
+    ) !important;
+}
+
+/* Modals/form controls that still had hard-coded white */
+html[data-color-mode="dark"]
+  .app-modal-header {
+  border-bottom-color:
+    rgba(
+      255,
+      255,
+      255,
+      0.08
+    ) !important;
+}
+
+html[data-color-mode="dark"]
+  .app-modal-header
+  h2,
+html[data-color-mode="dark"]
+  .form-label,
+html[data-color-mode="dark"]
+  .category-card
+  strong,
+html[data-color-mode="dark"]
+  .room-menu-list
+  button {
+  color:
+    #f5f5f7 !important;
+}
+
+html[data-color-mode="dark"]
+  .app-modal-header
+  p,
+html[data-color-mode="dark"]
+  .category-card
+  small {
+  color:
+    rgba(
+      235,
+      235,
+      245,
+      0.46
+    ) !important;
+}
+
+html[data-color-mode="dark"]
+  .app-modal-close,
+html[data-color-mode="dark"]
+  .category-card,
+html[data-color-mode="dark"]
+  .room-menu-list
+  button,
+html[data-color-mode="dark"]
+  .secondary-action,
+html[data-color-mode="dark"]
+  .mobile-sheet-cancel {
+  border-color:
+    rgba(
+      255,
+      255,
+      255,
+      0.08
+    ) !important;
+
+  background:
+    rgba(
+      118,
+      118,
+      128,
+      0.13
+    ) !important;
+
+  color:
+    rgba(
+      245,
+      245,
+      247,
+      0.82
+    ) !important;
+}
+
+html[data-color-mode="dark"]
+  .category-card.selected {
+  border-color:
+    var(
+      --category-accent
+    ) !important;
+
+  background:
+    color-mix(
+      in srgb,
+      var(
+        --category-accent
+      )
+      18%,
+      #23252d
+      82%
+    ) !important;
+}
+
+html[data-color-mode="dark"]
+  .room-theme-preview {
+  color:
+    #f5f5f7 !important;
+
+  background:
+    rgba(
+      118,
+      118,
+      128,
+      0.12
+    ) !important;
+}
+
+/* Search icons / placeholder */
+html[data-color-mode="dark"]
+  .room-search
+  > span,
+html[data-color-mode="dark"]
+  .friend-add-search
+  > span {
+  color:
+    rgba(
+      235,
+      235,
+      245,
+      0.42
+    ) !important;
+}
+
+/* =========================================================
+   V16 — MOBILE
+========================================================= */
+
+@media (max-width: 767px) {
+  .global-theme-toggle {
+    top:
+      13px !important;
+
+    right:
+      10px !important;
+
+    width:
+      36px !important;
+
+    min-width:
+      36px !important;
+
+    height:
+      36px !important;
+
+    min-height:
+      36px !important;
+  }
+
+  .chat-main
+    .chat-header {
+    padding-right:
+      56px !important;
+  }
+
+  .composer-emoji-button {
+    width:
+      36px;
+
+    height:
+      36px;
+
+    flex-basis:
+      36px;
+  }
+
+  .composer-emoji-picker {
+    position:
+      fixed;
+
+    right:
+      10px;
+
+    bottom:
+      calc(
+        72px +
+        env(
+          safe-area-inset-bottom
+        )
+      );
+
+    left:
+      10px;
+
+    width:
+      auto;
+
+    border-radius:
+      20px;
+  }
+
+  .emoji-picker-grid {
+    grid-template-columns:
+      repeat(
+        8,
+        1fr
+      );
+  }
+
+  .message-action-menu {
+    bottom:
+      calc(
+        84px +
+        env(
+          safe-area-inset-bottom
+        )
+      ) !important;
+  }
+
+  .message-quick-reactions {
+    justify-content:
+      center;
+  }
+
+  .message-quick-reaction {
+    width:
+      40px;
+
+    height:
+      40px;
+
+    font-size:
+      20px;
+  }
+}
+
+
+/* =========================================================
+   V17 — SIDEBAR TAB COUNT BADGE VISIBILITY
+========================================================= */
+
+.sidebar-tabs
+  button
+  > span {
+  min-width:
+    20px !important;
+
+  height:
+    20px !important;
+
+  padding:
+    0
+    6px !important;
+
+  border:
+    1px solid
+    rgba(
+      255,
+      255,
+      255,
+      0.64
+    ) !important;
+
+  background:
+    rgba(
+      255,
+      255,
+      255,
+      0.66
+    ) !important;
+
+  color:
+    #5149b8 !important;
+
+  font-size:
+    9px !important;
+
+  font-weight:
+    850 !important;
+
+  box-shadow:
+    inset
+    0
+    0.5px
+    0
+    rgba(
+      255,
+      255,
+      255,
+      0.96
+    ),
+    0
+    2px
+    7px
+    rgba(
+      0,
+      0,
+      0,
+      0.055
+    ) !important;
+}
+
+.sidebar-tabs
+  button.active
+  > span {
+  background:
+    rgba(
+      var(
+        --theme-accent-rgb
+      ),
+      0.16
+    ) !important;
+
+  color:
+    #4d45b4 !important;
+}
+
+html[data-color-mode="dark"]
+  .sidebar-tabs
+  button
+  > span {
+  border-color:
+    rgba(
+      255,
+      255,
+      255,
+      0.12
+    ) !important;
+
+  background:
+    rgba(
+      118,
+      118,
+      128,
+      0.24
+    ) !important;
+
+  color:
+    rgba(
+      245,
+      245,
+      247,
+      0.90
+    ) !important;
+
+  box-shadow:
+    inset
+    0
+    0.5px
+    0
+    rgba(
+      255,
+      255,
+      255,
+      0.10
+    ) !important;
+}
+
+html[data-color-mode="dark"]
+  .sidebar-tabs
+  button.active
+  > span {
+  border-color:
+    rgba(
+      255,
+      255,
+      255,
+      0.18
+    ) !important;
+
+  background:
+    rgba(
+      var(
+        --theme-accent-rgb
+      ),
+      0.34
+    ) !important;
+
+  color:
+    #ffffff !important;
+}
+
+/* =========================================================
+   V17 — DARK MODE NOTIFICATIONS COMPLETE
+========================================================= */
+
+html[data-color-mode="dark"]
+  .notifications-workspace {
+  color:
+    #f5f5f7;
+}
+
+html[data-color-mode="dark"]
+  .notifications-header
+  h1 {
+  color:
+    #f5f5f7 !important;
+}
+
+html[data-color-mode="dark"]
+  .notifications-header
+  p {
+  color:
+    rgba(
+      235,
+      235,
+      245,
+      0.50
+    ) !important;
+}
+
+html[data-color-mode="dark"]
+  .notifications-summary
+  > div {
+  border-color:
+    rgba(
+      255,
+      255,
+      255,
+      0.10
+    ) !important;
+
+  background:
+    linear-gradient(
+      145deg,
+      rgba(
+        51,
+        53,
+        63,
+        0.76
+      ),
+      rgba(
+        27,
+        29,
+        36,
+        0.70
+      )
+    ) !important;
+
+  box-shadow:
+    inset
+    0
+    0.5px
+    0
+    rgba(
+      255,
+      255,
+      255,
+      0.10
+    ),
+    0
+    8px
+    22px
+    rgba(
+      0,
+      0,
+      0,
+      0.15
+    ) !important;
+}
+
+html[data-color-mode="dark"]
+  .notifications-summary
+  span {
+  color:
+    rgba(
+      235,
+      235,
+      245,
+      0.48
+    ) !important;
+}
+
+html[data-color-mode="dark"]
+  .notifications-summary
+  strong {
+  color:
+    #b7afff !important;
+}
+
+html[data-color-mode="dark"]
+  .workspace-secondary-button {
+  border:
+    1px solid
+    rgba(
+      255,
+      255,
+      255,
+      0.10
+    ) !important;
+
+  background:
+    rgba(
+      116,
+      103,
+      232,
+      0.18
+    ) !important;
+
+  color:
+    #c4beff !important;
+
+  box-shadow:
+    inset
+    0
+    0.5px
+    0
+    rgba(
+      255,
+      255,
+      255,
+      0.10
+    ) !important;
+}
+
+html[data-color-mode="dark"]
+  .workspace-danger-button {
+  border:
+    1px solid
+    rgba(
+      255,
+      105,
+      97,
+      0.18
+    ) !important;
+
+  background:
+    rgba(
+      255,
+      59,
+      48,
+      0.11
+    ) !important;
+
+  color:
+    #ff8d86 !important;
+}
+
+html[data-color-mode="dark"]
+  .workspace-secondary-button:hover:not(:disabled) {
+  background:
+    rgba(
+      116,
+      103,
+      232,
+      0.26
+    ) !important;
+
+  color:
+    #ffffff !important;
+}
+
+html[data-color-mode="dark"]
+  .workspace-danger-button:hover:not(:disabled) {
+  background:
+    rgba(
+      255,
+      59,
+      48,
+      0.18
+    ) !important;
+
+  color:
+    #ffb0ab !important;
+}
+
+html[data-color-mode="dark"]
+  .workspace-notification-item {
+  border-color:
+    rgba(
+      255,
+      255,
+      255,
+      0.09
+    ) !important;
+
+  background:
+    linear-gradient(
+      145deg,
+      rgba(
+        42,
+        44,
+        53,
+        0.72
+      ),
+      rgba(
+        25,
+        27,
+        34,
+        0.66
+      )
+    ) !important;
+
+  box-shadow:
+    inset
+    0
+    0.5px
+    0
+    rgba(
+      255,
+      255,
+      255,
+      0.08
+    ),
+    0
+    9px
+    28px
+    rgba(
+      0,
+      0,
+      0,
+      0.14
+    ) !important;
+}
+
+html[data-color-mode="dark"]
+  .workspace-notification-item.unread {
+  border-color:
+    rgba(
+      var(
+        --theme-accent-rgb
+      ),
+      0.28
+    ) !important;
+
+  background:
+    linear-gradient(
+      135deg,
+      rgba(
+        var(
+          --theme-accent-rgb
+        ),
+        0.17
+      ),
+      rgba(
+        29,
+        31,
+        40,
+        0.72
+      )
+    ) !important;
+}
+
+html[data-color-mode="dark"]
+  .workspace-notification-item:hover {
+  border-color:
+    rgba(
+      255,
+      255,
+      255,
+      0.15
+    ) !important;
+
+  background:
+    linear-gradient(
+      145deg,
+      rgba(
+        54,
+        56,
+        67,
+        0.78
+      ),
+      rgba(
+        31,
+        33,
+        41,
+        0.72
+      )
+    ) !important;
+}
+
+html[data-color-mode="dark"]
+  .workspace-notification-body
+  strong {
+  color:
+    #f5f5f7 !important;
+}
+
+html[data-color-mode="dark"]
+  .workspace-notification-body
+  p {
+  color:
+    rgba(
+      235,
+      235,
+      245,
+      0.58
+    ) !important;
+}
+
+html[data-color-mode="dark"]
+  .workspace-notification-body
+  > span {
+  color:
+    rgba(
+      235,
+      235,
+      245,
+      0.36
+    ) !important;
+}
+
+html[data-color-mode="dark"]
+  .workspace-new-badge {
+  background:
+    rgba(
+      var(
+        --theme-accent-rgb
+      ),
+      0.34
+    ) !important;
+
+  color:
+    #ffffff !important;
+}
+
+html[data-color-mode="dark"]
+  .notification-delete-button {
+  border:
+    1px solid
+    rgba(
+      255,
+      255,
+      255,
+      0.09
+    ) !important;
+
+  background:
+    rgba(
+      118,
+      118,
+      128,
+      0.14
+    ) !important;
+
+  color:
+    rgba(
+      235,
+      235,
+      245,
+      0.58
+    ) !important;
+}
+
+html[data-color-mode="dark"]
+  .notification-delete-button:hover {
+  border-color:
+    rgba(
+      255,
+      105,
+      97,
+      0.18
+    ) !important;
+
+  background:
+    rgba(
+      255,
+      59,
+      48,
+      0.15
+    ) !important;
+
+  color:
+    #ff8d86 !important;
+}
+
+html[data-color-mode="dark"]
+  .notifications-empty {
+  border-color:
+    rgba(
+      255,
+      255,
+      255,
+      0.11
+    ) !important;
+
+  color:
+    rgba(
+      235,
+      235,
+      245,
+      0.48
+    ) !important;
+}
+
+html[data-color-mode="dark"]
+  .notifications-empty
+  strong {
+  color:
+    #f5f5f7 !important;
+}
+
+/* =========================================================
+   V17 — DARK HOVER FIX FOR + MENU / GLASS ACTIONS
+========================================================= */
+
+/*
+ * chat.css의 .composer-action:hover { background:#f7f8fb }를
+ * 다크모드에서 확실하게 덮는다.
+ */
+html[data-color-mode="dark"]
+  .composer-menu
+  .composer-action,
+html[data-color-mode="dark"]
+  .composer-menu
+  .composer-action:hover,
+html[data-color-mode="dark"]
+  .composer-menu
+  .composer-action:focus-visible {
+  border:
+    1px solid
+    transparent !important;
+
+  background:
+    transparent !important;
+
+  color:
+    #f5f5f7 !important;
+
+  box-shadow:
+    none !important;
+}
+
+html[data-color-mode="dark"]
+  .composer-menu
+  .composer-action:hover:not(:disabled) {
+  border-color:
+    rgba(
+      255,
+      255,
+      255,
+      0.08
+    ) !important;
+
+  background:
+    rgba(
+      118,
+      118,
+      128,
+      0.13
+    ) !important;
+
+  color:
+    #ffffff !important;
+}
+
+html[data-color-mode="dark"]
+  .composer-menu
+  .composer-action.disabled,
+html[data-color-mode="dark"]
+  .composer-menu
+  .composer-action:disabled {
+  opacity:
+    0.42 !important;
+
+  background:
+    transparent !important;
+}
+
+html[data-color-mode="dark"]
+  .composer-action
+  strong {
+  color:
+    #f5f5f7 !important;
+}
+
+html[data-color-mode="dark"]
+  .composer-action
+  p {
+  color:
+    rgba(
+      235,
+      235,
+      245,
+      0.44
+    ) !important;
+}
+
+html[data-color-mode="dark"]
+  .composer-action-icon.ai {
+  background:
+    rgba(
+      126,
+      108,
+      255,
+      0.18
+    ) !important;
+
+  color:
+    #c0b7ff !important;
+}
+
+html[data-color-mode="dark"]
+  .composer-action-icon.image {
+  background:
+    rgba(
+      76,
+      205,
+      132,
+      0.13
+    ) !important;
+
+  color:
+    #77e0a7 !important;
+}
+
+/* + / round glass buttons do not turn white on hover */
+html[data-color-mode="dark"]
+  :is(
+    .new-room-button,
+    .member-add-button,
+    .composer-plus-button,
+    .composer-emoji-button,
+    .header-more-button,
+    .utility-close-button,
+    .app-modal-close
+  ):hover {
+  border-color:
+    rgba(
+      255,
+      255,
+      255,
+      0.13
+    ) !important;
+
+  background:
+    rgba(
+      118,
+      118,
+      128,
+      0.19
+    ) !important;
+
+  color:
+    #f5f5f7 !important;
+
+  box-shadow:
+    inset
+    0
+    0.5px
+    0
+    rgba(
+      255,
+      255,
+      255,
+      0.12
+    ),
+    0
+    7px
+    18px
+    rgba(
+      0,
+      0,
+      0,
+      0.16
+    ) !important;
+}
+
+/* =========================================================
+   V17 — EMOJI PICKER SEARCH / SCROLL
+========================================================= */
+
+.composer-emoji-picker {
+  width:
+    330px !important;
+
+  max-height:
+    min(
+      480px,
+      calc(
+        100dvh -
+        140px
+      )
+    );
+
+  display:
+    flex;
+
+  flex-direction:
+    column;
+
+  overflow:
+    hidden !important;
+}
+
+.emoji-picker-search {
+  position:
+    relative;
+
+  display:
+    flex;
+
+  align-items:
+    center;
+
+  gap:
+    8px;
+
+  min-height:
+    38px;
+
+  margin:
+    9px
+    10px
+    5px;
+
+  padding:
+    0
+    10px;
+
+  border:
+    1px solid
+    rgba(
+      255,
+      255,
+      255,
+      0.58
+    );
+
+  border-radius:
+    12px;
+
+  background:
+    rgba(
+      255,
+      255,
+      255,
+      0.50
+    );
+
+  box-shadow:
+    inset
+    0
+    0.5px
+    0
+    rgba(
+      255,
+      255,
+      255,
+      0.90
+    );
+
+  backdrop-filter:
+    blur(16px)
+    saturate(150%);
+
+  -webkit-backdrop-filter:
+    blur(16px)
+    saturate(150%);
+}
+
+.emoji-picker-search
+  > span {
+  flex:
+    0 0 auto;
+
+  color:
+    rgba(
+      60,
+      60,
+      67,
+      0.46
+    );
+
+  font-size:
+    14px;
+}
+
+.emoji-picker-search
+  input {
+  min-width:
+    0;
+
+  flex:
+    1;
+
+  border:
+    0 !important;
+
+  outline:
+    0 !important;
+
+  background:
+    transparent !important;
+
+  color:
+    #2c2c2e;
+
+  font-size:
+    10px;
+
+  box-shadow:
+    none !important;
+}
+
+.emoji-picker-search
+  input:focus,
+.emoji-picker-search
+  input:focus-visible {
+  outline:
+    0 !important;
+
+  box-shadow:
+    none !important;
+}
+
+.emoji-search-clear {
+  display:
+    flex;
+
+  align-items:
+    center;
+
+  justify-content:
+    center;
+
+  width:
+    23px;
+  height:
+    23px;
+
+  flex:
+    0 0 23px;
+
+  border-radius:
+    50%;
+
+  background:
+    rgba(
+      118,
+      118,
+      128,
+      0.10
+    );
+
+  color:
+    rgba(
+      60,
+      60,
+      67,
+      0.56
+    );
+
+  font-size:
+    14px;
+}
+
+.emoji-picker-scroll {
+  flex:
+    1;
+
+  min-height:
+    0;
+
+  overflow-y:
+    auto;
+
+  overscroll-behavior:
+    contain;
+
+  scrollbar-width:
+    thin;
+
+  scrollbar-color:
+    rgba(
+      118,
+      118,
+      128,
+      0.22
+    )
+    transparent;
+}
+
+.emoji-picker-scroll::-webkit-scrollbar {
+  width:
+    7px;
+}
+
+.emoji-picker-scroll::-webkit-scrollbar-thumb {
+  border:
+    2px solid
+    transparent;
+
+  border-radius:
+    999px;
+
+  background:
+    rgba(
+      118,
+      118,
+      128,
+      0.25
+    );
+
+  background-clip:
+    padding-box;
+}
+
+.emoji-picker-grid {
+  grid-template-columns:
+    repeat(
+      7,
+      1fr
+    ) !important;
+
+  padding:
+    8px
+    10px
+    12px !important;
+}
+
+.emoji-picker-grid
+  button {
+  min-width:
+    0;
+
+  aspect-ratio:
+    1;
+
+  font-size:
+    21px !important;
+}
+
+.emoji-picker-empty {
+  display:
+    flex;
+
+  align-items:
+    center;
+
+  justify-content:
+    center;
+
+  flex-direction:
+    column;
+
+  min-height:
+    180px;
+
+  padding:
+    24px;
+
+  text-align:
+    center;
+}
+
+.emoji-picker-empty
+  > span {
+  margin-bottom:
+    9px;
+
+  font-size:
+    28px;
+}
+
+.emoji-picker-empty
+  strong {
+  color:
+    #3a3a3c;
+
+  font-size:
+    11px;
+}
+
+.emoji-picker-empty
+  p {
+  margin:
+    5px
+    0
+    0;
+
+  color:
+    rgba(
+      60,
+      60,
+      67,
+      0.50
+    );
+
+  font-size:
+    9px;
+}
+
+.emoji-picker-footer {
+  display:
+    flex;
+
+  align-items:
+    center;
+
+  justify-content:
+    space-between;
+
+  gap:
+    8px;
+
+  min-height:
+    34px;
+
+  padding:
+    0
+    11px;
+
+  border-top:
+    1px solid
+    rgba(
+      60,
+      60,
+      67,
+      0.07
+    );
+
+  color:
+    rgba(
+      60,
+      60,
+      67,
+      0.44
+    );
+
+  font-size:
+    7px;
+}
+
+html[data-color-mode="dark"]
+  .emoji-picker-search {
+  border-color:
+    rgba(
+      255,
+      255,
+      255,
+      0.09
+    );
+
+  background:
+    rgba(
+      118,
+      118,
+      128,
+      0.13
+    );
+
+  box-shadow:
+    inset
+    0
+    0.5px
+    0
+    rgba(
+      255,
+      255,
+      255,
+      0.08
+    );
+}
+
+html[data-color-mode="dark"]
+  .emoji-picker-search
+  > span {
+  color:
+    rgba(
+      235,
+      235,
+      245,
+      0.42
+    );
+}
+
+html[data-color-mode="dark"]
+  .emoji-picker-search
+  input {
+  color:
+    #f5f5f7 !important;
+
+  caret-color:
+    #ffffff;
+}
+
+html[data-color-mode="dark"]
+  .emoji-picker-search
+  input::placeholder {
+  color:
+    rgba(
+      235,
+      235,
+      245,
+      0.34
+    );
+}
+
+html[data-color-mode="dark"]
+  .emoji-search-clear {
+  background:
+    rgba(
+      118,
+      118,
+      128,
+      0.19
+    );
+
+  color:
+    rgba(
+      245,
+      245,
+      247,
+      0.66
+    );
+}
+
+html[data-color-mode="dark"]
+  .emoji-picker-empty
+  strong {
+  color:
+    #f5f5f7;
+}
+
+html[data-color-mode="dark"]
+  .emoji-picker-empty
+  p,
+html[data-color-mode="dark"]
+  .emoji-picker-footer {
+  color:
+    rgba(
+      235,
+      235,
+      245,
+      0.43
+    );
+}
+
+html[data-color-mode="dark"]
+  .emoji-picker-footer {
+  border-top-color:
+    rgba(
+      255,
+      255,
+      255,
+      0.07
+    );
+}
+
+/* =========================================================
+   V17 — REACTION CHIP ENTER ANIMATION
+========================================================= */
+
+.message-reaction-chip.reaction-chip-enter {
+  transform-origin:
+    50%
+    60%;
+
+  animation:
+    reactionChipPop
+    520ms
+    cubic-bezier(
+      0.18,
+      1.45,
+      0.38,
+      1
+    );
+}
+
+@keyframes reactionChipPop {
+  0% {
+    opacity:
+      0;
+
+    transform:
+      translateY(-3px)
+      scale(0.35);
+
+    filter:
+      blur(3px);
+  }
+
+  48% {
+    opacity:
+      1;
+
+    transform:
+      translateY(1px)
+      scale(1.18);
+
+    filter:
+      blur(0);
+  }
+
+  72% {
+    transform:
+      translateY(0)
+      scale(0.94);
+  }
+
+  100% {
+    opacity:
+      1;
+
+    transform:
+      translateY(0)
+      scale(1);
+  }
+}
+
+.message-quick-reaction.reacted {
+  animation:
+    quickReactionTap
+    390ms
+    var(
+      --ios-spring
+    );
+}
+
+@keyframes quickReactionTap {
+  0% {
+    transform:
+      scale(1);
+  }
+
+  45% {
+    transform:
+      translateY(-3px)
+      scale(1.20);
+  }
+
+  100% {
+    transform:
+      scale(1);
+  }
+}
+
+/* =========================================================
+   V17 — MOBILE EMOJI PICKER
+========================================================= */
+
+@media (max-width: 767px) {
+  .composer-emoji-picker {
+    width:
+      auto !important;
+
+    max-height:
+      min(
+        60dvh,
+        520px
+      );
+  }
+
+  .emoji-picker-grid {
+    grid-template-columns:
+      repeat(
+        8,
+        1fr
+      ) !important;
+  }
+
+  .emoji-picker-search {
+    min-height:
+      42px;
+  }
+
+  .emoji-picker-search
+    input {
+    font-size:
+      13px;
+  }
+
+  .emoji-picker-footer {
+    display:
+      none;
+  }
+}
+
+@media (
+  prefers-reduced-motion:
+  reduce
+) {
+  .message-reaction-chip.reaction-chip-enter,
+  .message-quick-reaction.reacted {
+    animation:
+      none !important;
+  }
+}
+
+
+/* =========================================================
+   V18 — DARK MODE HOME COMPLETE FIX
+   chat.css의 Home 전용 밝은 !important 규칙을 마지막에서 덮는다.
+========================================================= */
+
+html[data-color-mode="dark"]
+  .home-room-stage {
+  background:
+    #0e1016 !important;
+}
+
+html[data-color-mode="dark"]
+  .home-chat-body {
+  background:
+    transparent !important;
+}
+
+html[data-color-mode="dark"]
+  .main-home-column,
+html[data-color-mode="dark"]
+  .home-conversation-column {
+  background:
+    radial-gradient(
+      circle at
+      14% 14%,
+      rgba(
+        var(
+          --theme-accent-rgb,
+          116,
+          103,
+          232
+        ),
+        0.12
+      ),
+      transparent
+      34%
+    ),
+    radial-gradient(
+      circle at
+      86% 72%,
+      rgba(
+        44,
+        117,
+        210,
+        0.10
+      ),
+      transparent
+      38%
+    ),
+    linear-gradient(
+      180deg,
+      #11131a 0%,
+      #0d0f15 100%
+    ) !important;
+}
+
+html[data-color-mode="dark"]
+  .main-home-content {
+  color:
+    #f5f5f7 !important;
+}
+
+html[data-color-mode="dark"]
+  .main-home-ambient
+  span:nth-child(1) {
+  background:
+    radial-gradient(
+      circle,
+      rgba(
+        132,
+        116,
+        255,
+        0.18
+      ),
+      transparent
+      70%
+    ) !important;
+
+  opacity:
+    0.46 !important;
+}
+
+html[data-color-mode="dark"]
+  .main-home-ambient
+  span:nth-child(2) {
+  background:
+    radial-gradient(
+      circle,
+      rgba(
+        78,
+        210,
+        159,
+        0.08
+      ),
+      transparent
+      70%
+    ) !important;
+
+  opacity:
+    0.34 !important;
+}
+
+html[data-color-mode="dark"]
+  .main-home-ambient
+  span:nth-child(3) {
+  background:
+    radial-gradient(
+      circle,
+      rgba(
+        231,
+        142,
+        91,
+        0.07
+      ),
+      transparent
+      70%
+    ) !important;
+
+  opacity:
+    0.30 !important;
+}
+
+html[data-color-mode="dark"]
+  .main-home-eyebrow,
+html[data-color-mode="dark"]
+  .main-home-section-title
+  > div
+  > span {
+  color:
+    #aaa2ff !important;
+}
+
+html[data-color-mode="dark"]
+  .main-home-hero
+  h1,
+html[data-color-mode="dark"]
+  .main-home-section-title
+  h2 {
+  color:
+    #f6f6f8 !important;
+
+  text-shadow:
+    0
+    1px
+    0
+    rgba(
+      255,
+      255,
+      255,
+      0.02
+    );
+}
+
+html[data-color-mode="dark"]
+  .main-home-hero
+  p,
+html[data-color-mode="dark"]
+  .main-home-section-title
+  > span {
+  color:
+    rgba(
+      235,
+      235,
+      245,
+      0.52
+    ) !important;
+}
+
+html[data-color-mode="dark"]
+  .main-home-create {
+  border-color:
+    rgba(
+      255,
+      255,
+      255,
+      0.14
+    ) !important;
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(
+        var(
+          --theme-accent-rgb,
+          116,
+          103,
+          232
+        ),
+        0.92
+      ),
+      rgba(
+        var(
+          --theme-accent-rgb,
+          116,
+          103,
+          232
+        ),
+        0.70
+      )
+    ) !important;
+
+  color:
+    #ffffff !important;
+
+  box-shadow:
+    0
+    14px
+    34px
+    rgba(
+      var(
+        --theme-accent-rgb,
+        116,
+        103,
+        232
+      ),
+      0.20
+    ),
+    inset
+    0
+    0.5px
+    0
+    rgba(
+      255,
+      255,
+      255,
+      0.24
+    ) !important;
+}
+
+html[data-color-mode="dark"]
+  .main-home-room-card {
+  border-color:
+    rgba(
+      255,
+      255,
+      255,
+      0.10
+    ) !important;
+
+  background:
+    linear-gradient(
+      145deg,
+      rgba(
+        49,
+        52,
+        62,
+        0.76
+      ),
+      rgba(
+        25,
+        27,
+        34,
+        0.68
+      )
+    ) !important;
+
+  box-shadow:
+    inset
+    0
+    0.5px
+    0
+    rgba(
+      255,
+      255,
+      255,
+      0.10
+    ),
+    0
+    16px
+    38px
+    rgba(
+      0,
+      0,
+      0,
+      0.20
+    ) !important;
+
+  backdrop-filter:
+    blur(22px)
+    saturate(150%) !important;
+
+  -webkit-backdrop-filter:
+    blur(22px)
+    saturate(150%) !important;
+}
+
+html[data-color-mode="dark"]
+  .main-home-room-card:hover {
+  border-color:
+    color-mix(
+      in srgb,
+      var(
+        --home-room-accent
+      )
+      58%,
+      rgba(
+        255,
+        255,
+        255,
+        0.13
+      )
+      42%
+    ) !important;
+
+  background:
+    linear-gradient(
+      145deg,
+      rgba(
+        61,
+        64,
+        76,
+        0.82
+      ),
+      rgba(
+        29,
+        31,
+        39,
+        0.74
+      )
+    ) !important;
+
+  box-shadow:
+    inset
+    0
+    0.5px
+    0
+    rgba(
+      255,
+      255,
+      255,
+      0.12
+    ),
+    0
+    20px
+    46px
+    rgba(
+      0,
+      0,
+      0,
+      0.26
+    ) !important;
+}
+
+html[data-color-mode="dark"]
+  .main-home-room-card::after {
+  opacity:
+    0.18 !important;
+
+  filter:
+    saturate(120%);
+}
+
+html[data-color-mode="dark"]
+  .main-home-room-card
+  h3 {
+  color:
+    #f5f5f7 !important;
+}
+
+html[data-color-mode="dark"]
+  .main-home-room-card
+  p {
+  color:
+    rgba(
+      235,
+      235,
+      245,
+      0.54
+    ) !important;
+}
+
+html[data-color-mode="dark"]
+  .main-home-room-card
+  footer {
+  color:
+    rgba(
+      235,
+      235,
+      245,
+      0.40
+    ) !important;
+}
+
+html[data-color-mode="dark"]
+  .main-home-room-card
+  footer
+  span:last-child {
+  color:
+    color-mix(
+      in srgb,
+      var(
+        --home-room-accent
+      )
+      72%,
+      white
+      28%
+    ) !important;
+}
+
+html[data-color-mode="dark"]
+  .home-workspace-header {
+  background:
+    linear-gradient(
+      180deg,
+      rgba(
+        37,
+        39,
+        47,
+        0.78
+      ),
+      rgba(
+        25,
+        27,
+        34,
+        0.68
+      )
+    ) !important;
+
+  border-bottom-color:
+    rgba(
+      255,
+      255,
+      255,
+      0.08
+    ) !important;
+}
+
+html[data-color-mode="dark"]
+  .home-header-avatar {
+  border:
+    1px solid
+    rgba(
+      255,
+      255,
+      255,
+      0.12
+    ) !important;
+
+  background:
+    linear-gradient(
+      135deg,
+      rgba(
+        112,
+        101,
+        225,
+        0.86
+      ),
+      rgba(
+        88,
+        77,
+        175,
+        0.76
+      )
+    ) !important;
+}
+
+html[data-color-mode="dark"]
+  .home-header-create {
+  border-color:
+    rgba(
+      255,
+      255,
+      255,
+      0.11
+    ) !important;
+
+  background:
+    rgba(
+      118,
+      118,
+      128,
+      0.13
+    ) !important;
+
+  color:
+    #f5f5f7 !important;
+}
+
+/* =========================================================
+   V18 — EMOJI-ONLY MESSAGE
+   Emoji만 단독 전송 시 말풍선을 없애고 조금 크게 표시한다.
+========================================================= */
+
+.message-row.message-emoji-only
+  .message-bubble-shell {
+  overflow:
+    visible;
+}
+
+.message-row.message-emoji-only
+  .message-bubble.emoji-only-bubble,
+html[data-color-mode="dark"]
+  .message-row.message-emoji-only
+  .message-bubble.emoji-only-bubble {
+  min-width:
+    0 !important;
+
+  max-width:
+    none !important;
+
+  padding:
+    0
+    3px !important;
+
+  border:
+    0 !important;
+
+  border-radius:
+    0 !important;
+
+  outline:
+    none !important;
+
+  background:
+    transparent !important;
+
+  box-shadow:
+    none !important;
+
+  backdrop-filter:
+    none !important;
+
+  -webkit-backdrop-filter:
+    none !important;
+
+  filter:
+    none !important;
+}
+
+.message-row.message-emoji-only
+  .message-bubble.emoji-only-bubble:hover,
+.message-row.message-emoji-only
+  .message-bubble.emoji-only-bubble:active,
+.message-row.message-emoji-only.message-selected
+  .message-bubble.emoji-only-bubble {
+  transform:
+    none !important;
+
+  background:
+    transparent !important;
+
+  box-shadow:
+    none !important;
+}
+
+.message-emoji-only-content {
+  display:
+    inline-block;
+
+  font-family:
+    "Apple Color Emoji",
+    "Segoe UI Emoji",
+    "Noto Color Emoji",
+    sans-serif !important;
+
+  font-size:
+    36px;
+
+  font-weight:
+    400;
+
+  line-height:
+    1.12;
+
+  letter-spacing:
+    1px;
+
+  text-shadow:
+    0
+    7px
+    18px
+    rgba(
+      0,
+      0,
+      0,
+      0.09
+    );
+
+  transform-origin:
+    center;
+
+  animation:
+    emojiOnlyMessageIn
+    420ms
+    cubic-bezier(
+      0.18,
+      1.32,
+      0.36,
+      1
+    );
+}
+
+.message-row.emoji-count-1
+  .message-emoji-only-content {
+  font-size:
+    48px;
+}
+
+.message-row.emoji-count-2
+  .message-emoji-only-content {
+  font-size:
+    42px;
+}
+
+.message-row.emoji-count-3
+  .message-emoji-only-content {
+  font-size:
+    38px;
+}
+
+.message-row.emoji-count-4
+  .message-emoji-only-content {
+  font-size:
+    34px;
+}
+
+.message-row.message-emoji-only
+  .message-meta {
+  padding-bottom:
+    5px;
+}
+
+.message-row.message-emoji-only
+  .message-reaction-chips {
+  margin-top:
+    1px;
+}
+
+.message-row.message-emoji-only.message-selected
+  .message-bubble-shell::after {
+  position:
+    absolute;
+
+  inset:
+    -7px
+    -9px;
+
+  z-index:
+    -1;
+
+  border-radius:
+    18px;
+
+  background:
+    radial-gradient(
+      circle at
+      50% 50%,
+      rgba(
+        var(
+          --theme-accent-rgb,
+          116,
+          103,
+          232
+        ),
+        0.10
+      ),
+      transparent
+      70%
+    );
+
+  pointer-events:
+    none;
+
+  content:
+    "";
+}
+
+@keyframes emojiOnlyMessageIn {
+  0% {
+    opacity:
+      0;
+
+    transform:
+      translateY(5px)
+      scale(0.72);
+  }
+
+  58% {
+    opacity:
+      1;
+
+    transform:
+      translateY(-1px)
+      scale(1.08);
+  }
+
+  100% {
+    opacity:
+      1;
+
+    transform:
+      translateY(0)
+      scale(1);
+  }
+}
+
+@media (max-width: 767px) {
+  .message-row.emoji-count-1
+    .message-emoji-only-content {
+    font-size:
+      44px;
+  }
+
+  .message-row.emoji-count-2
+    .message-emoji-only-content {
+    font-size:
+      39px;
+  }
+
+  .message-row.emoji-count-3
+    .message-emoji-only-content {
+    font-size:
+      36px;
+  }
+
+  .message-row.emoji-count-4
+    .message-emoji-only-content {
+    font-size:
+      32px;
+  }
+}
+
+@media (
+  prefers-reduced-motion:
+  reduce
+) {
+  .message-emoji-only-content {
+    animation:
+      none !important;
+  }
+}
+
+
+/* =========================================================
+   V19 — FRIEND ADD LIQUID GLASS CONSISTENCY
+========================================================= */
+
+.friend-add-workspace {
+  background:
+    transparent !important;
+}
+
+.friend-add-panel {
+  border:
+    1px solid
+    rgba(
+      255,
+      255,
+      255,
+      0.58
+    ) !important;
+
+  background:
+    linear-gradient(
+      145deg,
+      rgba(
+        255,
+        255,
+        255,
+        0.62
+      ),
+      rgba(
+        248,
+        249,
+        253,
+        0.40
+      )
+    ) !important;
+
+  box-shadow:
+    inset
+    0
+    1px
+    0
+    rgba(
+      255,
+      255,
+      255,
+      0.90
+    ),
+    0
+    14px
+    38px
+    rgba(
+      30,
+      35,
+      50,
+      0.065
+    ) !important;
+
+  backdrop-filter:
+    blur(24px)
+    saturate(155%) !important;
+
+  -webkit-backdrop-filter:
+    blur(24px)
+    saturate(155%) !important;
+}
+
+.friend-add-search {
+  border:
+    1px solid
+    rgba(
+      255,
+      255,
+      255,
+      0.58
+    ) !important;
+
+  background:
+    rgba(
+      255,
+      255,
+      255,
+      0.50
+    ) !important;
+
+  box-shadow:
+    inset
+    0
+    1px
+    0
+    rgba(
+      255,
+      255,
+      255,
+      0.92
+    ),
+    inset
+    0
+    -1px
+    0
+    rgba(
+      60,
+      60,
+      67,
+      0.045
+    ) !important;
+}
+
+.friend-add-search
+  button {
+  min-width:
+    72px;
+
+  height:
+    38px;
+
+  border:
+    1px solid
+    rgba(
+      255,
+      255,
+      255,
+      0.38
+    );
+
+  border-radius:
+    11px !important;
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(
+        var(
+          --theme-accent-rgb,
+          116,
+          103,
+          232
+        ),
+        0.96
+      ),
+      rgba(
+        var(
+          --theme-accent-rgb,
+          116,
+          103,
+          232
+        ),
+        0.78
+      )
+    ) !important;
+
+  color:
+    #ffffff !important;
+
+  box-shadow:
+    inset
+    0
+    0.5px
+    0
+    rgba(
+      255,
+      255,
+      255,
+      0.34
+    ),
+    0
+    7px
+    18px
+    rgba(
+      var(
+        --theme-accent-rgb,
+        116,
+        103,
+        232
+      ),
+      0.15
+    ) !important;
+
+  transition:
+    transform
+    220ms
+    var(
+      --ios-spring
+    ),
+    filter
+    180ms
+    ease !important;
+}
+
+.friend-add-search
+  button:hover {
+  transform:
+    translateY(-1px);
+
+  filter:
+    brightness(1.04);
+}
+
+.friend-add-search
+  button:active {
+  transform:
+    scale(0.96);
+}
+
+.friend-add-guide {
+  margin-top:
+    18px !important;
+
+  padding:
+    18px !important;
+
+  border:
+    1px solid
+    rgba(
+      255,
+      255,
+      255,
+      0.54
+    ) !important;
+
+  border-radius:
+    16px !important;
+
+  background:
+    linear-gradient(
+      145deg,
+      rgba(
+        255,
+        255,
+        255,
+        0.52
+      ),
+      rgba(
+        247,
+        247,
+        252,
+        0.34
+      )
+    ) !important;
+
+  box-shadow:
+    inset
+    0
+    0.5px
+    0
+    rgba(
+      255,
+      255,
+      255,
+      0.88
+    ) !important;
+}
+
+.friend-add-guide-icon {
+  border:
+    1px solid
+    rgba(
+      255,
+      255,
+      255,
+      0.58
+    ) !important;
+
+  background:
+    linear-gradient(
+      145deg,
+      rgba(
+        var(
+          --theme-accent-rgb,
+          116,
+          103,
+          232
+        ),
+        0.16
+      ),
+      rgba(
+        255,
+        255,
+        255,
+        0.40
+      )
+    ) !important;
+
+  box-shadow:
+    inset
+    0
+    0.5px
+    0
+    rgba(
+      255,
+      255,
+      255,
+      0.82
+    ) !important;
+}
+
+.friend-add-guide
+  strong {
+  color:
+    #3a3a3c !important;
+}
+
+.friend-add-guide
+  p {
+  color:
+    rgba(
+      60,
+      60,
+      67,
+      0.54
+    ) !important;
+}
+
+/* =========================================================
+   V19 — FRIEND ADD DARK MODE COMPLETE
+========================================================= */
+
+html[data-color-mode="dark"]
+  .friend-add-workspace {
+  background:
+    radial-gradient(
+      circle at
+      10% 10%,
+      rgba(
+        var(
+          --theme-accent-rgb,
+          116,
+          103,
+          232
+        ),
+        0.09
+      ),
+      transparent
+      34%
+    ),
+    linear-gradient(
+      180deg,
+      #11131a 0%,
+      #0d0f15 100%
+    ) !important;
+}
+
+html[data-color-mode="dark"]
+  .workspace-section-header
+  h1 {
+  color:
+    #f5f5f7 !important;
+}
+
+html[data-color-mode="dark"]
+  .workspace-section-header
+  p {
+  color:
+    rgba(
+      235,
+      235,
+      245,
+      0.50
+    ) !important;
+}
+
+html[data-color-mode="dark"]
+  .workspace-section-header
+  > div
+  > span {
+  color:
+    #aaa2ff !important;
+}
+
+html[data-color-mode="dark"]
+  .friend-add-panel {
+  border-color:
+    rgba(
+      255,
+      255,
+      255,
+      0.10
+    ) !important;
+
+  background:
+    linear-gradient(
+      145deg,
+      rgba(
+        46,
+        48,
+        58,
+        0.76
+      ),
+      rgba(
+        24,
+        26,
+        33,
+        0.70
+      )
+    ) !important;
+
+  box-shadow:
+    inset
+    0
+    0.5px
+    0
+    rgba(
+      255,
+      255,
+      255,
+      0.10
+    ),
+    0
+    16px
+    42px
+    rgba(
+      0,
+      0,
+      0,
+      0.22
+    ) !important;
+}
+
+html[data-color-mode="dark"]
+  .form-label {
+  color:
+    rgba(
+      245,
+      245,
+      247,
+      0.82
+    ) !important;
+}
+
+html[data-color-mode="dark"]
+  .friend-add-search,
+html[data-color-mode="dark"]
+  .friend-add-search:focus,
+html[data-color-mode="dark"]
+  .friend-add-search:focus-within {
+  border-color:
+    rgba(
+      255,
+      255,
+      255,
+      0.10
+    ) !important;
+
+  background:
+    rgba(
+      20,
+      22,
+      28,
+      0.64
+    ) !important;
+
+  box-shadow:
+    inset
+    0
+    0.5px
+    0
+    rgba(
+      255,
+      255,
+      255,
+      0.08
+    ),
+    inset
+    0
+    -0.5px
+    0
+    rgba(
+      0,
+      0,
+      0,
+      0.30
+    ) !important;
+}
+
+html[data-color-mode="dark"]
+  .friend-add-search
+  > span {
+  color:
+    rgba(
+      235,
+      235,
+      245,
+      0.42
+    ) !important;
+}
+
+html[data-color-mode="dark"]
+  .friend-add-search
+  input {
+  color:
+    #f5f5f7 !important;
+
+  caret-color:
+    #ffffff;
+}
+
+html[data-color-mode="dark"]
+  .friend-add-search
+  input::placeholder {
+  color:
+    rgba(
+      235,
+      235,
+      245,
+      0.34
+    ) !important;
+}
+
+html[data-color-mode="dark"]
+  .friend-add-search
+  button {
+  border-color:
+    rgba(
+      255,
+      255,
+      255,
+      0.14
+    ) !important;
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(
+        var(
+          --theme-accent-rgb,
+          116,
+          103,
+          232
+        ),
+        0.96
+      ),
+      rgba(
+        var(
+          --theme-accent-rgb,
+          116,
+          103,
+          232
+        ),
+        0.74
+      )
+    ) !important;
+
+  color:
+    #ffffff !important;
+}
+
+html[data-color-mode="dark"]
+  .friend-add-guide {
+  border-color:
+    rgba(
+      255,
+      255,
+      255,
+      0.09
+    ) !important;
+
+  background:
+    linear-gradient(
+      145deg,
+      rgba(
+        51,
+        53,
+        64,
+        0.70
+      ),
+      rgba(
+        29,
+        31,
+        39,
+        0.66
+      )
+    ) !important;
+
+  box-shadow:
+    inset
+    0
+    0.5px
+    0
+    rgba(
+      255,
+      255,
+      255,
+      0.09
+    ) !important;
+}
+
+html[data-color-mode="dark"]
+  .friend-add-guide-icon {
+  border-color:
+    rgba(
+      255,
+      255,
+      255,
+      0.09
+    ) !important;
+
+  background:
+    linear-gradient(
+      145deg,
+      rgba(
+        var(
+          --theme-accent-rgb,
+          116,
+          103,
+          232
+        ),
+        0.20
+      ),
+      rgba(
+        118,
+        118,
+        128,
+        0.12
+      )
+    ) !important;
+}
+
+html[data-color-mode="dark"]
+  .friend-add-guide
+  strong {
+  color:
+    #f5f5f7 !important;
+}
+
+html[data-color-mode="dark"]
+  .friend-add-guide
+  p {
+  color:
+    rgba(
+      235,
+      235,
+      245,
+      0.48
+    ) !important;
+}
+
+/* =========================================================
+   V19 — OWN PROFILE POPOVER STABLE OPEN
+========================================================= */
+
+/*
+ * 내 프로필 카드가 open animation의 scale 크기로 측정되면서
+ * 등장 후 수 px 위로 재배치되던 문제를 JS에서 offsetHeight로 수정.
+ * CSS는 최종 위치를 기준으로 아래쪽에서 자연스럽게 열리기만 한다.
+ */
+body
+  > .own-profile-popover.ios-popover-desktop {
+  transform-origin:
+    left bottom !important;
+
+  will-change:
+    transform,
+    opacity;
+}
+
+/*
+ * 위치가 바뀌는 것처럼 보이는 translateY 양도 줄여서
+ * 실제 Anchor 위치는 고정된 채 작은 Scale 중심으로 등장.
+ */
+body
+  > .own-profile-popover {
+  animation:
+    ownProfileStableOpen
+    360ms
+    var(
+      --ios-spring
+    ) !important;
+}
+
+@keyframes ownProfileStableOpen {
+  0% {
+    opacity:
+      0;
+
+    filter:
+      blur(5px);
+
+    transform:
+      scale(0.94);
+  }
+
+  68% {
+    opacity:
+      1;
+
+    filter:
+      blur(0);
+
+    transform:
+      scale(1.012);
+  }
+
+  100% {
+    opacity:
+      1;
+
+    transform:
+      scale(1);
+  }
+}
+
+@media (
+  prefers-reduced-motion:
+  reduce
+) {
+  body
+    > .own-profile-popover {
+    animation:
+      none !important;
+  }
+}

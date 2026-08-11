@@ -1,0 +1,276 @@
+export const currentUser = {
+  id: 1,
+  nickname: '희수',
+  role: 'OWNER',
+  email: 'heesu@example.com',
+  profileImageUrl: null,
+  statusMessage: 'MeetupLog 개발 중',
+  presence: 'ONLINE',
+}
+
+export const initialChatRooms = [
+  {
+    id: 1,
+    name: '주말 영화방',
+    topicType: 'MOVIE',
+    lastMessage: '그럼 액션 쪽으로 찾아보자.',
+    unreadCount: 2,
+    memberCount: 4,
+  },
+  {
+    id: 2,
+    name: '오늘 뭐 할까?',
+    topicType: 'GAME',
+    lastMessage: '보드게임 하나 골라보자',
+    unreadCount: 0,
+    memberCount: 5,
+  },
+  {
+    id: 3,
+    name: '저녁 메뉴 정하기',
+    topicType: 'FOOD',
+    lastMessage: '나는 한식 좋아!',
+    unreadCount: 4,
+    memberCount: 3,
+  },
+  {
+    id: 4,
+    name: '여름 여행 계획',
+    topicType: 'TRAVEL',
+    lastMessage: '바다 있는 곳 어때?',
+    unreadCount: 1,
+    memberCount: 6,
+  },
+]
+
+export const initialMembers = [
+  {
+    id: 1,
+    nickname: '희수',
+    role: 'OWNER',
+    presence: 'ONLINE',
+    profileImageUrl: null,
+    statusMessage: 'MeetupLog 개발 중',
+  },
+  {
+    id: 2,
+    nickname: '민수',
+    role: 'MEMBER',
+    presence: 'ONLINE',
+    profileImageUrl: null,
+    statusMessage: '오늘도 개발 중',
+  },
+  {
+    id: 3,
+    nickname: '지우',
+    role: 'MEMBER',
+    presence: 'OFFLINE',
+    profileImageUrl: null,
+    statusMessage: '저녁에 봐요 👋',
+  },
+  {
+    id: 4,
+    nickname: '유진',
+    role: 'GUEST',
+    presence: 'AWAY',
+    profileImageUrl: null,
+    statusMessage: '잠깐 자리 비움',
+  },
+]
+
+export const initialFriends = [
+  {
+    id: 11,
+    nickname: '민수',
+    presence: 'ONLINE',
+    profileImageUrl: null,
+    statusMessage: '오늘도 개발 중',
+  },
+  {
+    id: 12,
+    nickname: '지우',
+    presence: 'OFFLINE',
+    profileImageUrl: null,
+    statusMessage: '저녁에 봐요 👋',
+  },
+  {
+    id: 13,
+    nickname: '유진',
+    presence: 'AWAY',
+    profileImageUrl: null,
+    statusMessage: '영화 추천 환영',
+  },
+  {
+    id: 14,
+    nickname: '서준',
+    presence: 'ONLINE',
+    profileImageUrl: null,
+    statusMessage: '',
+  },
+]
+
+export const initialNotifications = [
+  {
+    id: 1,
+    type: 'INVITE',
+    title: '새 채팅방 초대',
+    body: '민수님이 “금요일 영화방”에 초대했습니다.',
+    time: '방금',
+    read: false,
+  },
+  {
+    id: 2,
+    type: 'FRIEND',
+    title: '친구 요청',
+    body: '서준님이 친구 요청을 보냈습니다.',
+    time: '12분 전',
+    read: false,
+  },
+  {
+    id: 3,
+    type: 'SYSTEM',
+    title: '추천 결과 확정',
+    body: '“주말 영화방”에서 최종 영화가 선택되었습니다.',
+    time: '어제',
+    read: true,
+  },
+]
+
+export const initialMessagesByRoom = {
+  1: [
+    {
+      id: 101,
+      senderId: 2,
+      senderName: '민수',
+      content: '이번에는 액션 영화 보고 싶어.',
+      sentAt: '15:12',
+      type: 'TEXT',
+      reactions: {
+        '👍': [3, 4],
+      },
+      unreadCount: 0,
+    },
+    {
+      id: 102,
+      senderId: 3,
+      senderName: '지우',
+      content: '나는 공포만 아니면 괜찮아!',
+      sentAt: '15:13',
+      type: 'TEXT',
+      reactions: {
+        '❤️': [1],
+        '✅': [4],
+      },
+      unreadCount: 1,
+    },
+    {
+      id: 103,
+      senderId: 4,
+      senderName: '유진',
+      content: '두 시간 넘는 영화는 조금 부담스러워.',
+      sentAt: '15:14',
+      type: 'TEXT',
+      unreadCount: 2,
+    },
+    {
+      id: 104,
+      senderId: 1,
+      senderName: '희수',
+      content: '그럼 가볍게 볼 수 있는 액션 쪽으로 찾아보자.',
+      sentAt: '15:15',
+      type: 'TEXT',
+      reactions: {
+        '👍': [2],
+      },
+      unreadCount: 1,
+      replyToId: 102,
+    },
+  ],
+
+  2: [
+    {
+      id: 201,
+      senderId: 2,
+      senderName: '민수',
+      content: '오늘 보드게임 할 사람?',
+      sentAt: '14:10',
+      type: 'TEXT',
+      unreadCount: 0,
+    },
+    {
+      id: 202,
+      senderId: 1,
+      senderName: '희수',
+      content: '난 좋아. 너무 오래 걸리는 것만 아니면!',
+      sentAt: '14:12',
+      type: 'TEXT',
+      unreadCount: 1,
+    },
+  ],
+
+  3: [
+    {
+      id: 301,
+      senderId: 3,
+      senderName: '지우',
+      content: '오늘 저녁 뭐 먹지?',
+      sentAt: '13:40',
+      type: 'TEXT',
+      unreadCount: 1,
+    },
+    {
+      id: 302,
+      senderId: 1,
+      senderName: '희수',
+      content: '나는 한식이면 좋을 것 같아.',
+      sentAt: '13:42',
+      type: 'TEXT',
+      unreadCount: 0,
+    },
+  ],
+
+  4: [
+    {
+      id: 401,
+      senderId: 4,
+      senderName: '유진',
+      content: '여름에는 바다 있는 곳 가고 싶다.',
+      sentAt: '12:30',
+      type: 'TEXT',
+      unreadCount: 2,
+    },
+    {
+      id: 402,
+      senderId: 2,
+      senderName: '민수',
+      content: '부산이나 제주도?',
+      sentAt: '12:31',
+      type: 'TEXT',
+      unreadCount: 1,
+    },
+  ],
+}
+
+export const mockAiMovies = [
+  {
+    rank: 1,
+    title: '가디언즈 오브 갤럭시 Vol. 3',
+    genres: '액션 · SF · 코미디',
+    runtime: '150분',
+    score: 94,
+  },
+  {
+    rank: 2,
+    title: '탑건: 매버릭',
+    genres: '액션 · 드라마',
+    runtime: '131분',
+    score: 91,
+  },
+  {
+    rank: 3,
+    title: '엣지 오브 투모로우',
+    genres: '액션 · SF',
+    runtime: '113분',
+    score: 88,
+  },
+]
