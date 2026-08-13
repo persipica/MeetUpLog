@@ -42,7 +42,9 @@ import { changeMyPassword } from '../api/memberApi'
 import {
   BellIcon,
   CloseIcon,
+  LogoutIcon,
   PencilIcon,
+  TrashIcon,
   UserPlusIcon,
 } from '../components/common/Icons'
 
@@ -80,8 +82,95 @@ const createPresenceDirectory = (...groups) => {
   return directory
 }
 
-const ChatMainPage = () => {
+const ChatMainPage = ({
+  authSession,
+  onLogout,
+}) => {
   useLiquidControlReflection()
+
+  const isGuest =
+    authSession?.type === 'guest'
+
+  const sessionUser = {
+    ...initialCurrentUser,
+    ...authSession?.user,
+    role:
+      authSession?.user?.role ??
+      (isGuest ? 'GUEST' : initialCurrentUser.role),
+    email:
+      authSession?.user?.email ??
+      (isGuest ? '' : initialCurrentUser.email),
+    statusMessage:
+      isGuest
+        ? '게스트로 참여 중'
+        : authSession?.user?.statusMessage ?? initialCurrentUser.statusMessage,
+    presence:
+      authSession?.user?.presence ?? 'ONLINE',
+  }
+
+  const sessionRooms = isGuest
+    ? [
+        {
+          ...(initialChatRooms.find(
+            (room) => room.id === authSession?.inviteRoomId,
+          ) ?? initialChatRooms[0]),
+          id: authSession?.inviteRoomId ?? initialChatRooms[0].id,
+          name: authSession?.inviteRoomName ?? initialChatRooms[0].name,
+          memberCount:
+            (initialChatRooms.find(
+              (room) => room.id === authSession?.inviteRoomId,
+            )?.memberCount ?? initialChatRooms[0].memberCount) + 1,
+        },
+      ]
+    : initialChatRooms
+
+  const sessionMembers = (() => {
+    const currentMember = {
+      id: sessionUser.id,
+      accountId: sessionUser.accountId,
+      nickname: sessionUser.nickname,
+      email: sessionUser.email,
+      role: sessionUser.role,
+      presence: sessionUser.presence,
+      profileImageUrl: sessionUser.profileImageUrl,
+      statusMessage: sessionUser.statusMessage,
+    }
+
+    if (isGuest) {
+      return [currentMember, ...initialMembers]
+    }
+
+    const alreadyIncluded = initialMembers.some(
+      (member) => member.id === currentMember.id,
+    )
+
+    return alreadyIncluded
+      ? initialMembers.map((member) =>
+          member.id === currentMember.id
+            ? { ...member, ...currentMember }
+            : member,
+        )
+      : [currentMember, ...initialMembers]
+  })()
+
+  const sessionMessages = isGuest
+    ? {
+        ...initialMessagesByRoom,
+        [sessionRooms[0].id]: [
+          ...(initialMessagesByRoom[sessionRooms[0].id] ?? []),
+          {
+            id: `guest-join-${sessionUser.id}`,
+            eventId: `guest-join-${sessionUser.id}`,
+            senderId: 0,
+            senderName: 'System',
+            content: `${sessionUser.nickname}님이 입장했습니다.`,
+            sentAt: '',
+            type: 'SYSTEM',
+            systemEvent: 'JOIN',
+          },
+        ],
+      }
+    : initialMessagesByRoom
 
   const [
     colorMode,
@@ -139,27 +228,29 @@ const ChatMainPage = () => {
     userProfile,
     setUserProfile,
   ] = useState(
-    initialCurrentUser,
+    sessionUser,
   )
 
   const [rooms, setRooms] =
-    useState(initialChatRooms)
+    useState(sessionRooms)
 
   const [baseFriends] =
-    useState(initialFriends)
+    useState(
+      isGuest ? [] : initialFriends,
+    )
 
   const [presenceDirectory, setPresenceDirectory] = useState(
     () => createPresenceDirectory(
       initialCurrentUser,
-      initialFriends,
-      initialMembers,
+      isGuest ? [] : initialFriends,
+      sessionMembers,
     ),
   )
 
   const [
     baseMembers,
     setBaseMembers,
-  ] = useState(initialMembers)
+  ] = useState(sessionMembers)
 
   const [activeMenu, setActiveMenu] =
     useState('chat')
@@ -175,7 +266,7 @@ const ChatMainPage = () => {
   )
 
   useEffect(() => {
-    const currentIdentity = getPresenceIdentity(initialCurrentUser)
+    const currentIdentity = getPresenceIdentity(sessionUser)
 
     const applyRealtimePresence = (payload) => {
       const identity =
@@ -236,7 +327,9 @@ const ChatMainPage = () => {
   const [
     workspaceMode,
     setWorkspaceMode,
-  ] = useState('home')
+  ] = useState(
+    isGuest ? 'chat' : 'home',
+  )
 
   const [
     returnWorkspaceMode,
@@ -246,13 +339,17 @@ const ChatMainPage = () => {
   const [
     selectedRoomId,
     setSelectedRoomId,
-  ] = useState(null)
+  ] = useState(
+    isGuest
+      ? sessionRooms[0]?.id ?? null
+      : null,
+  )
 
   const [
     messagesByRoom,
     setMessagesByRoom,
   ] = useState(
-    initialMessagesByRoom,
+    sessionMessages,
   )
 
   const [
@@ -453,6 +550,11 @@ const ChatMainPage = () => {
   ] = useState(null)
 
   const [
+    editMessageDraft,
+    setEditMessageDraft,
+  ] = useState('')
+
+  const [
     deleteMessageTarget,
     setDeleteMessageTarget,
   ] = useState(null)
@@ -603,6 +705,14 @@ const ChatMainPage = () => {
   }
 
   const handleHome = () => {
+    if (isGuest) {
+      setSelectedRoomId(
+        sessionRooms[0]?.id ?? null,
+      )
+      setWorkspaceMode('chat')
+      return
+    }
+
     setLocalTyping(false)
     setReplyTarget(null)
     setEditingMessage(null)
@@ -962,6 +1072,10 @@ const ChatMainPage = () => {
 
     setReplyTarget(null)
     setEditingMessage(message)
+    setEditMessageDraft(
+      message.content,
+    )
+    setModal('EDIT_MESSAGE')
   }
 
   const handleSaveEdit = (
@@ -993,6 +1107,7 @@ const ChatMainPage = () => {
     )
 
     setEditingMessage(null)
+    setEditMessageDraft('')
     setReplyTarget(null)
 
     setRooms((previous) =>
@@ -1376,17 +1491,15 @@ const ChatMainPage = () => {
               members.length
             }
             isOwner={isOwner}
-            onBack={handleHome}
+            onBack={isGuest ? null : handleHome}
             onOpenMembers={() =>
               setMemberDrawerOpen(
                 true,
               )
             }
-            onOpenRoomMenu={() =>
-              setModal(
-                'ROOM_MENU',
-              )
-            }
+            onOpenRoomMenu={isGuest
+              ? null
+              : () => setModal('ROOM_MENU')}
           />
 
           <div className="chat-body">
@@ -1453,7 +1566,9 @@ const ChatMainPage = () => {
                   replyTarget
                 }
                 editingMessage={
-                  editingMessage
+                  modal === 'EDIT_MESSAGE'
+                    ? null
+                    : editingMessage
                 }
                 aiSupported={
                   roomTheme.aiSupported
@@ -1775,6 +1890,7 @@ const ChatMainPage = () => {
         currentUser={
           userProfile
         }
+        isGuest={isGuest}
         unreadNotificationCount={
           unreadNotificationCount
         }
@@ -1892,17 +2008,28 @@ const ChatMainPage = () => {
         open={
           modal === 'LOGOUT'
         }
-        title="로그아웃"
-        subtitle="현재 계정에서 로그아웃합니다."
+        title={isGuest ? '게스트 참여 종료' : '로그아웃'}
+        subtitle={isGuest ? '초대받은 채팅방에서 나갑니다.' : '현재 MeetupLog 세션을 안전하게 종료합니다.'}
+        eyebrow={isGuest ? 'GUEST SESSION' : 'ACCOUNT SESSION'}
+        icon={<LogoutIcon />}
+        className="logout-modal"
         onClose={() =>
           setModal(null)
         }
         size="small"
       >
         <div className="logout-confirm">
-          <p>
-            정말 로그아웃할까요?
-          </p>
+          <div className="logout-confirm-message">
+            <strong>
+              {isGuest ? '초대방에서 나갈까요?' : '정말 로그아웃할까요?'}
+            </strong>
+
+            <p>
+              {isGuest
+                ? '게스트 세션이 종료되며, 다시 참여하려면 초대 링크가 필요합니다.'
+                : '이 기기의 로그인 상태가 해제되고 로그인 화면으로 이동합니다.'}
+            </p>
+          </div>
 
           <div className="modal-action-row">
             <button
@@ -1919,14 +2046,12 @@ const ChatMainPage = () => {
               type="button"
               className="primary-action"
               onClick={() => {
-                alert(
-                  '로그아웃 API 연결 후 로그인 화면으로 이동합니다.',
-                )
-
                 setModal(null)
+                onLogout?.()
               }}
             >
-              로그아웃
+              <LogoutIcon />
+              {isGuest ? '나가기' : '로그아웃'}
             </button>
           </div>
         </div>
@@ -1988,10 +2113,102 @@ const ChatMainPage = () => {
       <AppModal
         open={
           modal ===
+          'EDIT_MESSAGE'
+        }
+        title="메시지 수정"
+        subtitle="전송한 메시지의 내용을 변경합니다."
+        eyebrow="MESSAGE ACTION"
+        icon={<PencilIcon />}
+        className="message-action-modal"
+        onClose={() => {
+          setEditingMessage(null)
+          setEditMessageDraft('')
+          setModal(null)
+        }}
+        size="small"
+      >
+        <div className="message-edit-confirm">
+          <label className="message-edit-field">
+            <span>
+              수정할 내용
+              <small>{editMessageDraft.length}/1000</small>
+            </span>
+
+            <textarea
+              value={editMessageDraft}
+              maxLength={1000}
+              autoFocus
+              onChange={(event) =>
+                setEditMessageDraft(event.target.value)
+              }
+              onKeyDown={(event) => {
+                if (
+                  event.key === 'Enter' &&
+                  !event.shiftKey &&
+                  editMessageDraft.trim() &&
+                  editMessageDraft.trim() !== editingMessage?.content
+                ) {
+                  event.preventDefault()
+                  handleSaveEdit(
+                    editingMessage.id,
+                    editMessageDraft.trim(),
+                  )
+                  setModal(null)
+                }
+              }}
+            />
+          </label>
+
+          <div className="message-action-note">
+            <span>i</span>
+            <p>수정한 메시지에는 대화 상대가 확인할 수 있도록 ‘수정됨’ 표시가 남습니다.</p>
+          </div>
+
+          <div className="modal-action-row">
+            <button
+              type="button"
+              className="secondary-action"
+              onClick={() => {
+                setEditingMessage(null)
+                setEditMessageDraft('')
+                setModal(null)
+              }}
+            >
+              취소
+            </button>
+
+            <button
+              type="button"
+              className="primary-action"
+              disabled={
+                !editMessageDraft.trim() ||
+                editMessageDraft.trim() === editingMessage?.content
+              }
+              onClick={() => {
+                handleSaveEdit(
+                  editingMessage.id,
+                  editMessageDraft.trim(),
+                )
+                setModal(null)
+              }}
+            >
+              <PencilIcon />
+              수정 저장
+            </button>
+          </div>
+        </div>
+      </AppModal>
+
+      <AppModal
+        open={
+          modal ===
           'DELETE_MESSAGE'
         }
         title="메시지 삭제"
-        subtitle="이 메시지를 삭제할까요?"
+        subtitle="삭제 후에는 메시지 내용을 복구할 수 없습니다."
+        eyebrow="MESSAGE ACTION"
+        icon={<TrashIcon />}
+        className="message-action-modal message-delete-modal"
         onClose={() => {
           setDeleteMessageTarget(
             null,
@@ -2003,12 +2220,14 @@ const ChatMainPage = () => {
       >
         <div className="delete-message-confirm">
           <div className="delete-message-preview">
-            {deleteMessageTarget?.content}
+            <span>삭제할 메시지</span>
+            <p>{deleteMessageTarget?.content}</p>
           </div>
 
-          <p>
-            삭제된 메시지는 대화 위치는 유지되지만 내용은 표시되지 않습니다.
-          </p>
+          <div className="message-action-note danger">
+            <span>!</span>
+            <p>대화 위치는 유지되지만 내용은 ‘삭제된 메시지입니다’로 대체됩니다.</p>
+          </div>
 
           <div className="modal-action-row">
             <button
@@ -2032,6 +2251,7 @@ const ChatMainPage = () => {
                 confirmDeleteMessage
               }
             >
+              <TrashIcon />
               삭제
             </button>
           </div>

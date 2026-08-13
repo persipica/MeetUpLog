@@ -78,6 +78,14 @@ const CONTROL_SELECTOR = [
   '.profile-field-group > input',
   '.profile-field-group > textarea',
   '.form-input',
+
+  '.auth-card',
+  '.auth-input-shell',
+  '.auth-primary-button',
+  '.auth-kakao-button',
+  '.auth-guest-button',
+  '.auth-invite-room',
+  '.auth-guest-permissions',
 ].join(',')
 
 const useLiquidControlReflection = () => {

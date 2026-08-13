@@ -128,6 +128,17 @@ export const MailIcon = (props) => (
   </IconFrame>
 )
 
+export const KakaoIcon = ({ className = '' }) => (
+  <svg
+    className={`ui-icon ${className}`}
+    viewBox="0 0 24 24"
+    fill="currentColor"
+    aria-hidden="true"
+  >
+    <path d="M12 3C6.5 3 2 6.55 2 10.93c0 2.82 1.86 5.3 4.66 6.7l-.94 3.47c-.08.3.26.54.52.37l4.13-2.73c.53.07 1.08.11 1.63.11 5.5 0 10-3.54 10-7.92S17.5 3 12 3Z" />
+  </svg>
+)
+
 export const LockIcon = (props) => (
   <IconFrame {...props}>
     <rect x="4.5" y="10" width="15" height="10" rx="2.5" />

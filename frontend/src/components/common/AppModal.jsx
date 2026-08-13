@@ -1,7 +1,17 @@
 import { useEffect } from 'react'
 import { CloseIcon } from './Icons'
 
-const AppModal = ({ open, title, subtitle, children, onClose, size = 'medium' }) => {
+const AppModal = ({
+  open,
+  title,
+  subtitle,
+  children,
+  onClose,
+  size = 'medium',
+  className = '',
+  eyebrow = '',
+  icon = null,
+}) => {
   useEffect(() => {
     if (!open) return undefined
     const handleKeyDown = (event) => event.key === 'Escape' && onClose()
@@ -14,11 +24,25 @@ const AppModal = ({ open, title, subtitle, children, onClose, size = 'medium' })
   return (
     <div className="app-modal-layer">
       <button type="button" className="app-modal-backdrop" aria-label="모달 닫기" onClick={onClose} />
-      <section className={`app-modal app-modal-${size}`} role="dialog" aria-modal="true" aria-label={title}>
+      <section className={`app-modal app-modal-${size} ${className}`} role="dialog" aria-modal="true" aria-label={title}>
         <header className="app-modal-header">
-          <div>
-            <h2>{title}</h2>
-            {subtitle && <p>{subtitle}</p>}
+          <div className="app-modal-heading">
+            {icon && (
+              <span className="app-modal-header-icon">
+                {icon}
+              </span>
+            )}
+
+            <div>
+              {eyebrow && (
+                <span className="app-modal-eyebrow">
+                  {eyebrow}
+                </span>
+              )}
+
+              <h2>{title}</h2>
+              {subtitle && <p>{subtitle}</p>}
+            </div>
           </div>
           <button type="button" className="app-modal-close" onClick={onClose} aria-label="닫기"><CloseIcon /></button>
         </header>

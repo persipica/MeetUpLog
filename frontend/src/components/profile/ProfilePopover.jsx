@@ -30,6 +30,7 @@ const ProfilePopover = ({
   onEditProfile,
   onPresenceChange,
   onLogout,
+  isGuest = false,
 }) => {
   const [
     presenceMenuOpen,
@@ -136,7 +137,7 @@ const ProfilePopover = ({
         </div>
 
         <div className="profile-popover-menu">
-          <button
+          {!isGuest && <button
             type="button"
             className="profile-popover-action"
             onClick={() => {
@@ -161,9 +162,9 @@ const ProfilePopover = ({
             <span className="profile-action-chevron">
               ›
             </span>
-          </button>
+          </button>}
 
-          <button
+          {!isGuest && <button
             type="button"
             className="profile-popover-action"
             onClick={() =>
@@ -197,9 +198,9 @@ const ProfilePopover = ({
             >
               ›
             </span>
-          </button>
+          </button>}
 
-          <div
+          {!isGuest && <div
             className={`presence-select-menu ${
               presenceMenuOpen
                 ? 'open'
@@ -242,7 +243,7 @@ const ProfilePopover = ({
                 </button>
               ),
             )}
-          </div>
+          </div>}
 
           <button
             type="button"
@@ -257,8 +258,8 @@ const ProfilePopover = ({
             </span>
 
             <div>
-              <strong>로그아웃</strong>
-              <small>현재 계정에서 로그아웃</small>
+              <strong>{isGuest ? '게스트 나가기' : '로그아웃'}</strong>
+              <small>{isGuest ? '초대방 참여 종료' : '현재 계정에서 로그아웃'}</small>
             </div>
           </button>
         </div>

@@ -1,5 +1,7 @@
 import {
+  useLayoutEffect,
   useMemo,
+  useRef,
   useState,
 } from 'react'
 
@@ -38,6 +40,7 @@ const ChatSidebar = ({
   onEditProfile,
   onPresenceChange,
   onLogout,
+  isGuest = false,
 }) => {
   const [
     profileOpen,
@@ -58,6 +61,42 @@ const ChatSidebar = ({
     ownProfileAnchorElement,
     setOwnProfileAnchorElement,
   ] = useState(null)
+
+  const [
+    tabMotion,
+    setTabMotion,
+  ] = useState('')
+
+  const previousMenuRef =
+    useRef(activeMenu)
+
+  useLayoutEffect(() => {
+    const previousMenu =
+      previousMenuRef.current
+
+    if (previousMenu === activeMenu) {
+      return undefined
+    }
+
+    setTabMotion(
+      activeMenu === 'friend'
+        ? 'is-moving-right'
+        : 'is-moving-left',
+    )
+    previousMenuRef.current =
+      activeMenu
+
+    const motionTimer =
+      window.setTimeout(
+        () => setTabMotion(''),
+        620,
+      )
+
+    return () =>
+      window.clearTimeout(
+        motionTimer,
+      )
+  }, [activeMenu])
 
   const currentPresence =
     getPresence(
@@ -103,9 +142,20 @@ const ChatSidebar = ({
         </div>
       </button>
 
-      <div className="sidebar-tabs">
+      {!isGuest ? <div
+        className={`sidebar-tabs ${tabMotion}`}
+        data-active={activeMenu}
+        role="tablist"
+        aria-label="사이드바 메뉴"
+      >
+        <span
+          className="sidebar-tab-glider"
+          aria-hidden="true"
+        />
         <button
           type="button"
+          role="tab"
+          aria-selected={activeMenu === 'chat'}
           className={
             activeMenu === 'chat'
               ? 'active'
@@ -122,6 +172,8 @@ const ChatSidebar = ({
 
         <button
           type="button"
+          role="tab"
+          aria-selected={activeMenu === 'friend'}
           className={
             activeMenu === 'friend'
               ? 'active'
@@ -134,7 +186,12 @@ const ChatSidebar = ({
           친구
           <span>{friends.length}</span>
         </button>
-      </div>
+      </div> : (
+        <div className="sidebar-guest-pass">
+          <span>GUEST PASS</span>
+          <strong>초대방 전용</strong>
+        </div>
+      )}
 
       {activeMenu === 'chat' ? (
         <>
@@ -144,14 +201,14 @@ const ChatSidebar = ({
               <h2>최근 대화</h2>
             </div>
 
-            <button
+            {!isGuest && <button
               type="button"
               className="new-room-button"
               onClick={onCreateRoom}
               aria-label="새 채팅방 만들기"
             >
               <PlusIcon />
-            </button>
+            </button>}
           </div>
 
           <label className="room-search">
@@ -351,7 +408,7 @@ const ChatSidebar = ({
         </>
       )}
 
-      <div className="sidebar-utility-row">
+      {!isGuest && <div className="sidebar-utility-row">
         <button
           type="button"
           className="sidebar-utility-button"
@@ -372,7 +429,7 @@ const ChatSidebar = ({
             </strong>
           )}
         </button>
-      </div>
+      </div>}
 
       <div className="sidebar-profile-anchor">
         <button
@@ -445,6 +502,7 @@ const ChatSidebar = ({
             onPresenceChange
           }
           onLogout={onLogout}
+          isGuest={isGuest}
         />
       </div>
 
