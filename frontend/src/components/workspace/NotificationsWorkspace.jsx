@@ -1,3 +1,5 @@
+import { CloseIcon } from '../common/Icons'
+
 const NotificationsWorkspace = ({
   notifications,
   onBack,
@@ -103,7 +105,7 @@ const NotificationsWorkspace = ({
                 aria-label={`${notification.title} 알림 지우기`}
                 onClick={() => onDelete(notification.id)}
               >
-                ×
+                <CloseIcon />
               </button>
             </article>
           ))

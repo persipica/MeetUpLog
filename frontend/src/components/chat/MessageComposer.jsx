@@ -5,6 +5,15 @@ import {
   useState,
 } from 'react'
 
+import {
+  CloseIcon,
+  ImageIcon,
+  PlusIcon,
+  SearchIcon,
+  SmileIcon,
+  SparklesIcon,
+} from '../common/Icons'
+
 const EMOJIS = [
   { emoji: '😀', keywords: '웃음 미소 happy smile grin' },
   { emoji: '😃', keywords: '웃음 미소 happy smile' },
@@ -178,6 +187,7 @@ const truncate = (
 
 const MessageComposer = ({
   onSend,
+  onSendImage,
   onSaveEdit,
   onRecommend,
   onTypingChange,
@@ -207,10 +217,23 @@ const MessageComposer = ({
     setEmojiQuery,
   ] = useState('')
 
+  const [
+    imageProcessing,
+    setImageProcessing,
+  ] = useState(false)
+
+  const [
+    imageError,
+    setImageError,
+  ] = useState('')
+
   const textareaRef =
     useRef(null)
 
   const emojiSearchRef =
+    useRef(null)
+
+  const imageInputRef =
     useRef(null)
 
   const previousEditingIdRef =
@@ -410,6 +433,95 @@ const MessageComposer = ({
     onCancelContext?.()
   }
 
+  const handleImageSelect = (
+    event,
+  ) => {
+    const file =
+      event.target.files?.[0]
+
+    event.target.value = ''
+
+    if (!file) {
+      return
+    }
+
+    const allowedTypes =
+      new Set([
+        'image/jpeg',
+        'image/png',
+        'image/gif',
+        'image/webp',
+      ])
+
+    if (
+      !allowedTypes.has(
+        file.type,
+      )
+    ) {
+      setImageError(
+        'JPG, PNG, GIF, WEBP 이미지만 보낼 수 있습니다.',
+      )
+      return
+    }
+
+    if (
+      file.size >
+      10 * 1024 * 1024
+    ) {
+      setImageError(
+        '이미지는 10MB 이하만 보낼 수 있습니다.',
+      )
+      return
+    }
+
+    setImageError('')
+    setImageProcessing(true)
+
+    const reader =
+      new FileReader()
+
+    reader.onload = () => {
+      const imageUrl =
+        typeof reader.result ===
+        'string'
+          ? reader.result
+          : ''
+
+      setImageProcessing(false)
+
+      if (!imageUrl) {
+        setImageError(
+          '이미지를 읽지 못했습니다. 다시 시도해주세요.',
+        )
+        return
+      }
+
+      onSendImage?.(
+        {
+          fileName:
+            file.name,
+          mimeType:
+            file.type,
+          size: file.size,
+          imageUrl,
+        },
+        replyTarget?.id ??
+          null,
+      )
+
+      onCancelContext?.()
+    }
+
+    reader.onerror = () => {
+      setImageProcessing(false)
+      setImageError(
+        '이미지를 읽지 못했습니다. 다시 시도해주세요.',
+      )
+    }
+
+    reader.readAsDataURL(file)
+  }
+
   const handleKeyDown = (
     event,
   ) => {
@@ -478,57 +590,54 @@ const MessageComposer = ({
                 aiAnalyzing
               }
               onClick={() => {
-                onRecommend()
+                onRecommend?.()
                 setMenuOpen(
                   false,
                 )
               }}
             >
               <span className="composer-action-icon ai">
-                ✦
+                <SparklesIcon />
               </span>
 
-              <div>
-                <strong>
-                  AI 추천
-                </strong>
-
-                <p>
-                  {aiSupported
-                    ? aiAnalyzing
-                      ? '현재 대화를 분석 중입니다'
-                      : '대화를 분석해 영화 TOP 3 추천'
-                    : '이 카테고리는 아직 준비 중입니다'}
-                </p>
-              </div>
+              <strong>
+                {aiAnalyzing
+                  ? '분석 중'
+                  : 'AI 추천'}
+              </strong>
             </button>
 
             <button
               type="button"
-              className="composer-action"
-              onClick={() => {
-                alert(
-                  '이미지 업로드는 다음 단계에서 구현합니다.',
+              className={`composer-action ${
+                imageProcessing ||
+                editingMessage
+                  ? 'disabled'
+                  : ''
+              }`}
+              disabled={
+                imageProcessing ||
+                Boolean(
+                  editingMessage,
                 )
-
+              }
+              onClick={() => {
                 setMenuOpen(
                   false,
                 )
+
+                imageInputRef.current?.click()
               }}
             >
               <span className="composer-action-icon image">
-                ▧
+                <ImageIcon />
               </span>
 
-              <div>
-                <strong>
-                  이미지
-                </strong>
-
-                <p>
-                  사진을 채팅으로 전송합니다.
-                </p>
-              </div>
+              <strong>
+                {imageProcessing
+                  ? '처리 중'
+                  : '이미지'}
+              </strong>
             </button>
 
             <button
@@ -561,13 +670,13 @@ const MessageComposer = ({
                 }
                 aria-label="이모티콘 닫기"
               >
-                ×
+                <CloseIcon />
               </button>
             </div>
 
             <label className="emoji-picker-search">
               <span>
-                ⌕
+                <SearchIcon />
               </span>
 
               <input
@@ -611,7 +720,7 @@ const MessageComposer = ({
                   }
                   aria-label="검색어 지우기"
                 >
-                  ×
+                  <CloseIcon />
                 </button>
               )}
             </label>
@@ -713,7 +822,37 @@ const MessageComposer = ({
                 clearContext
               }
             >
-              ×
+              <CloseIcon />
+            </button>
+          </div>
+        )}
+
+        <input
+          ref={imageInputRef}
+          className="sr-only"
+          type="file"
+          accept="image/jpeg,image/png,image/gif,image/webp"
+          tabIndex={-1}
+          onChange={
+            handleImageSelect
+          }
+        />
+
+        {imageError && (
+          <div
+            className="composer-inline-error"
+            role="alert"
+          >
+            <span>{imageError}</span>
+
+            <button
+              type="button"
+              aria-label="오류 메시지 닫기"
+              onClick={() =>
+                setImageError('')
+              }
+            >
+              <CloseIcon />
             </button>
           </div>
         )}
@@ -736,7 +875,7 @@ const MessageComposer = ({
             }}
             aria-label="채팅 도구"
           >
-            +
+            <PlusIcon />
           </button>
 
           <textarea
@@ -779,7 +918,7 @@ const MessageComposer = ({
             }}
             aria-label="이모티콘"
           >
-            ☺
+            <SmileIcon />
           </button>
 
           <button

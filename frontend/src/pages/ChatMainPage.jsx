@@ -1,6 +1,7 @@
 import {
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from 'react'
 
@@ -18,6 +19,7 @@ import ProfileEditWorkspace from '../components/workspace/ProfileEditWorkspace'
 
 import CreateRoomModal from '../components/modals/CreateRoomModal'
 import KickMemberModal from '../components/modals/KickMemberModal'
+import KickedMemberNoticeModal from '../components/modals/KickedMemberNoticeModal'
 import AppModal from '../components/common/AppModal'
 
 import {
@@ -34,11 +36,49 @@ import {
   getRoomTheme,
 } from '../config/roomThemes'
 
-import '../styles/chat.css'
-import '../styles/liquid.css'
-
 import useLiquidControlReflection from '../hooks/useLiquidControlReflection'
 import GlobalThemeToggle from '../components/common/GlobalThemeToggle'
+import { changeMyPassword } from '../api/memberApi'
+import {
+  BellIcon,
+  CloseIcon,
+  PencilIcon,
+  UserPlusIcon,
+} from '../components/common/Icons'
+
+const PRESENCE_KEYS = new Set([
+  'ONLINE',
+  'AWAY',
+  'OFFLINE',
+])
+
+const getPresenceIdentity = (person) => {
+  if (person?.accountId) {
+    return `account:${person.accountId}`
+  }
+
+  if (person?.email) {
+    return `email:${person.email.toLocaleLowerCase()}`
+  }
+
+  return person?.id != null
+    ? `id:${person.id}`
+    : null
+}
+
+const createPresenceDirectory = (...groups) => {
+  const directory = {}
+
+  groups.flat().forEach((person) => {
+    const identity = getPresenceIdentity(person)
+
+    if (identity && PRESENCE_KEYS.has(person?.presence)) {
+      directory[identity] = person.presence
+    }
+  })
+
+  return directory
+}
 
 const ChatMainPage = () => {
   useLiquidControlReflection()
@@ -157,8 +197,16 @@ const ChatMainPage = () => {
   const [rooms, setRooms] =
     useState(initialChatRooms)
 
-  const [friends] =
+  const [baseFriends] =
     useState(initialFriends)
+
+  const [presenceDirectory, setPresenceDirectory] = useState(
+    () => createPresenceDirectory(
+      initialCurrentUser,
+      initialFriends,
+      initialMembers,
+    ),
+  )
 
   const [
     baseMembers,
@@ -167,6 +215,70 @@ const ChatMainPage = () => {
 
   const [activeMenu, setActiveMenu] =
     useState('chat')
+
+  const friends = useMemo(
+    () => baseFriends.map((friend) => ({
+      ...friend,
+      presence:
+        presenceDirectory[getPresenceIdentity(friend)] ??
+        friend.presence,
+    })),
+    [baseFriends, presenceDirectory],
+  )
+
+  useEffect(() => {
+    const currentIdentity = getPresenceIdentity(initialCurrentUser)
+
+    const applyRealtimePresence = (payload) => {
+      const identity =
+        payload?.identity ??
+        getPresenceIdentity(payload)
+      const presence = payload?.presence
+
+      if (!identity || !PRESENCE_KEYS.has(presence)) {
+        return
+      }
+
+      setPresenceDirectory((previous) => ({
+        ...previous,
+        [identity]: presence,
+      }))
+
+      if (identity === currentIdentity) {
+        setUserProfile((previous) => ({
+          ...previous,
+          presence,
+        }))
+      }
+    }
+
+    const handleWindowPresence = (event) => {
+      applyRealtimePresence(event.detail)
+    }
+
+    window.addEventListener(
+      'meetuplog:presence-change',
+      handleWindowPresence,
+    )
+
+    const channel = 'BroadcastChannel' in window
+      ? new BroadcastChannel('meetuplog-presence')
+      : null
+
+    if (channel) {
+      channel.onmessage = (event) => {
+        applyRealtimePresence(event.data)
+      }
+    }
+
+    return () => {
+      window.removeEventListener(
+        'meetuplog:presence-change',
+        handleWindowPresence,
+      )
+      channel?.close()
+    }
+  }, [])
 
   /*
    * 중앙 콘텐츠:
@@ -201,6 +313,8 @@ const ChatMainPage = () => {
   ] = useState(
     initialNotifications,
   )
+
+  const [pendingInvitesByRoom, setPendingInvitesByRoom] = useState({})
 
   /*
    * 다른 사용자 입력 상태 Mock.
@@ -239,9 +353,146 @@ const ChatMainPage = () => {
   ] = useState(null)
 
   const [
+    kickedNotice,
+    setKickedNotice,
+  ] = useState(null)
+
+  const processedRoomEventIds = useRef(new Set())
+
+  const [
     aiDetailMovie,
     setAiDetailMovie,
   ] = useState(null)
+
+  /*
+   * 참여자 입장/퇴장/강퇴 이벤트 처리.
+   * Mock에서는 CustomEvent/BroadcastChannel로 검증하고,
+   * 실제 연결 시 WebSocket payload를 같은 형태로 전달한다.
+   */
+  useEffect(() => {
+    const supportedEvents = new Set([
+      'MEMBER_JOINED',
+      'MEMBER_LEFT',
+      'MEMBER_KICKED',
+    ])
+
+    const applyRoomMemberEvent = (payload) => {
+      if (!payload || !supportedEvents.has(payload.type) || !payload.roomId) return
+
+      const eventId = payload.eventId ?? `${payload.type}-${payload.roomId}-${payload.memberId}-${Date.now()}`
+      if (processedRoomEventIds.current.has(eventId)) return
+      processedRoomEventIds.current.add(eventId)
+      const eventConfig = {
+        MEMBER_JOINED: {
+          content: `${payload.memberName}님이 입장했습니다.`,
+          systemEvent: 'JOIN',
+          memberDelta: 1,
+        },
+        MEMBER_LEFT: {
+          content: `${payload.memberName}님이 퇴장했습니다.`,
+          systemEvent: 'LEAVE',
+          memberDelta: -1,
+        },
+        MEMBER_KICKED: {
+          content: `${payload.memberName}님이 강퇴당했습니다.`,
+          systemEvent: 'KICK',
+          memberDelta: -1,
+        },
+      }[payload.type]
+
+      setMessagesByRoom((previous) => {
+        const roomMessages = previous[payload.roomId] ?? []
+        if (roomMessages.some((message) => message.eventId === eventId)) return previous
+
+        return {
+          ...previous,
+          [payload.roomId]: [
+            ...roomMessages,
+            {
+              id: eventId,
+              eventId,
+              senderId: 0,
+              senderName: 'System',
+              content: eventConfig.content,
+              sentAt: '',
+              type: 'SYSTEM',
+              systemEvent: eventConfig.systemEvent,
+            },
+          ],
+        }
+      })
+
+      setBaseMembers((previous) => {
+        if (payload.type === 'MEMBER_JOINED') {
+          if (previous.some((member) => member.id === payload.memberId)) return previous
+          return [
+            ...previous,
+            payload.member ?? {
+              id: payload.memberId,
+              nickname: payload.memberName,
+              role: 'MEMBER',
+              presence: 'ONLINE',
+              profileImageUrl: null,
+              statusMessage: '',
+            },
+          ]
+        }
+
+        return previous.filter((member) => member.id !== payload.memberId)
+      })
+
+      const currentUserRemoved =
+        payload.memberId === userProfile.id &&
+        (payload.type === 'MEMBER_LEFT' || payload.type === 'MEMBER_KICKED')
+
+      setRooms((previous) =>
+        currentUserRemoved
+          ? previous.filter((room) => room.id !== payload.roomId)
+          : previous.map((room) =>
+              room.id === payload.roomId
+                ? {
+                    ...room,
+                    memberCount: Math.max(0, (room.memberCount ?? 0) + eventConfig.memberDelta),
+                  }
+                : room,
+            ),
+      )
+
+      if (payload.type !== 'MEMBER_KICKED' || payload.memberId !== userProfile.id) {
+        if (currentUserRemoved) {
+          setSelectedRoomId(null)
+          setMemberDrawerOpen(false)
+          setWorkspaceMode('home')
+        }
+        return
+      }
+
+      setKickedNotice({
+        roomId: payload.roomId,
+        roomName: payload.roomName,
+        reason: payload.reason?.trim() ?? '',
+      })
+      setSelectedRoomId(null)
+      setMemberDrawerOpen(false)
+      setWorkspaceMode('home')
+    }
+
+    const handleWindowMemberEvent = (event) => applyRoomMemberEvent(event.detail)
+    window.addEventListener('meetuplog:room-member-event', handleWindowMemberEvent)
+
+    let roomEventChannel = null
+    if ('BroadcastChannel' in window) {
+      roomEventChannel = new BroadcastChannel('meetuplog-room-events')
+      roomEventChannel.addEventListener('message', (event) => {
+        applyRoomMemberEvent(event.data)
+      })
+    }
+
+    return () => {
+      window.removeEventListener('meetuplog:room-member-event', handleWindowMemberEvent)
+      roomEventChannel?.close()
+    }
+  }, [userProfile.id])
 
   const [
     replyTarget,
@@ -290,7 +541,12 @@ const ChatMainPage = () => {
             member.id !==
             userProfile.id
           ) {
-            return member
+            return {
+              ...member,
+              presence:
+                presenceDirectory[getPresenceIdentity(member)] ??
+                member.presence,
+            }
           }
 
           return {
@@ -308,6 +564,7 @@ const ChatMainPage = () => {
       )
     }, [
       baseMembers,
+      presenceDirectory,
       userProfile,
     ])
 
@@ -432,12 +689,45 @@ const ChatMainPage = () => {
   const handlePresenceChange = (
     presence,
   ) => {
+    if (!PRESENCE_KEYS.has(presence)) {
+      return
+    }
+
+    const identity = getPresenceIdentity(userProfile)
+
     setUserProfile(
       (previous) => ({
         ...previous,
         presence,
       }),
     )
+
+    if (identity) {
+      setPresenceDirectory((previous) => ({
+        ...previous,
+        [identity]: presence,
+      }))
+
+      const payload = {
+        identity,
+        accountId: userProfile.accountId,
+        email: userProfile.email,
+        presence,
+        changedAt: new Date().toISOString(),
+      }
+
+      window.dispatchEvent(
+        new CustomEvent('meetuplog:presence-change', {
+          detail: payload,
+        }),
+      )
+
+      if ('BroadcastChannel' in window) {
+        const channel = new BroadcastChannel('meetuplog-presence')
+        channel.postMessage(payload)
+        channel.close()
+      }
+    }
   }
 
   const handleProfileSave = (
@@ -591,6 +881,93 @@ const ChatMainPage = () => {
               ...room,
               lastMessage:
                 content,
+            }
+          : room,
+      ),
+    )
+
+    setReplyTarget(null)
+    setEditingMessage(null)
+
+    if (
+      unreadCount > 0
+    ) {
+      scheduleMockReadReceipts(
+        selectedRoom.id,
+        messageId,
+      )
+    }
+  }
+
+  const handleSendImage = (
+    attachment,
+    replyToId = null,
+  ) => {
+    if (
+      !selectedRoom ||
+      !attachment?.imageUrl
+    ) {
+      return
+    }
+
+    const now = new Date()
+
+    const time = `${String(
+      now.getHours(),
+    ).padStart(2, '0')}:${String(
+      now.getMinutes(),
+    ).padStart(2, '0')}`
+
+    const messageId =
+      Date.now()
+
+    const unreadCount =
+      Math.max(
+        0,
+        members.length - 1,
+      )
+
+    const newMessage = {
+      id: messageId,
+      senderId:
+        userProfile.id,
+      senderName:
+        userProfile.nickname,
+      content:
+        attachment.fileName ||
+        '사진',
+      sentAt: time,
+      type: 'IMAGE',
+      imageUrl:
+        attachment.imageUrl,
+      imageMimeType:
+        attachment.mimeType,
+      imageSize:
+        attachment.size,
+      unreadCount,
+      replyToId,
+    }
+
+    setMessagesByRoom(
+      (previous) => ({
+        ...previous,
+        [selectedRoom.id]: [
+          ...(previous[
+            selectedRoom.id
+          ] ?? []),
+          newMessage,
+        ],
+      }),
+    )
+
+    setRooms((previous) =>
+      previous.map((room) =>
+        room.id ===
+        selectedRoom.id
+          ? {
+              ...room,
+              lastMessage:
+                '사진을 보냈습니다.',
             }
           : room,
       ),
@@ -975,21 +1352,47 @@ const ChatMainPage = () => {
 
   const handleKickMember = (
     member,
+    reason = '',
   ) => {
     if (!member) {
       return
     }
 
-    setBaseMembers(
-      (previous) =>
-        previous.filter(
-          (item) =>
-            item.id !==
-            member.id,
-        ),
+    const kickPayload = {
+      type: 'MEMBER_KICKED',
+      eventId: `kick-${selectedRoomId}-${member.id}-${Date.now()}`,
+      roomId: selectedRoom?.id ?? selectedRoomId,
+      roomName: selectedRoom?.name ?? '채팅방',
+      memberId: member.id,
+      memberName: member.nickname,
+      reason: reason.trim(),
+    }
+
+    window.dispatchEvent(
+      new CustomEvent('meetuplog:room-member-event', { detail: kickPayload }),
     )
 
+    if ('BroadcastChannel' in window) {
+      const roomEventChannel = new BroadcastChannel('meetuplog-room-events')
+      roomEventChannel.postMessage(kickPayload)
+      roomEventChannel.close()
+    }
+
     setKickTarget(null)
+  }
+
+  const handleInviteFriend = (friend) => {
+    if (!friend || !selectedRoomId) return
+
+    setPendingInvitesByRoom((previous) => {
+      const roomInvites = previous[selectedRoomId] ?? []
+      if (roomInvites.includes(friend.id)) return previous
+
+      return {
+        ...previous,
+        [selectedRoomId]: [...roomInvites, friend.id],
+      }
+    })
   }
 
   const handleDeleteNotification =
@@ -1083,6 +1486,9 @@ const ChatMainPage = () => {
                 onSend={
                   handleSend
                 }
+                onSendImage={
+                  handleSendImage
+                }
                 onSaveEdit={
                   handleSaveEdit
                 }
@@ -1120,6 +1526,9 @@ const ChatMainPage = () => {
               onRequestKick={
                 setKickTarget
               }
+              friends={friends}
+              onInviteFriend={handleInviteFriend}
+              pendingInviteIds={pendingInvitesByRoom[selectedRoomId] ?? []}
             />
           </div>
         </div>
@@ -1138,7 +1547,7 @@ const ChatMainPage = () => {
           <header className="chat-header utility-workspace-header">
             <div className="chat-header-left">
               <div className="chat-room-avatar utility-header-avatar">
-                ✎
+                <PencilIcon />
               </div>
 
               <div className="chat-room-info">
@@ -1161,7 +1570,7 @@ const ChatMainPage = () => {
                 closeWorkspacePage
               }
             >
-              ×
+              <CloseIcon />
             </button>
           </header>
 
@@ -1176,6 +1585,9 @@ const ChatMainPage = () => {
                 }
                 onSave={
                   handleProfileSave
+                }
+                onChangePassword={
+                  changeMyPassword
                 }
                 onDeleteAccount={() =>
                   setModal(
@@ -1201,7 +1613,7 @@ const ChatMainPage = () => {
           <header className="chat-header utility-workspace-header">
             <div className="chat-header-left">
               <div className="chat-room-avatar utility-header-avatar">
-                👤
+                <UserPlusIcon />
               </div>
 
               <div className="chat-room-info">
@@ -1224,7 +1636,7 @@ const ChatMainPage = () => {
                 closeWorkspacePage
               }
             >
-              ×
+              <CloseIcon />
             </button>
           </header>
 
@@ -1253,7 +1665,7 @@ const ChatMainPage = () => {
           <header className="chat-header utility-workspace-header">
             <div className="chat-header-left">
               <div className="chat-room-avatar utility-header-avatar">
-                🔔
+                <BellIcon />
               </div>
 
               <div className="chat-room-info">
@@ -1274,7 +1686,7 @@ const ChatMainPage = () => {
                 closeWorkspacePage
               }
             >
-              ×
+              <CloseIcon />
             </button>
           </header>
 
@@ -1339,17 +1751,6 @@ const ChatMainPage = () => {
             </div>
           </div>
 
-          <button
-            type="button"
-            className="home-header-create"
-            onClick={() =>
-              setModal(
-                'CREATE_ROOM',
-              )
-            }
-          >
-            ＋ 새 채팅방
-          </button>
         </header>
 
         <div className="chat-body">
@@ -1501,6 +1902,9 @@ const ChatMainPage = () => {
                   member,
                 )
               }}
+              friends={friends}
+              onInviteFriend={handleInviteFriend}
+              pendingInviteIds={pendingInvitesByRoom[selectedRoomId] ?? []}
             />
           </div>
         )}
@@ -1529,6 +1933,11 @@ const ChatMainPage = () => {
         onConfirm={
           handleKickMember
         }
+      />
+
+      <KickedMemberNoticeModal
+        notice={kickedNotice}
+        onConfirm={() => setKickedNotice(null)}
       />
 
       <AppModal

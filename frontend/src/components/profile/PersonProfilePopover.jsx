@@ -7,6 +7,7 @@ import {
 } from 'react-dom'
 
 import PresenceOrb from '../common/PresenceOrb'
+import PresenceBanner from '../common/PresenceBanner'
 import UserAvatar from '../common/UserAvatar'
 
 import {
@@ -77,17 +78,11 @@ const PersonProfilePopover = ({
         role="dialog"
         aria-label={`${user.nickname} 프로필`}
       >
-        <div className="person-profile-banner ios-profile-hero">
-          <div className="ios-profile-hero-light" />
-
-          <PresenceOrb
-            presence={
-              user.presence
-            }
-            size="large"
-            animated
-          />
-        </div>
+        <PresenceBanner
+          presence={user.presence}
+          size="large"
+          className="person-profile-banner"
+        />
 
         <div className="person-profile-main">
           <div className="person-profile-avatar-wrap">
@@ -144,9 +139,7 @@ const PersonProfilePopover = ({
           </div>
         </div>
 
-        <div className="person-profile-divider" />
-
-        <section className="person-profile-status ios-grouped-section">
+        <section className="person-profile-status">
           <span>
             상태 메시지
           </span>

@@ -1,3 +1,9 @@
+import {
+  PencilIcon,
+  ReplyIcon,
+  TrashIcon,
+} from '../common/Icons'
+
 const QUICK_REACTIONS = [
   '✅',
   '❤️',
@@ -227,9 +233,17 @@ const MessageBubble = ({
     message.type ===
     'SYSTEM'
   ) {
+    const eventType =
+      message.systemEvent?.toLowerCase() ?? 'info'
+
     return (
-      <div className="system-message">
-        {message.content}
+      <div
+        className={`system-message system-event-notice system-event-${eventType}`}
+        role="status"
+        aria-live="polite"
+      >
+        <span className="system-event-dot" aria-hidden="true" />
+        <span>{message.content}</span>
       </div>
     )
   }
@@ -256,6 +270,8 @@ const MessageBubble = ({
    */
   const emojiOnlyInfo =
     !message.deleted &&
+    message.type ===
+      'TEXT' &&
     !message.replyToId
       ? getEmojiOnlyInfo(
           message.content,
@@ -409,7 +425,29 @@ const MessageBubble = ({
               >
                 {message.deleted
                   ? '삭제된 메시지입니다.'
-                  : message.content}
+                  : message.type ===
+                        'IMAGE' &&
+                      message.imageUrl
+                    ? (
+                        <span className="message-image-attachment">
+                          <img
+                            src={
+                              message.imageUrl
+                            }
+                            alt={
+                              message.content ||
+                              '전송한 이미지'
+                            }
+                            loading="lazy"
+                          />
+
+                          <span>
+                            {message.content ||
+                              '사진'}
+                          </span>
+                        </span>
+                      )
+                    : message.content}
               </span>
             </div>
 
@@ -496,13 +534,15 @@ const MessageBubble = ({
                         )
                       }
                     >
-                      ↩
+                      <ReplyIcon />
                       <span>
                         답장
                       </span>
                     </button>
 
-                    {mine && (
+                    {mine &&
+                      message.type ===
+                        'TEXT' && (
                       <>
                         <button
                           type="button"
@@ -513,7 +553,7 @@ const MessageBubble = ({
                             )
                           }
                         >
-                          ✎
+                          <PencilIcon />
                           <span>
                             수정
                           </span>
@@ -528,7 +568,7 @@ const MessageBubble = ({
                             )
                           }
                         >
-                          ⌫
+                          <TrashIcon />
                           <span>
                             삭제
                           </span>

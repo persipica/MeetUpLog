@@ -23,32 +23,33 @@ const PresenceOrb = ({
       title={meta.label}
       aria-label={meta.label}
     >
-      <span className="presence-space">
+      <span className="presence-space" aria-hidden="true">
         <i className="presence-star star-one" />
         <i className="presence-star star-two" />
         <i className="presence-star star-three" />
+        <i className="presence-star star-four" />
+        <i className="presence-star star-five" />
+        <i className="presence-star star-six" />
       </span>
 
-      <span className="presence-rays">
-        <i />
-        <i />
-        <i />
-        <i />
-        <i />
-        <i />
-        <i />
-        <i />
+      <span className="presence-rays" aria-hidden="true" />
+
+      <span className="presence-celestial" aria-hidden="true">
+        <span className="presence-body">
+          <i className="presence-crater crater-one" />
+          <i className="presence-crater crater-two" />
+          <i className="presence-crater crater-three" />
+        </span>
+
+        <span className="presence-phase" />
       </span>
 
-      <span className="presence-body">
-        <i className="presence-crater crater-one" />
-        <i className="presence-crater crater-two" />
+      <span className="presence-sleep" aria-hidden="true">
+        <i>z</i><i>z</i><i>z</i>
       </span>
 
-      <span className="presence-eclipse" />
-
-      <span className="presence-sleep">
-        zzz
+      <span className="sr-only">
+        {meta.label}
       </span>
 
       {showLabel && (

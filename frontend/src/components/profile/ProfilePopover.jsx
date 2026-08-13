@@ -8,7 +8,12 @@ import {
 } from 'react-dom'
 
 import PresenceOrb from '../common/PresenceOrb'
+import PresenceBanner from '../common/PresenceBanner'
 import UserAvatar from '../common/UserAvatar'
+import {
+  LogoutIcon,
+  PencilIcon,
+} from '../common/Icons'
 
 import {
   PRESENCE,
@@ -47,8 +52,8 @@ const ProfilePopover = ({
     width: 304,
     estimatedHeight:
       presenceMenuOpen
-        ? 488
-        : 330,
+        ? 500
+        : 360,
     refreshKey:
       presenceMenuOpen,
   })
@@ -98,23 +103,25 @@ const ProfilePopover = ({
         ].join(' ')}
         style={style}
       >
-        <div className="profile-popover-banner ios-profile-hero">
-          <div className="ios-profile-hero-light" />
-
-          <PresenceOrb
-            presence={
-              user.presence
-            }
-            size="large"
-            animated
-          />
-        </div>
+        <PresenceBanner
+          presence={user.presence}
+          size="large"
+          className="profile-popover-banner"
+        />
 
         <div className="profile-popover-user">
-          <UserAvatar
-            user={user}
-            className="profile-popover-avatar"
-          />
+          <div className="profile-popover-avatar-wrap">
+            <UserAvatar
+              user={user}
+              className="profile-popover-avatar"
+            />
+
+            <PresenceOrb
+              presence={user.presence}
+              size="small"
+              animated
+            />
+          </div>
 
           <div>
             <strong>
@@ -128,9 +135,7 @@ const ProfilePopover = ({
           </div>
         </div>
 
-        <div className="profile-popover-divider" />
-
-        <div className="ios-profile-action-group">
+        <div className="profile-popover-menu">
           <button
             type="button"
             className="profile-popover-action"
@@ -140,7 +145,7 @@ const ProfilePopover = ({
             }}
           >
             <span className="profile-action-icon">
-              ✎
+              <PencilIcon />
             </span>
 
             <div>
@@ -158,136 +163,105 @@ const ProfilePopover = ({
             </span>
           </button>
 
-          <div className="profile-presence-section">
-            <button
-              type="button"
-              className="profile-popover-action"
-              onClick={() =>
-                setPresenceMenuOpen(
-                  (previous) =>
-                    !previous,
-                )
-              }
+          <button
+            type="button"
+            className="profile-popover-action"
+            onClick={() =>
+              setPresenceMenuOpen(
+                (previous) =>
+                  !previous,
+              )
+            }
+          >
+            <span
+              className={`profile-action-icon presence presence-option-${currentPresence.key}`}
             >
               <PresenceOrb
-                presence={
-                  user.presence
-                }
+                presence={user.presence}
                 size="small"
                 animated
               />
+            </span>
 
-              <div>
-                <strong>
-                  {
-                    currentPresence.label
-                  }
-                </strong>
+            <div>
+              <strong>{currentPresence.label}</strong>
+              <small>상태 변경</small>
+            </div>
 
-                <small>
-                  상태 변경
-                </small>
-              </div>
-
-              <span
-                className={`profile-action-chevron ${
-                  presenceMenuOpen
-                    ? 'opened'
-                    : ''
-                }`}
-              >
-                ›
-              </span>
-            </button>
-
-            <div
-              className={`presence-select-menu ${
+            <span
+              className={`profile-action-chevron ${
                 presenceMenuOpen
-                  ? 'open'
+                  ? 'opened'
                   : ''
               }`}
             >
-              {Object.entries(
-                PRESENCE,
-              ).map(
-                ([
-                  key,
-                  presence,
-                ]) => (
-                  <button
-                    key={key}
-                    type="button"
-                    className={
-                      user.presence ===
-                      key
-                        ? 'selected'
-                        : ''
-                    }
-                    onClick={() => {
-                      onPresenceChange(
-                        key,
-                      )
+              ›
+            </span>
+          </button>
 
-                      setPresenceMenuOpen(
-                        false,
-                      )
-                    }}
+          <div
+            className={`presence-select-menu ${
+              presenceMenuOpen
+                ? 'open'
+                : ''
+            }`}
+          >
+            {Object.entries(PRESENCE).map(
+              ([key, presence]) => (
+                <button
+                  key={key}
+                  type="button"
+                  className={
+                    user.presence === key
+                      ? 'selected'
+                      : ''
+                  }
+                  onClick={() => {
+                    onPresenceChange(key)
+                    setPresenceMenuOpen(false)
+                  }}
+                >
+                  <span
+                    className={`presence-option-icon presence-option-${presence.key}`}
                   >
                     <PresenceOrb
                       presence={key}
                       size="small"
-                      animated
+                      animated={false}
                     />
+                  </span>
 
-                    <div>
-                      <strong>
-                        {
-                          presence.label
-                        }
-                      </strong>
+                  <div>
+                    <strong>{presence.label}</strong>
+                    <span>{presence.description}</span>
+                  </div>
 
-                      <span>
-                        {
-                          presence.description
-                        }
-                      </span>
-                    </div>
+                  {user.presence === key && (
+                    <i>✓</i>
+                  )}
+                </button>
+              ),
+            )}
+          </div>
 
-                    {user.presence ===
-                      key && (
-                      <i>✓</i>
-                    )}
-                  </button>
-                ),
-              )}
+          <button
+            type="button"
+            className="profile-popover-action logout"
+            onClick={() => {
+              onLogout()
+              closePopover()
+            }}
+          >
+            <span className="profile-action-icon">
+              <LogoutIcon />
+            </span>
+
+            <div>
+              <strong>로그아웃</strong>
+              <small>현재 계정에서 로그아웃</small>
             </div>
-          </div>
+          </button>
         </div>
-
-        <div className="profile-popover-divider" />
-
-        <button
-          type="button"
-          className="profile-popover-action logout"
-          onClick={() => {
-            onLogout()
-            closePopover()
-          }}
-        >
-          <span className="profile-action-icon">
-            ↪
-          </span>
-
-          <div>
-            <strong>
-              로그아웃
-            </strong>
-
-            <small>
-              현재 계정에서 로그아웃
-            </small>
-          </div>
-        </button>
       </section>
     </>,
     document.body,

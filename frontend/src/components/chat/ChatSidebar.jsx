@@ -13,6 +13,12 @@ import {
 
 import PresenceOrb from '../common/PresenceOrb'
 import UserAvatar from '../common/UserAvatar'
+import {
+  BellIcon,
+  MoreIcon,
+  PlusIcon,
+  SearchIcon,
+} from '../common/Icons'
 import ProfilePopover from '../profile/ProfilePopover'
 import PersonProfilePopover from '../profile/PersonProfilePopover'
 
@@ -144,12 +150,12 @@ const ChatSidebar = ({
               onClick={onCreateRoom}
               aria-label="새 채팅방 만들기"
             >
-              +
+              <PlusIcon />
             </button>
           </div>
 
           <label className="room-search">
-            <span>⌕</span>
+            <span><SearchIcon /></span>
 
             <input
               type="search"
@@ -237,12 +243,12 @@ const ChatSidebar = ({
               onClick={onAddFriend}
               aria-label="친구 추가"
             >
-              +
+              <PlusIcon />
             </button>
           </div>
 
           <label className="room-search">
-            <span>⌕</span>
+            <span><SearchIcon /></span>
 
             <input
               type="search"
@@ -335,7 +341,7 @@ const ChatSidebar = ({
                       className="sidebar-friend-more"
                       aria-label={`${friend.nickname} 더보기`}
                     >
-                      ⋯
+                      <MoreIcon />
                     </button>
                   </div>
                 )
@@ -354,7 +360,7 @@ const ChatSidebar = ({
             onNotifications()
           }}
         >
-          <span>🔔</span>
+          <span><BellIcon /></span>
           <span>알림</span>
 
           {unreadNotificationCount >
@@ -418,7 +424,7 @@ const ChatSidebar = ({
           </div>
 
           <span className="sidebar-user-more">
-            ⋯
+            <MoreIcon />
           </span>
         </button>
 

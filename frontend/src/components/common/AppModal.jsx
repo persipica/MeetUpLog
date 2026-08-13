@@ -1,4 +1,5 @@
 import { useEffect } from 'react'
+import { CloseIcon } from './Icons'
 
 const AppModal = ({ open, title, subtitle, children, onClose, size = 'medium' }) => {
   useEffect(() => {
@@ -19,7 +20,7 @@ const AppModal = ({ open, title, subtitle, children, onClose, size = 'medium' })
             <h2>{title}</h2>
             {subtitle && <p>{subtitle}</p>}
           </div>
-          <button type="button" className="app-modal-close" onClick={onClose} aria-label="닫기">×</button>
+          <button type="button" className="app-modal-close" onClick={onClose} aria-label="닫기"><CloseIcon /></button>
         </header>
         <div className="app-modal-content">{children}</div>
       </section>

@@ -1,5 +1,6 @@
 export const currentUser = {
   id: 1,
+  accountId: 'user-heesu',
   nickname: '희수',
   role: 'OWNER',
   email: 'heesu@example.com',
@@ -11,6 +12,7 @@ export const currentUser = {
 export const initialChatRooms = [
   {
     id: 1,
+    accountId: 'user-heesu',
     name: '주말 영화방',
     topicType: 'MOVIE',
     lastMessage: '그럼 액션 쪽으로 찾아보자.',
@@ -19,6 +21,7 @@ export const initialChatRooms = [
   },
   {
     id: 2,
+    accountId: 'user-minsu',
     name: '오늘 뭐 할까?',
     topicType: 'GAME',
     lastMessage: '보드게임 하나 골라보자',
@@ -27,6 +30,7 @@ export const initialChatRooms = [
   },
   {
     id: 3,
+    accountId: 'user-jiwoo',
     name: '저녁 메뉴 정하기',
     topicType: 'FOOD',
     lastMessage: '나는 한식 좋아!',
@@ -35,6 +39,7 @@ export const initialChatRooms = [
   },
   {
     id: 4,
+    accountId: 'user-yujin',
     name: '여름 여행 계획',
     topicType: 'TRAVEL',
     lastMessage: '바다 있는 곳 어때?',
@@ -55,6 +60,7 @@ export const initialMembers = [
   {
     id: 2,
     nickname: '민수',
+    email: 'minsu@meetuplog.dev',
     role: 'MEMBER',
     presence: 'ONLINE',
     profileImageUrl: null,
@@ -63,6 +69,7 @@ export const initialMembers = [
   {
     id: 3,
     nickname: '지우',
+    email: 'jiwoo@meetuplog.dev',
     role: 'MEMBER',
     presence: 'OFFLINE',
     profileImageUrl: null,
@@ -71,6 +78,7 @@ export const initialMembers = [
   {
     id: 4,
     nickname: '유진',
+    email: 'yujin@meetuplog.dev',
     role: 'GUEST',
     presence: 'AWAY',
     profileImageUrl: null,
@@ -81,28 +89,36 @@ export const initialMembers = [
 export const initialFriends = [
   {
     id: 11,
+    accountId: 'user-minsu',
     nickname: '민수',
+    email: 'minsu@meetuplog.dev',
     presence: 'ONLINE',
     profileImageUrl: null,
     statusMessage: '오늘도 개발 중',
   },
   {
     id: 12,
+    accountId: 'user-jiwoo',
     nickname: '지우',
+    email: 'jiwoo@meetuplog.dev',
     presence: 'OFFLINE',
     profileImageUrl: null,
     statusMessage: '저녁에 봐요 👋',
   },
   {
     id: 13,
+    accountId: 'user-yujin',
     nickname: '유진',
+    email: 'yujin@meetuplog.dev',
     presence: 'AWAY',
     profileImageUrl: null,
     statusMessage: '영화 추천 환영',
   },
   {
     id: 14,
+    accountId: 'user-seojun',
     nickname: '서준',
+    email: 'user14@meetuplog.dev',
     presence: 'ONLINE',
     profileImageUrl: null,
     statusMessage: '',
@@ -138,6 +154,16 @@ export const initialNotifications = [
 
 export const initialMessagesByRoom = {
   1: [
+    {
+      id: 100,
+      eventId: 'demo-join-100',
+      senderId: 0,
+      senderName: 'System',
+      content: '유진님이 입장했습니다.',
+      sentAt: '',
+      type: 'SYSTEM',
+      systemEvent: 'JOIN',
+    },
     {
       id: 101,
       senderId: 2,
@@ -184,6 +210,16 @@ export const initialMessagesByRoom = {
       },
       unreadCount: 1,
       replyToId: 102,
+    },
+    {
+      id: 105,
+      eventId: 'demo-leave-105',
+      senderId: 0,
+      senderName: 'System',
+      content: '서준님이 퇴장했습니다.',
+      sentAt: '',
+      type: 'SYSTEM',
+      systemEvent: 'LEAVE',
     },
   ],
 

@@ -1,3 +1,8 @@
+import {
+  SearchIcon,
+  UserPlusIcon,
+} from '../common/Icons'
+
 const FriendAddWorkspace = ({
   onBack,
 }) => {
@@ -27,7 +32,7 @@ const FriendAddWorkspace = ({
         </label>
 
         <div className="friend-add-search liquid-menu-surface">
-          <span>⌕</span>
+          <span><SearchIcon /></span>
 
           <input
             id="friendSearch"
@@ -46,7 +51,7 @@ const FriendAddWorkspace = ({
         </div>
 
         <div className="friend-add-guide liquid-menu-surface">
-          <div className="friend-add-guide-icon">👥</div>
+          <div className="friend-add-guide-icon"><UserPlusIcon /></div>
 
           <div>
             <strong>친구를 찾아보세요</strong>
