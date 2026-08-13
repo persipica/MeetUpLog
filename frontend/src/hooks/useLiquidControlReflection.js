@@ -56,8 +56,15 @@ const CONTROL_SELECTOR = [
   '.profile-photo-control',
 
   '.main-home-room-card',
+  '.main-home-hero',
+  '.friend-card',
   '.workspace-notification-item',
   '.friend-add-panel',
+  '.member-invite-result',
+  '.member-invite-search',
+  '.member-invite-tabs',
+  '.ai-result-card',
+  '.ai-candidate-card',
   '.composer-context-bar',
   '.message-action-menu',
   '.app-modal',
@@ -75,9 +82,30 @@ const CONTROL_SELECTOR = [
 
 const useLiquidControlReflection = () => {
   useEffect(() => {
+    const finePointer =
+      window.matchMedia?.(
+        '(hover: hover) and (pointer: fine)',
+      ).matches ?? true
+
+    const reducedMotion =
+      window.matchMedia?.(
+        '(prefers-reduced-motion: reduce)',
+      ).matches ?? false
+
+    if (
+      !finePointer ||
+      reducedMotion
+    ) {
+      return undefined
+    }
+
     let frameId = null
     let latestEvent = null
+    let latestControl = null
     let activeControl = null
+    let activeRect = null
+    let previousX = null
+    let previousY = null
 
     const resetControl = (
       control,
@@ -99,6 +127,10 @@ const useLiquidControlReflection = () => {
       control.removeAttribute(
         'data-liquid-hover',
       )
+
+      activeRect = null
+      previousX = null
+      previousY = null
     }
 
     const paint = () => {
@@ -115,9 +147,7 @@ const useLiquidControlReflection = () => {
       }
 
       const control =
-        event.target.closest(
-          CONTROL_SELECTOR,
-        )
+        latestControl
 
       if (!control) {
         if (activeControl) {
@@ -144,8 +174,13 @@ const useLiquidControlReflection = () => {
       activeControl =
         control
 
+      if (!activeRect) {
+        activeRect =
+          control.getBoundingClientRect()
+      }
+
       const rect =
-        control.getBoundingClientRect()
+        activeRect
 
       const x =
         ((event.clientX -
@@ -165,26 +200,50 @@ const useLiquidControlReflection = () => {
           )) *
         100
 
+      const clampedX =
+        Math.min(
+          100,
+          Math.max(0, x),
+        )
+
+      const clampedY =
+        Math.min(
+          100,
+          Math.max(0, y),
+        )
+
+      if (
+        previousX !== null &&
+        previousY !== null &&
+        Math.abs(
+          clampedX -
+            previousX,
+        ) < 1.5 &&
+        Math.abs(
+          clampedY -
+            previousY,
+        ) < 1.5
+      ) {
+        return
+      }
+
+      previousX =
+        clampedX
+      previousY =
+        clampedY
+
       control.style.setProperty(
         '--control-reflect-x',
-        `${Math.min(
-          100,
-          Math.max(
-            0,
-            x,
-          ),
-        ).toFixed(2)}%`,
+        `${clampedX.toFixed(
+          1,
+        )}%`,
       )
 
       control.style.setProperty(
         '--control-reflect-y',
-        `${Math.min(
-          100,
-          Math.max(
-            0,
-            y,
-          ),
-        ).toFixed(2)}%`,
+        `${clampedY.toFixed(
+          1,
+        )}%`,
       )
 
       control.setAttribute(
@@ -197,6 +256,23 @@ const useLiquidControlReflection = () => {
       event,
     ) => {
       latestEvent = event
+
+      if (
+        activeControl?.contains(
+          event.target,
+        )
+      ) {
+        latestControl =
+          activeControl
+      } else {
+        latestControl =
+          event.target instanceof
+          Element
+            ? event.target.closest(
+                CONTROL_SELECTOR,
+              )
+            : null
+      }
 
       if (!frameId) {
         frameId =
@@ -214,7 +290,13 @@ const useLiquidControlReflection = () => {
           )
 
           activeControl = null
+          latestControl = null
         }
+      }
+
+    const invalidateActiveRect =
+      () => {
+        activeRect = null
       }
 
     document.addEventListener(
@@ -230,6 +312,23 @@ const useLiquidControlReflection = () => {
         'pointerleave',
         handlePointerLeave,
       )
+
+    window.addEventListener(
+      'resize',
+      invalidateActiveRect,
+      {
+        passive: true,
+      },
+    )
+
+    document.addEventListener(
+      'scroll',
+      invalidateActiveRect,
+      {
+        passive: true,
+        capture: true,
+      },
+    )
 
     return () => {
       if (frameId) {
@@ -252,6 +351,17 @@ const useLiquidControlReflection = () => {
           'pointerleave',
           handlePointerLeave,
         )
+
+      window.removeEventListener(
+        'resize',
+        invalidateActiveRect,
+      )
+
+      document.removeEventListener(
+        'scroll',
+        invalidateActiveRect,
+        true,
+      )
     }
   }, [])
 }

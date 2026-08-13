@@ -135,58 +135,6 @@ const ChatMainPage = () => {
     colorMode,
   ])
 
-  /*
-   * Liquid Glass reflection point.
-   * Pointer position is converted to percentages and used by CSS
-   * radial gradients on glass surfaces.
-   */
-  useEffect(() => {
-    let frameId = null
-
-    const updateReflection = (event) => {
-      if (frameId) {
-        cancelAnimationFrame(frameId)
-      }
-
-      frameId = requestAnimationFrame(() => {
-        const x =
-          (event.clientX / window.innerWidth) * 100
-
-        const y =
-          (event.clientY / window.innerHeight) * 100
-
-        document.documentElement.style.setProperty(
-          '--liquid-x',
-          `${x.toFixed(2)}%`,
-        )
-
-        document.documentElement.style.setProperty(
-          '--liquid-y',
-          `${y.toFixed(2)}%`,
-        )
-      })
-    }
-
-    window.addEventListener(
-      'pointermove',
-      updateReflection,
-      {
-        passive: true,
-      },
-    )
-
-    return () => {
-      if (frameId) {
-        cancelAnimationFrame(frameId)
-      }
-
-      window.removeEventListener(
-        'pointermove',
-        updateReflection,
-      )
-    }
-  }, [])
-
   const [
     userProfile,
     setUserProfile,

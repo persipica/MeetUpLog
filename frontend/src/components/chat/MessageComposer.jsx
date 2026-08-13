@@ -265,20 +265,26 @@ const MessageComposer = ({
       emojiQuery,
     ])
 
+  const isTyping =
+    message.length > 0
+
   useEffect(() => {
     onTypingChange?.(
-      message.length > 0,
+      isTyping,
     )
+  }, [
+    isTyping,
+    onTypingChange,
+  ])
 
-    return () => {
+  useEffect(
+    () => () => {
       onTypingChange?.(
         false,
       )
-    }
-  }, [
-    message,
-    onTypingChange,
-  ])
+    },
+    [onTypingChange],
+  )
 
   useEffect(() => {
     const previousId =

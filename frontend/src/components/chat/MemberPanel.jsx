@@ -57,12 +57,25 @@ const MemberPanel = ({
       ],
     )
 
-  const isTyping = (
-    memberId,
-  ) =>
-    typingUsers.some(
-      (user) =>
-        user.id === memberId,
+  const typingUserIds =
+    useMemo(
+      () =>
+        new Set(
+          typingUsers.map(
+            (user) =>
+              user.id,
+          ),
+        ),
+      [typingUsers],
+    )
+
+  const pendingInviteIdSet =
+    useMemo(
+      () =>
+        new Set(
+          pendingInviteIds,
+        ),
+      [pendingInviteIds],
     )
 
   const closeProfile = () => {
@@ -153,14 +166,14 @@ const MemberPanel = ({
                 {inviteCandidates.map((friend) => (
                   <div className="member-invite-result" key={friend.id}>
                     <UserAvatar user={friend} className="member-avatar" />
-                    <div><strong>{friend.nickname}</strong><span>{friend.email || friend.statusMessage || 'MeetupLog 친구'}</span></div>
+                    <div className="member-invite-result-copy"><strong>{friend.nickname}</strong><span>{friend.email || friend.statusMessage || 'MeetupLog 친구'}</span></div>
                     <button
                       type="button"
-                      className={pendingInviteIds.includes(friend.id) ? 'pending' : ''}
-                      disabled={pendingInviteIds.includes(friend.id)}
+                      className={pendingInviteIdSet.has(friend.id) ? 'pending' : ''}
+                      disabled={pendingInviteIdSet.has(friend.id)}
                       onClick={() => onInviteFriend?.(friend)}
                     >
-                      {pendingInviteIds.includes(friend.id) ? '초대 보냄' : '초대'}
+                      {pendingInviteIdSet.has(friend.id) ? '초대 보냄' : '초대'}
                     </button>
                   </div>
                 ))}
@@ -180,7 +193,7 @@ const MemberPanel = ({
         {members.map(
           (member) => {
             const typing =
-              isTyping(
+              typingUserIds.has(
                 member.id,
               )
 
