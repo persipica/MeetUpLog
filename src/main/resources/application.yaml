@@ -22,3 +22,8 @@ spring:
 jwt:
   secret: meetuplog_secret_key_for_jwt_authentication_token_2026_ver
   access-token-validity-in-seconds: 86400 # 24시간
+
+kakao:
+  client-id: 4fede614ac81d1535ca5bbb028f39af6
+  client-secret: xKS9Mh6mHdkrsfftkCSWdtVXJMWa8qXA
+  redirect-uri: http://localhost:8080/api/v1/auth/kakao/callback
