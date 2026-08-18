@@ -13,6 +13,7 @@ import UserAvatar from '../common/UserAvatar'
 import {
   LogoutIcon,
   PencilIcon,
+  UserPlusIcon,
 } from '../common/Icons'
 
 import {
@@ -61,16 +62,20 @@ const ProfilePopover = ({
 
   if (
     !open ||
+    !user ||
     typeof document ===
       'undefined'
   ) {
     return null
   }
 
-  const currentPresence =
-    getPresence(
-      user.presence,
-    )
+  const userPresence = user.presence ?? 'ONLINE'
+  const currentPresence = getPresence(userPresence)
+  const isGuestAccount =
+    isGuest || user.accountType === 'GUEST'
+  const isKakaoAccount =
+    user.accountType === 'SOCIAL' ||
+    user.kakaoLinked === true
 
   const closePopover = () => {
     setPresenceMenuOpen(
@@ -105,7 +110,7 @@ const ProfilePopover = ({
         style={style}
       >
         <PresenceBanner
-          presence={user.presence}
+          presence={userPresence}
           size="large"
           className="profile-popover-banner"
         />
@@ -118,7 +123,7 @@ const ProfilePopover = ({
             />
 
             <PresenceOrb
-              presence={user.presence}
+              presence={userPresence}
               size="small"
               animated
             />
@@ -137,34 +142,38 @@ const ProfilePopover = ({
         </div>
 
         <div className="profile-popover-menu">
-          {!isGuest && <button
+          <button
             type="button"
             className="profile-popover-action"
             onClick={() => {
-              onEditProfile()
+              onEditProfile?.()
               closePopover()
             }}
           >
             <span className="profile-action-icon">
-              <PencilIcon />
+              {isGuestAccount ? <UserPlusIcon /> : <PencilIcon />}
             </span>
 
             <div>
               <strong>
-                프로필 편집
+                {isGuestAccount ? '일반회원으로 전환' : '프로필 편집'}
               </strong>
 
               <small>
-                사진, 닉네임, 상태 메시지
+                {isGuestAccount
+                  ? '친구, 알림, 채팅방 기능 이용'
+                  : isKakaoAccount
+                    ? '상태 메시지'
+                    : '사진, 닉네임, 상태 메시지'}
               </small>
             </div>
 
             <span className="profile-action-chevron">
               ›
             </span>
-          </button>}
+          </button>
 
-          {!isGuest && <button
+          {!isGuestAccount && <button
             type="button"
             className="profile-popover-action"
             onClick={() =>
@@ -178,7 +187,7 @@ const ProfilePopover = ({
               className={`profile-action-icon presence presence-option-${currentPresence.key}`}
             >
               <PresenceOrb
-                presence={user.presence}
+                presence={userPresence}
                 size="small"
                 animated
               />
@@ -200,7 +209,7 @@ const ProfilePopover = ({
             </span>
           </button>}
 
-          {!isGuest && <div
+          {!isGuestAccount && <div
             className={`presence-select-menu ${
               presenceMenuOpen
                 ? 'open'
@@ -213,7 +222,7 @@ const ProfilePopover = ({
                   key={key}
                   type="button"
                   className={
-                    user.presence === key
+                    userPresence === key
                       ? 'selected'
                       : ''
                   }
@@ -237,7 +246,7 @@ const ProfilePopover = ({
                     <span>{presence.description}</span>
                   </div>
 
-                  {user.presence === key && (
+                  {userPresence === key && (
                     <i>✓</i>
                   )}
                 </button>
@@ -258,8 +267,8 @@ const ProfilePopover = ({
             </span>
 
             <div>
-              <strong>{isGuest ? '게스트 나가기' : '로그아웃'}</strong>
-              <small>{isGuest ? '초대방 참여 종료' : '현재 계정에서 로그아웃'}</small>
+              <strong>{isGuestAccount ? '게스트 나가기' : '로그아웃'}</strong>
+              <small>{isGuestAccount ? '초대방 참여 종료' : '현재 계정에서 로그아웃'}</small>
             </div>
           </button>
         </div>

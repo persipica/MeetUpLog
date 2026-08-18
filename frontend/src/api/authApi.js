@@ -2,8 +2,10 @@ const API_BASE_URL = (
   import.meta.env.VITE_API_BASE_URL || '/api'
 ).replace(/\/$/, '')
 
+const AUTH_API_PATH = '/v1/auth'
+
 const USE_MOCK_AUTH =
-  import.meta.env.VITE_USE_MOCK_AUTH !== 'false'
+  import.meta.env.VITE_USE_MOCK_AUTH === 'true'
 
 const MOCK_ACCOUNT_KEY =
   'meetuplog-mock-accounts'
@@ -53,36 +55,130 @@ const getMockAccounts = () => {
   }
 }
 
-const request = async (path, options = {}) => {
-  const response = await fetch(`${API_BASE_URL}${path}`, {
-    credentials: 'include',
-    headers: {
-      'Content-Type': 'application/json',
-      ...options.headers,
-    },
-    ...options,
-  })
+const getErrorMessage = (payload, status) => {
+  if (typeof payload === 'string' && payload.trim()) {
+    return payload
+  }
 
-  const payload = response.status === 204
-    ? null
-    : await response.json().catch(() => null)
+  return payload?.message ||
+    payload?.detail ||
+    payload?.error ||
+    (status === 401
+      ? '이메일 또는 비밀번호를 확인해주세요.'
+      : '요청을 처리하지 못했습니다.')
+}
+
+const request = async (path, options = {}) => {
+  let response
+
+  try {
+    response = await fetch(`${API_BASE_URL}${path}`, {
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+        ...options.headers,
+      },
+      ...options,
+    })
+  } catch {
+    const error = new Error(
+      '백엔드 서버에 연결할 수 없습니다. Spring Boot 실행 상태를 확인해주세요.',
+    )
+    error.code = 'NETWORK_ERROR'
+    throw error
+  }
+
+  const responseText = response.status === 204
+    ? ''
+    : await response.text().catch(() => '')
+
+  let payload = null
+
+  if (responseText) {
+    try {
+      payload = JSON.parse(responseText)
+    } catch {
+      payload = responseText
+    }
+  }
 
   if (!response.ok) {
     const error = new Error(
-      payload?.message ?? '요청을 처리하지 못했습니다.',
+      getErrorMessage(payload, response.status),
     )
     error.code = payload?.code ?? `HTTP_${response.status}`
+    error.status = response.status
     throw error
   }
 
   return payload
 }
 
+const normalizeMemberSession = (payload) => ({
+  type: 'member',
+  provider:
+    payload?.accountType === 'SOCIAL'
+      ? 'KAKAO'
+      : 'LOCAL',
+  accessToken: payload?.accountToken ?? payload?.accessToken ?? '',
+  user: {
+    id: payload?.userId ?? payload?.id,
+    accountId: payload?.accountId ?? `user-${payload?.userId ?? payload?.id}`,
+    email: payload?.email ?? '',
+    nickname: payload?.nickname ?? '',
+    accountType: payload?.accountType ?? 'MEMBER',
+    profileImageUrl:
+      payload?.profileImageUrl ??
+      payload?.profile_image_url ??
+      null,
+    statusMessage:
+      payload?.statusMessage ??
+      payload?.status_message ??
+      '',
+    kakaoLinked:
+      payload?.kakaoLinked ??
+      payload?.accountType === 'SOCIAL',
+    // 전역 계정 권한(USER/ADMIN)과 채팅방 권한(OWNER/MEMBER)은
+    // 별개이므로 방 정보 API가 연결되기 전에는 일반 참여자로 둡니다.
+    role: 'MEMBER',
+    presence: 'ONLINE',
+  },
+})
+
+const normalizeGuestSession = (payload, inviteContext) => ({
+  type: 'guest',
+  accessToken: payload?.accountToken ?? payload?.accessToken ?? '',
+  inviteToken: inviteContext.inviteToken,
+  inviteRoomId: inviteContext.inviteRoomId,
+  inviteRoomName: inviteContext.inviteRoomName,
+  user: {
+    id: payload?.userId ?? payload?.id,
+    accountId: payload?.accountId ?? `guest-${payload?.userId ?? payload?.id}`,
+    nickname: payload?.nickname ?? inviteContext.nickname,
+    accountType: payload?.accountType ?? 'GUEST',
+    profileImageUrl: null,
+    statusMessage: '게스트로 참여 중',
+    kakaoLinked: false,
+    role: 'GUEST',
+    presence: 'ONLINE',
+  },
+})
+
 export const checkEmailAvailability = async (email) => {
   const normalizedEmail = normalizeEmail(email)
 
   if (!USE_MOCK_AUTH) {
-    return request(`/auth/check-email?email=${encodeURIComponent(normalizedEmail)}`)
+    try {
+      return await request(`${AUTH_API_PATH}/check-email?email=${encodeURIComponent(normalizedEmail)}`)
+    } catch (error) {
+      if (error.status === 404 || error.status === 405) {
+        // 팀원 백엔드의 초기 버전에는 중복 확인 API가 없습니다.
+        // 회원가입 API의 서버 측 중복 검사를 최종 기준으로 사용합니다.
+        return { available: true, deferredToSignup: true }
+      }
+
+      throw error
+    }
   }
 
   await delay(360)
@@ -100,7 +196,15 @@ export const checkNicknameAvailability = async (nickname) => {
   const normalizedNickname = nickname.trim()
 
   if (!USE_MOCK_AUTH) {
-    return request(`/auth/check-nickname?nickname=${encodeURIComponent(normalizedNickname)}`)
+    try {
+      return await request(`${AUTH_API_PATH}/check-nickname?nickname=${encodeURIComponent(normalizedNickname)}`)
+    } catch (error) {
+      if (error.status === 404 || error.status === 405) {
+        return { available: true, deferredToSignup: true }
+      }
+
+      throw error
+    }
   }
 
   await delay(360)
@@ -120,7 +224,7 @@ export const registerMember = async ({
   nickname,
 }) => {
   if (!USE_MOCK_AUTH) {
-    return request('/auth/signup', {
+    return request(`${AUTH_API_PATH}/signup`, {
       method: 'POST',
       body: JSON.stringify({
         email: normalizeEmail(email),
@@ -179,13 +283,15 @@ export const loginMember = async ({ email, password }) => {
   const normalizedEmail = normalizeEmail(email)
 
   if (!USE_MOCK_AUTH) {
-    return request('/auth/login', {
+    const response = await request(`${AUTH_API_PATH}/login`, {
       method: 'POST',
       body: JSON.stringify({
         email: normalizedEmail,
         password,
       }),
     })
+
+    return normalizeMemberSession(response)
   }
 
   await delay(560)
@@ -259,6 +365,45 @@ export const loginWithKakao = async () => {
   }
 }
 
+/**
+ * OAuth 성공 핸들러가 발급한 일회용 코드를 실제 MeetupLog JWT로 교환합니다.
+ * 카카오 인가 코드를 다시 카카오 서버에 보내는 API가 아닙니다.
+ */
+export const exchangeOAuthCode = async (oauthCode) => {
+  const code = oauthCode?.trim()
+
+  if (USE_MOCK_AUTH) {
+    return {
+      type: 'member',
+      provider: 'KAKAO',
+      accessToken: 'mock-kakao-token',
+      user: {
+        id: DEMO_ACCOUNT.id,
+        accountId: DEMO_ACCOUNT.accountId,
+        email: DEMO_ACCOUNT.email,
+        nickname: DEMO_ACCOUNT.nickname,
+        accountType: 'SOCIAL',
+        profileImageUrl: null,
+        statusMessage: '',
+        kakaoLinked: true,
+        role: 'MEMBER',
+        presence: 'ONLINE',
+      },
+    }
+  }
+
+  const response = await request(`${AUTH_API_PATH}/oauth/exchange`, {
+    method: 'POST',
+    // 신규 백엔드는 HttpOnly 쿠키로 교환 코드를 전달합니다.
+    // code body는 기존 query-string 성공 핸들러와의 하위 호환용입니다.
+    ...(code
+      ? { body: JSON.stringify({ code }) }
+      : {}),
+  })
+
+  return normalizeMemberSession(response)
+}
+
 export const enterAsGuest = async ({
   nickname,
   inviteToken,
@@ -266,9 +411,16 @@ export const enterAsGuest = async ({
   inviteRoomName = '주말 영화방',
 }) => {
   if (!USE_MOCK_AUTH) {
-    return request(`/invites/${encodeURIComponent(inviteToken)}/guest`, {
+    const response = await request(`${AUTH_API_PATH}/guest`, {
       method: 'POST',
       body: JSON.stringify({ nickname: nickname.trim() }),
+    })
+
+    return normalizeGuestSession(response, {
+      nickname: nickname.trim(),
+      inviteToken,
+      inviteRoomId,
+      inviteRoomName,
     })
   }
 

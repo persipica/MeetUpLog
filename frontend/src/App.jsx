@@ -5,7 +5,15 @@ import {
 import AuthPage from './pages/AuthPage'
 import ChatMainPage from './pages/ChatMainPage'
 
-const SESSION_KEY = 'meetuplog-auth-session'
+const USE_MOCK_AUTH =
+  import.meta.env.VITE_USE_MOCK_AUTH === 'true'
+
+// Mock 인증 시절에 저장된 세션이 실제 API 세션으로 오인되지 않도록
+// 인증 모드별로 저장소를 분리합니다.
+const SESSION_KEY = USE_MOCK_AUTH
+  ? 'meetuplog-auth-session-mock'
+  : 'meetuplog-auth-session-v2'
+const LEGACY_SESSION_KEY = 'meetuplog-auth-session'
 
 const readSession = () => {
   const sources = [
@@ -28,6 +36,8 @@ const readSession = () => {
 const clearStoredSession = () => {
   window.localStorage.removeItem(SESSION_KEY)
   window.sessionStorage.removeItem(SESSION_KEY)
+  window.localStorage.removeItem(LEGACY_SESSION_KEY)
+  window.sessionStorage.removeItem(LEGACY_SESSION_KEY)
 }
 
 const App = () => {
@@ -58,8 +68,10 @@ const App = () => {
   return session
     ? (
       <ChatMainPage
+        key={`${session.type}:${session.user?.id ?? 'unknown'}`}
         authSession={session}
         onLogout={handleLogout}
+        onSessionChange={handleAuthenticated}
       />
       )
     : <AuthPage onAuthenticated={handleAuthenticated} />

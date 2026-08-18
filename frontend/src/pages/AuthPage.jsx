@@ -1,6 +1,7 @@
 import {
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from 'react'
 
@@ -22,6 +23,7 @@ import {
   checkEmailAvailability,
   checkNicknameAvailability,
   enterAsGuest,
+  exchangeOAuthCode,
   loginMember,
   loginWithKakao,
   registerMember,
@@ -131,12 +133,63 @@ const AuthPage = ({ onAuthenticated }) => {
   const [emailCheck, setEmailCheck] = useState('idle')
   const [nicknameCheck, setNicknameCheck] = useState('idle')
   const [guestNickname, setGuestNickname] = useState('')
+  const oauthCallbackStartedRef = useRef(false)
 
   useEffect(() => {
     document.documentElement.dataset.colorMode = colorMode
     document.documentElement.style.colorScheme = colorMode
     window.localStorage.setItem('meetuplog-color-mode', colorMode)
   }, [colorMode])
+
+  useEffect(() => {
+    if (oauthCallbackStartedRef.current) return
+
+    const currentUrl = new URL(window.location.href)
+    const oauthCode = currentUrl.searchParams.get('oauthCode')
+    const oauthStatus = currentUrl.searchParams.get('oauth')
+    const oauthError = currentUrl.searchParams.get('oauthError')
+
+    if (!oauthCode && oauthStatus !== 'success' && !oauthError) return
+
+    oauthCallbackStartedRef.current = true
+
+    // 일회용 코드가 주소창·브라우저 기록에 남지 않도록 API 호출 전에 제거합니다.
+    currentUrl.searchParams.delete('oauthCode')
+    currentUrl.searchParams.delete('oauth')
+    currentUrl.searchParams.delete('oauthError')
+
+    const cleanUrl = `${currentUrl.pathname}${
+      currentUrl.searchParams.toString()
+        ? `?${currentUrl.searchParams.toString()}`
+        : ''
+    }${currentUrl.hash}`
+
+    window.history.replaceState({}, document.title, cleanUrl)
+
+    if (oauthError) {
+      setFeedback({
+        type: 'error',
+        message: '카카오 로그인에 실패했습니다. 잠시 후 다시 시도해주세요.',
+      })
+      setSubmitting(false)
+      return
+    }
+
+    setFeedback(null)
+    setSubmitting(true)
+
+    exchangeOAuthCode(oauthCode)
+      .then((session) => {
+        onAuthenticated(session, true)
+      })
+      .catch((error) => {
+        setFeedback({
+          type: 'error',
+          message: error.message,
+        })
+        setSubmitting(false)
+      })
+  }, [onAuthenticated])
 
   const inviteContext = useMemo(() => {
     return resolveInviteContext()

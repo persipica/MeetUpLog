@@ -40,6 +40,15 @@ import useLiquidControlReflection from '../hooks/useLiquidControlReflection'
 import GlobalThemeToggle from '../components/common/GlobalThemeToggle'
 import { changeMyPassword } from '../api/memberApi'
 import {
+  convertGuestAccount,
+  deleteMyAccount,
+  getMyProfile,
+  removeProfileImage,
+  unlinkKakao,
+  updateMyProfile,
+  uploadProfileImage,
+} from '../api/profileApi'
+import {
   BellIcon,
   CloseIcon,
   LogoutIcon,
@@ -85,6 +94,7 @@ const createPresenceDirectory = (...groups) => {
 const ChatMainPage = ({
   authSession,
   onLogout,
+  onSessionChange,
 }) => {
   useLiquidControlReflection()
 
@@ -252,6 +262,57 @@ const ChatMainPage = ({
     setBaseMembers,
   ] = useState(sessionMembers)
 
+  /*
+   * 로그인 응답은 최소 정보만 포함할 수 있으므로
+   * 앱 진입 후 /users/me에서 실제 프로필을 다시 조회합니다.
+   */
+  useEffect(() => {
+    const accountToken = authSession?.accessToken
+
+    if (!accountToken) return undefined
+
+    const controller = new AbortController()
+
+    getMyProfile(accountToken, controller.signal)
+      .then((profile) => {
+        if (!profile) return
+
+        setUserProfile((previous) => ({
+          ...previous,
+          ...profile,
+          id: profile.userId ?? profile.id ?? previous.id,
+          accountId:
+            previous.accountId ??
+            `user-${profile.userId ?? profile.id}`,
+          // 전역 USER 역할이 채팅방 MEMBER 역할을 덮지 않도록 유지합니다.
+          role: previous.role,
+          presence: previous.presence ?? 'ONLINE',
+        }))
+
+        setBaseMembers((previous) =>
+          previous.map((member) =>
+            member.id === (profile.userId ?? profile.id)
+              ? {
+                  ...member,
+                  nickname: profile.nickname,
+                  email: profile.email,
+                  profileImageUrl: profile.profileImageUrl,
+                  statusMessage: profile.statusMessage,
+                  accountType: profile.accountType,
+                }
+              : member,
+          ),
+        )
+      })
+      .catch((error) => {
+        if (error?.name !== 'AbortError') {
+          console.error('프로필 조회 실패:', error)
+        }
+      })
+
+    return () => controller.abort()
+  }, [authSession?.accessToken])
+
   const [activeMenu, setActiveMenu] =
     useState('chat')
 
@@ -391,6 +452,12 @@ const ChatMainPage = ({
 
   const [modal, setModal] =
     useState(null)
+
+  const [accountActionSubmitting, setAccountActionSubmitting] =
+    useState(false)
+
+  const [accountActionError, setAccountActionError] =
+    useState('')
 
   const [
     kickTarget,
@@ -788,19 +855,76 @@ const ChatMainPage = ({
     }
   }
 
-  const handleProfileSave = (
+  const handleProfileSave = async (
     values,
   ) => {
-    setUserProfile(
-      (previous) => ({
-        ...previous,
-        ...values,
-      }),
+    const updatedProfile =
+      await updateMyProfile(
+        authSession.accessToken,
+        values,
+      )
+
+    setUserProfile((previous) => ({
+      ...previous,
+      ...updatedProfile,
+      id:
+        updatedProfile.userId ??
+        updatedProfile.id ??
+        previous.id,
+      role: previous.role,
+      presence: previous.presence,
+    }))
+
+    setBaseMembers((previous) =>
+      previous.map((member) =>
+        member.id === userProfile.id
+          ? {
+              ...member,
+              nickname: updatedProfile.nickname,
+              profileImageUrl: updatedProfile.profileImageUrl,
+              statusMessage: updatedProfile.statusMessage,
+            }
+          : member,
+      ),
     )
 
-    setWorkspaceMode(
-      returnWorkspaceMode,
+    setWorkspaceMode(returnWorkspaceMode)
+    return updatedProfile
+  }
+
+  const handleGuestConversion = async (values) => {
+    const response = await convertGuestAccount(
+      authSession.accessToken,
+      values,
     )
+
+    const nextUser = {
+      ...userProfile,
+      id: response?.userId ?? response?.id ?? userProfile.id,
+      accountId:
+        response?.accountId ??
+        userProfile.accountId,
+      email: response?.email ?? values.email,
+      nickname: response?.nickname ?? values.nickname,
+      accountType: response?.accountType ?? 'MEMBER',
+      role: 'MEMBER',
+      statusMessage: response?.statusMessage ?? '',
+      kakaoLinked: false,
+    }
+
+    const nextSession = {
+      ...authSession,
+      type: 'member',
+      provider: 'LOCAL',
+      accessToken:
+        response?.accountToken ??
+        response?.accessToken ??
+        authSession.accessToken,
+      user: nextUser,
+    }
+
+    onSessionChange?.(nextSession, true)
+    return nextSession
   }
 
   const updateMessageInRoom = (
@@ -1649,13 +1773,51 @@ const ChatMainPage = ({
                 onSave={
                   handleProfileSave
                 }
-                onChangePassword={
-                  changeMyPassword
+                onUploadProfileImage={(file) =>
+                  uploadProfileImage(
+                    authSession.accessToken,
+                    file,
+                  ).then((profile) => {
+                    setUserProfile((previous) => ({
+                      ...previous,
+                      ...profile,
+                      role: previous.role,
+                      presence: previous.presence,
+                    }))
+                    return profile
+                  })
+                }
+                onRemoveProfileImage={() =>
+                  removeProfileImage(
+                    authSession.accessToken,
+                  ).then((profile) => {
+                    setUserProfile((previous) => ({
+                      ...previous,
+                      ...profile,
+                      role: previous.role,
+                      presence: previous.presence,
+                    }))
+                    return profile
+                  })
+                }
+                onChangePassword={(values) =>
+                  changeMyPassword(
+                    authSession.accessToken,
+                    values,
+                  )
                 }
                 onDeleteAccount={() =>
-                  setModal(
-                    'DELETE_ACCOUNT',
-                  )
+                  {
+                    setAccountActionError('')
+                    setModal('DELETE_ACCOUNT')
+                  }
+                }
+                onUnlinkKakao={() => {
+                  setAccountActionError('')
+                  setModal('UNLINK_KAKAO')
+                }}
+                onConvertGuest={
+                  handleGuestConversion
                 }
               />
             </div>
@@ -2058,6 +2220,69 @@ const ChatMainPage = ({
       </AppModal>
 
       <AppModal
+        open={modal === 'UNLINK_KAKAO'}
+        title="카카오 연동 해제"
+        subtitle="카카오 계정과 MeetupLog의 연결을 해제합니다."
+        eyebrow="KAKAO ACCOUNT"
+        onClose={() => {
+          if (!accountActionSubmitting) setModal(null)
+        }}
+        size="small"
+      >
+        <div className="delete-account-confirm">
+          <div className="delete-account-warning">!</div>
+
+          <strong>카카오 연동을 해제할까요?</strong>
+
+          <p>
+            연동 해제 후 현재 세션이 종료됩니다. 다시 이용하려면 카카오 연결을
+            새로 진행해야 합니다.
+          </p>
+
+          {accountActionError && (
+            <div className="profile-password-status error" role="alert">
+              {accountActionError}
+            </div>
+          )}
+
+          <div className="modal-action-row">
+            <button
+              type="button"
+              className="secondary-action"
+              disabled={accountActionSubmitting}
+              onClick={() => setModal(null)}
+            >
+              취소
+            </button>
+
+            <button
+              type="button"
+              className="danger-action"
+              disabled={accountActionSubmitting}
+              onClick={async () => {
+                setAccountActionSubmitting(true)
+                setAccountActionError('')
+
+                try {
+                  await unlinkKakao(authSession.accessToken)
+                  setModal(null)
+                  onLogout?.()
+                } catch (error) {
+                  setAccountActionError(
+                    error?.message || '카카오 연동을 해제하지 못했습니다.',
+                  )
+                } finally {
+                  setAccountActionSubmitting(false)
+                }
+              }}
+            >
+              {accountActionSubmitting ? '해제 중...' : '연동 해제'}
+            </button>
+          </div>
+        </div>
+      </AppModal>
+
+      <AppModal
         open={
           modal ===
           'DELETE_ACCOUNT'
@@ -2082,6 +2307,12 @@ const ChatMainPage = ({
             가입 정보와 개인 데이터가 삭제되며 복구할 수 없습니다.
           </p>
 
+          {accountActionError && (
+            <div className="profile-password-status error" role="alert">
+              {accountActionError}
+            </div>
+          )}
+
           <div className="modal-action-row">
             <button
               type="button"
@@ -2096,15 +2327,25 @@ const ChatMainPage = ({
             <button
               type="button"
               className="danger-action"
-              onClick={() => {
-                alert(
-                  '회원탈퇴 API 연결 단계에서 실제 삭제 처리를 구현합니다.',
-                )
+              disabled={accountActionSubmitting}
+              onClick={async () => {
+                setAccountActionSubmitting(true)
+                setAccountActionError('')
 
-                setModal(null)
+                try {
+                  await deleteMyAccount(authSession.accessToken)
+                  setModal(null)
+                  onLogout?.()
+                } catch (error) {
+                  setAccountActionError(
+                    error?.message || '회원탈퇴를 처리하지 못했습니다.',
+                  )
+                } finally {
+                  setAccountActionSubmitting(false)
+                }
               }}
             >
-              회원탈퇴
+              {accountActionSubmitting ? '처리 중...' : '회원탈퇴'}
             </button>
           </div>
         </div>

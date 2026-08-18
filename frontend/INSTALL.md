@@ -1,6 +1,16 @@
-# MeetupLog Frontend v41 — 메시지 모달 및 상단 컨트롤 정렬
+# MeetupLog Frontend v42 — Spring Boot 회원 인증 연동
 
 기존 순수 CSS 디자인을 Tailwind CSS v4 기반으로 전환한 버전입니다.
+
+## v42 Spring Boot 회원 인증 연동
+
+- Mock 인증 대신 팀원 Spring Boot의 `/api/v1/auth` API를 기본 사용
+- 로그인 응답의 `accountToken`, `userId`, `accountType`을 기존 프론트 세션 형식으로 정규화
+- 회원가입 요청을 팀원 DTO의 `email`, `password`, `nickname` 계약에 맞춤
+- 게스트 계정 생성 요청을 `/api/v1/auth/guest`에 연결
+- 네트워크 실패와 JSON·문자열 오류 응답을 로그인 화면에 표시
+- 과거 Mock 세션과 실제 인증 세션의 저장소 키를 분리
+- 아직 중복 확인 API가 없는 백엔드에서도 회원가입 API의 최종 검증으로 진행 가능
 
 ## v41 메시지 모달 및 상단 컨트롤 정렬
 
@@ -207,6 +217,32 @@ window.dispatchEvent(
 ```powershell
 npm ci
 npm run dev
+```
+
+## Spring Boot 인증 API 연동
+
+v42부터 Mock 인증은 기본값이 아니며 아래 Spring Boot API를 호출합니다.
+
+```http
+POST /api/v1/auth/signup
+POST /api/v1/auth/login
+POST /api/v1/auth/guest
+GET  /api/v1/auth/check-email?email={email}
+GET  /api/v1/auth/check-nickname?nickname={nickname}
+```
+
+백엔드는 `http://localhost:8080`, 프론트엔드는 `http://localhost:5173`에서
+실행합니다. Vite가 `/api` 요청을 백엔드로 프록시하므로 별도 CORS 설정 없이
+로컬 연동할 수 있습니다.
+
+팀원 백엔드의 `accountToken`, `userId`, `accountType` 응답은 프론트에서
+각각 `accessToken`, `user.id`, `user.accountType`으로 변환해 기존 채팅 화면의
+세션 구조를 유지합니다.
+
+화면만 확인할 때는 프로젝트 루트에 `.env.local`을 만들고 다음 값을 지정합니다.
+
+```text
+VITE_USE_MOCK_AUTH=true
 ```
 
 `@tailwindcss/vite` 모듈 오류가 보이면 기존 `node_modules`가 이전 버전인 경우이므로,

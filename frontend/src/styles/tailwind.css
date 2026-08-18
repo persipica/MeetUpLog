@@ -513,6 +513,9 @@ html[data-color-mode="dark"] {
   .profile-text-field input, .profile-text-field textarea, .profile-password-field > div { @apply glass-control w-full rounded-xl; }
   .profile-text-field input, .profile-text-field textarea { @apply px-3 py-3 text-[12px] text-[var(--ink)] outline-none placeholder:text-[var(--faint)]; }
   .profile-text-field textarea { @apply min-h-24; }
+  .profile-text-field.readonly input, .profile-text-field input:disabled { @apply cursor-not-allowed bg-slate-100/60 text-[var(--muted)] opacity-80 dark:bg-white/[.035]; }
+  .profile-text-field.invalid input { @apply border-danger-500/40 bg-red-50/50 dark:bg-danger-500/[.07]; }
+  .profile-text-field > small { @apply mt-1.5 block text-[9px] text-danger-500; }
   .profile-unified-button, .primary-action, .secondary-action, .danger-action { @apply inline-flex min-h-10 items-center justify-center rounded-xl px-4 text-[11px] font-extrabold transition duration-200 hover:-translate-y-0.5 active:scale-[.98] disabled:pointer-events-none disabled:opacity-45; }
   .profile-unified-button.primary, .primary-action { @apply bg-gradient-to-br from-brand-500 to-brand-700 text-white shadow-[0_8px_20px_rgb(92_71_194/.18)]; }
   .profile-unified-button.secondary, .secondary-action { @apply glass-control text-[var(--muted)]; }
@@ -527,6 +530,16 @@ html[data-color-mode="dark"] {
   .profile-email-row > div span { @apply text-[9px] text-[var(--muted)]; }
   .profile-email-row > div strong { @apply mt-1 text-[12px] font-extrabold; }
   .profile-readonly-badge { @apply shrink-0 rounded-full bg-slate-100 px-2.5 py-1 text-[8px] font-bold text-[var(--muted)] dark:bg-white/[.06]; }
+  .profile-readonly-badge.kakao { @apply bg-yellow-300/40 text-amber-800 dark:bg-yellow-300/15 dark:text-yellow-200; }
+  .profile-kakao-notice { @apply mt-4 flex items-start gap-3 rounded-2xl border border-yellow-300/30 bg-yellow-100/40 p-4 text-[10px] leading-5 text-amber-900 dark:bg-yellow-300/[.07] dark:text-yellow-100; }
+  .profile-kakao-notice .ui-icon { @apply h-5 w-5 shrink-0; }
+  .profile-kakao-notice p { @apply m-0; }
+  .profile-guest-benefits { @apply mb-5 grid gap-2 rounded-2xl border border-[var(--line)] bg-white/35 p-4 dark:bg-white/[.025]; }
+  .profile-guest-benefits span { @apply flex items-center gap-2 text-[10px] font-bold text-[var(--muted)]; }
+  .profile-guest-benefits .ui-icon { @apply h-4 w-4 text-emerald-500; }
+  .profile-guest-start { @apply w-full gap-2; }
+  .profile-guest-start .ui-icon { @apply h-4 w-4; }
+  .profile-guest-conversion-form { @apply grid gap-4 border-t border-[var(--line)] pt-5; }
   .profile-password-form { @apply mt-5 border-t border-[var(--line)] pt-5; }
   .profile-password-title { @apply mb-5 flex items-center gap-3; }
   .profile-password-title > div { @apply min-w-0; }

@@ -23,10 +23,21 @@ const parsePayload = async (response) => {
   return response.json().catch(() => null)
 }
 
-export const changeMyPassword = async ({
-  currentPassword,
-  newPassword,
-}) => {
+export const changeMyPassword = async (
+  accountToken,
+  {
+    currentPassword,
+    newPassword,
+  },
+) => {
+  if (!accountToken) {
+    throw new MemberApiError(
+      '로그인 토큰이 없습니다.',
+      null,
+      401,
+    )
+  }
+
   let response
 
   try {
@@ -37,6 +48,7 @@ export const changeMyPassword = async ({
         credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
+          Authorization: `Bearer ${accountToken}`,
         },
         body: JSON.stringify({
           currentPassword,
