@@ -37,7 +37,7 @@ public class SecurityConfig {
                 )
                 .authorizeHttpRequests(auth -> auth
                         // 로그인/게스트 생성 API는 토큰 없이 누구나 허용
-                        .requestMatchers("/guest", "/guest/**", "/api/v1/auth/**").permitAll()
+                        .requestMatchers("/guest", "/guest/**", "/api/v1/auth/**", "/ws-chat/**", "/chat-test.html", "/api/v1/rooms/*/messages").permitAll()
                         // 그 외 모든 API는 로그인(JWT 토큰) 필수!
                         .anyRequest().authenticated()
                 )
