@@ -1,6 +1,7 @@
 package com.log.MeetupLog.domain.user.service;
 
 import com.log.MeetupLog.domain.user.dto.AuthResponse;
+import com.log.MeetupLog.domain.user.dto.KakaoUserInfoResponse;
 import com.log.MeetupLog.domain.user.dto.GuestLoginRequest;
 import com.log.MeetupLog.domain.user.dto.GuestLoginResponse;
 import com.log.MeetupLog.domain.user.dto.LoginRequest;
@@ -24,6 +25,7 @@ public class AuthService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
+    private final KakaoService kakaoService;
 
 // 1. 자체 회원가입 (MEMBER)
 
@@ -97,6 +99,59 @@ public class AuthService {
                 .accountType(user.getAccountType())
                 .build();
     }
+// 4. 카카오 소셜 로그인
+
+    @Transactional
+    public AuthResponse kakaoLogin(String code) {
+        // 1) 인가 코드로 카카오 액세스 토큰 획득
+        String kakaoAccessToken = kakaoService.getKakaoAccessToken(code);
+
+        // 2) 카카오 액세스 토큰으로 프로필 정보 획득
+        KakaoUserInfoResponse userInfo = kakaoService.getUserInfo(kakaoAccessToken);
+        Long kakaoId = userInfo.getId();
+
+        // 이메일이 없는 경우 카카오ID 기반 가상 이메일 생성
+        String email = (userInfo.getKakaoAccount() != null && userInfo.getKakaoAccount().getEmail() != null)
+                ? userInfo.getKakaoAccount().getEmail()
+                : "kakao_" + kakaoId + "@kakao.com";
+
+        String nickname = "카카오유저";
+        if (userInfo.getKakaoAccount() != null && userInfo.getKakaoAccount().getProfile() != null) {
+            nickname = userInfo.getKakaoAccount().getProfile().getNickname();
+        }
+
+        // 3) DB 조회 및 신규 회원이면 자동 가입
+        final String userEmail = email;
+        final String userNickname = nickname;
+        User user = userRepository.findByEmail(userEmail)
+                .orElseGet(() -> userRepository.save(
+                        User.builder()
+                                .email(userEmail)
+                                .nickname(userNickname)
+                                .passwordHash("") // 소셜 로그인은 자체 비밀번호 불필요
+                                .accountType(AccountType.SOCIAL)
+                                .role(Role.USER)
+                                .accountStatus(AccountStatus.ACTIVE)
+                                .build()
+                ));
+
+        // 4) 우리 서비스 전용 JWT Access Token 발급
+        String token = jwtTokenProvider.createAccessToken(
+                user.getUserId(),
+                user.getAccountType().name(),
+                user.getRole().name()
+        );
+
+        return AuthResponse.builder()
+                .accountToken(token)
+                .userId(user.getUserId())
+                .email(user.getEmail())
+                .nickname(user.getNickname())
+                .accountType(user.getAccountType())
+                .build();
+    }
+
+
 
 //3. 게스트 로그인
 

@@ -33,6 +33,14 @@ public class AuthController {
         return ResponseEntity.ok(response);
     }
 
+    // 카카오 소셜 로그인 (GET /api/v1/auth/kakao/callback?code=...)
+    @GetMapping("/kakao/callback")
+    public ResponseEntity<AuthResponse> kakaoCallback(@RequestParam("code") String code) {
+        AuthResponse response = authService.kakaoLogin(code);
+        return ResponseEntity.ok(response);
+    }
+
+
     // 게스트 로그인 / 임시 계정 생성 API / POST 요청 처리: http://localhost:8080/guest
     @PostMapping("/guest")
     public ResponseEntity<GuestLoginResponse> guestLogin(@Valid @RequestBody GuestLoginRequest request) {
