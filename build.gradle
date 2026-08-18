@@ -41,6 +41,8 @@ dependencies {
 	runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.12.5'
 	// @Valid, @NotBlank, @Size 같은 유효성 검사(Validation) 기능
 	implementation 'org.springframework.boot:spring-boot-starter-validation'
+	// 실시간 채팅
+	implementation 'org.springframework.boot:spring-boot-starter-websocket'
 }
 
 tasks.named('test') {
