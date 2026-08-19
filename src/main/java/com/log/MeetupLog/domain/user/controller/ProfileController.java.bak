@@ -1,0 +1,78 @@
+package com.log.MeetupLog.domain.user.controller;
+
+import com.log.MeetupLog.domain.user.dto.UpdateProfileRequest;
+import com.log.MeetupLog.domain.user.dto.UserProfileResponse;
+import com.log.MeetupLog.domain.user.service.ProfileService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
+
+@RestController
+@RequestMapping("/api/v1/users")
+@RequiredArgsConstructor
+public class ProfileController {
+
+    private final ProfileService profileService;
+
+    @GetMapping("/me")
+    public UserProfileResponse getMyProfile(
+            Authentication authentication
+    ) {
+        return profileService.getMyProfile(
+                getUserId(authentication)
+        );
+    }
+
+    @PatchMapping("/me")
+    public UserProfileResponse updateMyProfile(
+            Authentication authentication,
+            @RequestBody UpdateProfileRequest request
+    ) {
+        return profileService.updateMyProfile(
+                getUserId(authentication),
+                request
+        );
+    }
+
+    @DeleteMapping("/me/kakao-link")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void unlinkKakao(
+            Authentication authentication
+    ) {
+        profileService.unlinkKakao(
+                getUserId(authentication)
+        );
+    }
+
+    private Long getUserId(
+            Authentication authentication
+    ) {
+        if (authentication == null
+                || !authentication.isAuthenticated()) {
+            throw new ResponseStatusException(
+                    HttpStatus.UNAUTHORIZED
+            );
+        }
+
+        Object principal = authentication.getPrincipal();
+
+        if (principal instanceof Number number) {
+            return number.longValue();
+        }
+
+        String value = principal instanceof String
+                ? principal.toString()
+                : authentication.getName();
+
+        try {
+            return Long.valueOf(value);
+        } catch (NumberFormatException exception) {
+            throw new ResponseStatusException(
+                    HttpStatus.UNAUTHORIZED,
+                    "JWT 사용자 정보가 올바르지 않습니다."
+            );
+        }
+    }
+}

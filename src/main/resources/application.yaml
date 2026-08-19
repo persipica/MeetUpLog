@@ -1,0 +1,69 @@
+server:
+  port: 8080
+
+spring:
+  config:
+    import: optional:file:./config/application-secret.yml
+
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 11MB
+
+
+  application:
+    name: meetuplog
+
+  datasource:
+    url: jdbc:mysql://localhost:3306/meetuplog?useSSL=false&serverTimezone=Asia/Seoul&characterEncoding=UTF-8
+    username: ${app.database.username:root}
+    password: ${app.database.password}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  kakao:
+    client-id: ${app.kakao.client-id}
+    client-secret: ${app.kakao.client-secret}
+    redirect-uri: ${app.kakao.redirect-uri}
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+
+  security:
+    oauth2:
+      client:
+        registration:
+          kakao:
+            provider: kakao
+            client-id: ${app.kakao.client-id}
+            client-secret: ${app.kakao.client-secret}
+            client-authentication-method: client_secret_post
+            authorization-grant-type: authorization_code
+            redirect-uri: ${app.kakao.redirect-uri}
+            scope:
+              - profile_nickname
+              - profile_image
+              - account_email
+            client-name: Kakao
+
+        provider:
+          kakao:
+            authorization-uri: https://kauth.kakao.com/oauth/authorize
+            token-uri: https://kauth.kakao.com/oauth/token
+            user-info-uri: https://kapi.kakao.com/v2/user/me
+            user-name-attribute: id
+
+jwt:
+  secret: ${app.jwt.secret}
+  access-token-validity-in-seconds: 86400
+
+app:
+  # 운영에서는 실제 프론트엔드 Origin으로 변경하세요.
+  frontend-origin: ${APP_FRONTEND_ORIGIN:http://localhost:5173}
+  chat:
+    # 운영에서는 영속 볼륨 경로로 변경하세요.
+    upload-dir: ${CHAT_UPLOAD_DIR:./uploads/chat}
