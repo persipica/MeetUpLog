@@ -411,7 +411,7 @@ export const enterAsGuest = async ({
   inviteRoomName = '주말 영화방',
 }) => {
   if (!USE_MOCK_AUTH) {
-    const response = await request(`${AUTH_API_PATH}/guest`, {
+    const response = await request(`/v1/invites/${encodeURIComponent(inviteToken)}/guest`, {
       method: 'POST',
       body: JSON.stringify({ nickname: nickname.trim() }),
     })
@@ -419,8 +419,8 @@ export const enterAsGuest = async ({
     return normalizeGuestSession(response, {
       nickname: nickname.trim(),
       inviteToken,
-      inviteRoomId,
-      inviteRoomName,
+      inviteRoomId: response.inviteRoomId ?? inviteRoomId,
+      inviteRoomName: response.inviteRoomName ?? inviteRoomName,
     })
   }
 

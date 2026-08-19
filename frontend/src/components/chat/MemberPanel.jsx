@@ -28,6 +28,9 @@ const MemberPanel = ({
   friends = [],
   onInviteFriend,
   pendingInviteIds = [],
+  inviteLink,
+  inviteLinkBusy = false,
+  onCreateInviteLink,
 }) => {
   const [inviteOpen, setInviteOpen] = useState(false)
   const [inviteTab, setInviteTab] = useState('friends')
@@ -96,7 +99,8 @@ const MemberPanel = ({
   }, [friends, inviteSearch, members])
 
   const copyInviteLink = async () => {
-    const inviteUrl = `${window.location.origin}/invite/demo-token`
+    if (!inviteLink?.invitePath) return
+    const inviteUrl = `${window.location.origin}${inviteLink.invitePath}`
     try {
       await navigator.clipboard.writeText(inviteUrl)
       setCopied(true)
@@ -111,7 +115,7 @@ const MemberPanel = ({
       className={`member-panel ${variant}`}
     >
       <div className="member-panel-header">
-        <div>
+        <div className="member-panel-title">
           <span>참여자</span>
           <strong>
             {members.length}
@@ -120,16 +124,9 @@ const MemberPanel = ({
 
         {inviteOpen ? (
           <button type="button" className="member-close-button" aria-label="참여자 목록으로 돌아가기" onClick={() => setInviteOpen(false)}><CloseIcon /></button>
-        ) : variant === 'drawer' ? (
-          <button
-            type="button"
-            className="member-close-button"
-            onClick={onClose}
-          >
-            <CloseIcon />
-          </button>
         ) : (
-          isOwner && (
+          <div className="member-panel-header-actions">
+            {isOwner && (
             <button
               type="button"
               className="member-add-button"
@@ -141,7 +138,19 @@ const MemberPanel = ({
             >
               <PlusIcon />
             </button>
-          )
+            )}
+
+            {variant === 'drawer' && (
+              <button
+                type="button"
+                className="member-close-button"
+                aria-label="참여자 목록 닫기"
+                onClick={onClose}
+              >
+                <CloseIcon />
+              </button>
+            )}
+          </div>
         )}
       </div>
 
@@ -184,8 +193,17 @@ const MemberPanel = ({
             <div className="member-invite-link">
               <div className="member-invite-link-icon"><LinkIcon /></div>
               <strong>초대 링크 공유</strong>
-              <p>링크를 받은 사람은 이 채팅방에 바로 참여할 수 있어요.</p>
-              <div className="member-invite-link-value"><span>/invite/demo-token</span><button type="button" onClick={copyInviteLink}>{copied ? '복사됨' : '복사'}</button></div>
+              <p>링크를 받은 사람은 로그인하거나 게스트 닉네임으로 참여할 수 있어요.</p>
+              {inviteLink?.invitePath ? (
+                <>
+                  <div className="member-invite-link-value"><span>{inviteLink.invitePath}</span><button type="button" onClick={copyInviteLink}>{copied ? '복사됨' : '복사'}</button></div>
+                  <small className="member-invite-link-expiry">24시간 또는 {inviteLink.maxUses ?? 50}회 사용 후 만료됩니다.</small>
+                </>
+              ) : (
+                <button type="button" className="member-invite-link-create" disabled={inviteLinkBusy} onClick={onCreateInviteLink}>
+                  {inviteLinkBusy ? '링크 생성 중...' : '안전한 초대 링크 만들기'}
+                </button>
+              )}
             </div>
           )}
         </section>

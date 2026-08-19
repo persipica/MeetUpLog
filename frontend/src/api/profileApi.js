@@ -57,7 +57,12 @@ const request = async (
         },
       },
     )
-  } catch {
+  } catch (error) {
+    // React 개발 모드의 effect 재마운트나 화면 이동으로 취소된 요청은
+    // 서버 연결 실패가 아니다. AbortError를 그대로 전달해 호출부에서
+    // 조용히 무시할 수 있게 한다.
+    if (error?.name === 'AbortError') throw error
+
     throw new ProfileApiError(
       '서버에 연결할 수 없습니다. 백엔드 실행 상태를 확인해 주세요.',
     )

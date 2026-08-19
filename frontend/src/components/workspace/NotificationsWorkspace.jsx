@@ -1,4 +1,28 @@
-import { CloseIcon } from '../common/Icons'
+import {
+  BellIcon,
+  CheckIcon,
+  CloseIcon,
+  MailIcon,
+  UserPlusIcon,
+} from '../common/Icons'
+
+const NOTIFICATION_META = {
+  INVITE: {
+    label: '채팅방 초대',
+    icon: MailIcon,
+    tone: 'invite',
+  },
+  FRIEND: {
+    label: '친구 요청',
+    icon: UserPlusIcon,
+    tone: 'friend',
+  },
+  SYSTEM: {
+    label: '시스템 알림',
+    icon: CheckIcon,
+    tone: 'system',
+  },
+}
 
 const NotificationsWorkspace = ({
   notifications,
@@ -6,6 +30,9 @@ const NotificationsWorkspace = ({
   onDelete,
   onDeleteAll,
   onMarkAllRead,
+  onAccept,
+  onReject,
+  actionBusyId,
 }) => {
   const unreadCount = notifications.filter(
     (notification) => !notification.read,
@@ -22,12 +49,18 @@ const NotificationsWorkspace = ({
       </button>
 
       <header className="workspace-section-header notifications-header">
-        <div>
-          <span>NOTIFICATIONS</span>
-          <h1>알림</h1>
-          <p>
-            채팅방 초대, 친구 요청과 모임의 중요한 변경사항을 한곳에서 확인합니다.
-          </p>
+        <div className="notifications-title-group">
+          <span className="notifications-heading-icon">
+            <BellIcon />
+          </span>
+
+          <div>
+            <span>NOTIFICATIONS</span>
+            <h1>알림</h1>
+            <p>
+              채팅방 초대, 친구 요청과 모임의 중요한 변경사항을 한곳에서 확인합니다.
+            </p>
+          </div>
         </div>
 
         <div className="notifications-actions">
@@ -52,14 +85,24 @@ const NotificationsWorkspace = ({
       </header>
 
       <section className="notifications-summary">
-        <div>
-          <span>전체</span>
-          <strong>{notifications.length}</strong>
+        <div className="notifications-summary-card total">
+          <span className="notifications-summary-icon">
+            <BellIcon />
+          </span>
+          <div>
+            <span>전체 알림</span>
+            <strong>{notifications.length}</strong>
+          </div>
         </div>
 
-        <div>
-          <span>읽지 않음</span>
-          <strong>{unreadCount}</strong>
+        <div className="notifications-summary-card unread">
+          <span className="notifications-summary-icon">
+            <MailIcon />
+          </span>
+          <div>
+            <span>읽지 않은 알림</span>
+            <strong>{unreadCount}</strong>
+          </div>
         </div>
       </section>
 
@@ -71,44 +114,80 @@ const NotificationsWorkspace = ({
             <p>새로운 소식이 생기면 이곳에 표시됩니다.</p>
           </div>
         ) : (
-          notifications.map((notification) => (
-            <article
-              key={notification.id}
-              className={`workspace-notification-item ${
-                notification.read ? 'read' : 'unread'
-              }`}
-            >
-              <div className="workspace-notification-icon">
-                {notification.type === 'INVITE'
-                  ? '✉'
-                  : notification.type === 'FRIEND'
-                    ? '👤'
-                    : '✓'}
-              </div>
+          notifications.map((notification, index) => {
+            const meta =
+              NOTIFICATION_META[notification.type] ??
+              NOTIFICATION_META.SYSTEM
+            const NotificationIcon = meta.icon
+            const busy = actionBusyId === notification.id
 
-              <div className="workspace-notification-body">
-                <div>
-                  <strong>{notification.title}</strong>
+            return (
+              <article
+                key={notification.id}
+                className={`workspace-notification-item ${
+                  notification.read ? 'read' : 'unread'
+                } notification-tone-${meta.tone}`}
+                style={{ '--notification-order': index }}
+              >
+                <div className="workspace-notification-icon">
+                  <NotificationIcon />
+                </div>
 
-                  {!notification.read && (
-                    <span className="workspace-new-badge">NEW</span>
+                <div className="workspace-notification-body">
+                  <div className="workspace-notification-meta">
+                    <span>{meta.label}</span>
+
+                    {!notification.read && (
+                      <span className="workspace-new-badge">NEW</span>
+                    )}
+                  </div>
+
+                  <strong className="workspace-notification-title">
+                    {notification.title}
+                  </strong>
+
+                  <p>{notification.body}</p>
+                  <time>{notification.time}</time>
+
+                  {notification.actionable && (
+                    <div className="workspace-notification-response-actions">
+                      <button
+                        type="button"
+                        className="notification-accept-button"
+                        disabled={busy}
+                        onClick={() => onAccept?.(notification)}
+                      >
+                        {busy ? (
+                          <i className="notification-action-spinner" />
+                        ) : (
+                          <CheckIcon />
+                        )}
+                        {busy ? '처리 중' : '수락'}
+                      </button>
+                      <button
+                        type="button"
+                        className="notification-reject-button"
+                        disabled={busy}
+                        onClick={() => onReject?.(notification)}
+                      >
+                        <CloseIcon />
+                        거절
+                      </button>
+                    </div>
                   )}
                 </div>
 
-                <p>{notification.body}</p>
-                <span>{notification.time}</span>
-              </div>
-
-              <button
-                type="button"
-                className="notification-delete-button"
-                aria-label={`${notification.title} 알림 지우기`}
-                onClick={() => onDelete(notification.id)}
-              >
-                <CloseIcon />
-              </button>
-            </article>
-          ))
+                <button
+                  type="button"
+                  className="notification-delete-button"
+                  aria-label={`${notification.title} 알림 지우기`}
+                  onClick={() => onDelete(notification.id)}
+                >
+                  <CloseIcon />
+                </button>
+              </article>
+            )
+          })
         )}
       </section>
     </main>

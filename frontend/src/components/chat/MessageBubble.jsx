@@ -127,7 +127,7 @@ const MessageMeta = ({
       {message.edited &&
         !message.deleted && (
           <span className="message-edited-label">
-            수정됨
+            (수정됨)
           </span>
         )}
 

@@ -1,4 +1,5 @@
 import {
+  useEffect,
   useLayoutEffect,
   useMemo,
   useRef,
@@ -20,6 +21,8 @@ import {
   MoreIcon,
   PlusIcon,
   SearchIcon,
+  ShieldIcon,
+  TrashIcon,
 } from '../common/Icons'
 import ProfilePopover from '../profile/ProfilePopover'
 import PersonProfilePopover from '../profile/PersonProfilePopover'
@@ -36,6 +39,8 @@ const ChatSidebar = ({
   onHome,
   onCreateRoom,
   onAddFriend,
+  onRemoveFriend,
+  onBlockFriend,
   onNotifications,
   onEditProfile,
   onPresenceChange,
@@ -67,8 +72,27 @@ const ChatSidebar = ({
     setTabMotion,
   ] = useState('')
 
+  const [friendMenuId, setFriendMenuId] = useState(null)
+
   const previousMenuRef =
     useRef(activeMenu)
+
+  useEffect(() => {
+    if (friendMenuId === null) return undefined
+
+    const closeFriendMenu = (event) => {
+      if (
+        event.target.closest?.('.sidebar-friend-context-menu') ||
+        event.target.closest?.('.sidebar-friend-more')
+      ) {
+        return
+      }
+      setFriendMenuId(null)
+    }
+
+    document.addEventListener('pointerdown', closeFriendMenu)
+    return () => document.removeEventListener('pointerdown', closeFriendMenu)
+  }, [friendMenuId])
 
   useLayoutEffect(() => {
     const previousMenu =
@@ -397,9 +421,23 @@ const ChatSidebar = ({
                       type="button"
                       className="sidebar-friend-more"
                       aria-label={`${friend.nickname} 더보기`}
+                      onClick={() => setFriendMenuId((previous) => previous === friend.id ? null : friend.id)}
                     >
                       <MoreIcon />
                     </button>
+
+                    {friendMenuId === friend.id && (
+                      <div className="sidebar-friend-context-menu liquid-menu-surface">
+                        <button type="button" onClick={() => { setFriendMenuId(null); onRemoveFriend?.(friend) }}>
+                          <span><TrashIcon /></span>
+                          <strong>친구 삭제</strong>
+                        </button>
+                        <button type="button" className="danger" onClick={() => { setFriendMenuId(null); onBlockFriend?.(friend) }}>
+                          <span><ShieldIcon /></span>
+                          <strong>차단</strong>
+                        </button>
+                      </div>
+                    )}
                   </div>
                 )
               },

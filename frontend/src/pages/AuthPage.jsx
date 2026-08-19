@@ -29,6 +29,7 @@ import {
   registerMember,
 } from '../api/authApi'
 import useLiquidControlReflection from '../hooks/useLiquidControlReflection'
+import { getPublicRoomInvite } from '../api/socialApi'
 
 const EMAIL_PATTERN =
   /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -195,6 +196,33 @@ const AuthPage = ({ onAuthenticated }) => {
     return resolveInviteContext()
   }, [])
 
+  const [inviteRoom, setInviteRoom] = useState(() => ({
+    roomId: inviteContext.roomId,
+    roomName: inviteContext.roomName,
+    valid: Boolean(inviteContext.token),
+  }))
+
+  useEffect(() => {
+    if (!inviteContext.token || authEnvironment.mock) return undefined
+
+    const controller = new AbortController()
+    getPublicRoomInvite(inviteContext.token, controller.signal)
+      .then((room) => {
+        setInviteRoom(room)
+        if (!room?.valid) {
+          setFeedback({ type: 'error', message: '만료되었거나 사용할 수 없는 초대 링크입니다.' })
+        }
+      })
+      .catch((error) => {
+        if (error?.name !== 'AbortError') {
+          setInviteRoom((previous) => ({ ...previous, valid: false }))
+          setFeedback({ type: 'error', message: error.message })
+        }
+      })
+
+    return () => controller.abort()
+  }, [inviteContext.token])
+
   const passwordRules = {
     length: signupValues.password.length >= 8,
     letter: /[A-Za-z]/.test(signupValues.password),
@@ -357,8 +385,8 @@ const AuthPage = ({ onAuthenticated }) => {
       const session = await enterAsGuest({
         nickname,
         inviteToken: inviteContext.token,
-        inviteRoomId: inviteContext.roomId,
-        inviteRoomName: inviteContext.roomName,
+        inviteRoomId: inviteRoom.roomId,
+        inviteRoomName: inviteRoom.roomName,
       })
       onAuthenticated(session, false)
     } catch (error) {
@@ -645,7 +673,7 @@ const AuthPage = ({ onAuthenticated }) => {
                   <span className="auth-invite-room-icon">🎬</span>
                   <div>
                     <span>초대받은 채팅방</span>
-                    <strong>{inviteContext.token ? inviteContext.roomName : '초대 정보가 없습니다'}</strong>
+                    <strong>{inviteContext.token ? inviteRoom.roomName : '초대 정보가 없습니다'}</strong>
                   </div>
                   <span className="auth-invite-badge">GUEST</span>
                 </div>
@@ -676,7 +704,7 @@ const AuthPage = ({ onAuthenticated }) => {
 
                 {renderFeedback()}
 
-                <button type="submit" className="auth-primary-button" disabled={submitting || !inviteContext.token}>
+                <button type="submit" className="auth-primary-button" disabled={submitting || !inviteContext.token || !inviteRoom.valid}>
                   <span>{submitting ? '입장하는 중…' : '초대방 입장'}</span>
                   {!submitting && <ArrowRightIcon />}
                 </button>

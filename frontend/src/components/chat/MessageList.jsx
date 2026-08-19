@@ -120,6 +120,19 @@ const MessageList = ({
   ])
 
   useEffect(() => {
+    if (!selectedMessageId) return undefined
+
+    const closeFromOutside = (event) => {
+      if (!listRef.current?.contains(event.target)) {
+        setSelectedMessageId(null)
+      }
+    }
+
+    document.addEventListener('pointerdown', closeFromOutside)
+    return () => document.removeEventListener('pointerdown', closeFromOutside)
+  }, [selectedMessageId])
+
+  useEffect(() => {
     return () => {
       if (
         highlightTimerRef.current
@@ -194,8 +207,8 @@ const MessageList = ({
       className="message-list"
       onClick={(event) => {
         if (
-          event.target ===
-          event.currentTarget
+          !event.target.closest?.('.message-action-menu') &&
+          !event.target.closest?.('.message-bubble')
         ) {
           setSelectedMessageId(
             null,

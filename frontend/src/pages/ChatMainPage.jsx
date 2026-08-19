@@ -1,4 +1,5 @@
 import {
+  useCallback,
   useEffect,
   useMemo,
   useRef,
@@ -20,6 +21,7 @@ import ProfileEditWorkspace from '../components/workspace/ProfileEditWorkspace'
 import CreateRoomModal from '../components/modals/CreateRoomModal'
 import KickMemberModal from '../components/modals/KickMemberModal'
 import KickedMemberNoticeModal from '../components/modals/KickedMemberNoticeModal'
+import RoomMenuModal from '../components/modals/RoomMenuModal'
 import AppModal from '../components/common/AppModal'
 
 import {
@@ -49,6 +51,40 @@ import {
   uploadProfileImage,
 } from '../api/profileApi'
 import {
+  createRoom as createChatRoom,
+  deleteRoom as deleteChatRoom,
+  deleteChatMessage,
+  editChatMessage,
+  getRoomNotificationSetting,
+  getMyRooms,
+  getRoomMembers,
+  getRoomMessages,
+  normalizeMessage,
+  normalizeRoom,
+  leaveRoom as leaveChatRoom,
+  updateRoom as updateChatRoom,
+  updateRoomNotificationSetting,
+  uploadChatImage,
+} from '../api/chatApi'
+import {
+  acceptFriendRequest,
+  acceptRoomMemberInvite,
+  createRoomInviteLink,
+  getActiveRoomInviteLink,
+  getFriends,
+  getReceivedFriendRequests,
+  getReceivedRoomMemberInvites,
+  getSentRoomMemberInvites,
+  joinRoomByInvite,
+  blockFriend,
+  removeFriend,
+  rejectFriendRequest,
+  rejectRoomMemberInvite,
+  revokeRoomInviteLink,
+  sendRoomMemberInvite,
+} from '../api/socialApi'
+import useRealtimeChat from '../hooks/useRealtimeChat'
+import {
   BellIcon,
   CloseIcon,
   LogoutIcon,
@@ -63,28 +99,62 @@ const PRESENCE_KEYS = new Set([
   'OFFLINE',
 ])
 
-const getPresenceIdentity = (person) => {
-  if (person?.accountId) {
-    return `account:${person.accountId}`
+const USE_MOCK_CHAT =
+  import.meta.env.VITE_USE_MOCK_CHAT === 'true'
+
+const normalizePresenceIdentity = (value) => {
+  if (value == null) return null
+
+  const identity = String(value).trim()
+  if (!identity) return null
+  if (/^id:\d+$/i.test(identity)) return identity.toLocaleLowerCase()
+  if (/^\d+$/.test(identity)) return `id:${identity}`
+
+  const userIdMatch = identity.match(/^(?:user|guest)-(\d+)$/i)
+  if (userIdMatch) return `id:${userIdMatch[1]}`
+
+  if (/^account:/i.test(identity)) {
+    return `account:${identity.slice(identity.indexOf(':') + 1)}`
   }
 
-  if (person?.email) {
-    return `email:${person.email.toLocaleLowerCase()}`
+  if (/^email:/i.test(identity)) {
+    return `email:${identity.slice(identity.indexOf(':') + 1).toLocaleLowerCase()}`
   }
 
-  return person?.id != null
-    ? `id:${person.id}`
-    : null
+  if (identity.includes('@')) return `email:${identity.toLocaleLowerCase()}`
+  return null
+}
+
+const getPresenceIdentities = (person) => {
+  if (!person) return []
+
+  const identities = new Set()
+  const userId = person.id ?? person.userId
+  const normalizedPayloadIdentity = normalizePresenceIdentity(person.identity)
+
+  if (userId != null) identities.add(`id:${userId}`)
+  if (normalizedPayloadIdentity) identities.add(normalizedPayloadIdentity)
+  if (person.accountId) identities.add(`account:${person.accountId}`)
+  if (person.email) identities.add(`email:${String(person.email).toLocaleLowerCase()}`)
+
+  return Array.from(identities)
+}
+
+const getPresenceIdentity = (person) => getPresenceIdentities(person)[0] ?? null
+
+const resolvePresence = (directory, person) => {
+  const identity = getPresenceIdentities(person).find((key) => directory[key] != null)
+  return identity ? directory[identity] : person?.presence
 }
 
 const createPresenceDirectory = (...groups) => {
   const directory = {}
 
   groups.flat().forEach((person) => {
-    const identity = getPresenceIdentity(person)
-
-    if (identity && PRESENCE_KEYS.has(person?.presence)) {
-      directory[identity] = person.presence
+    if (PRESENCE_KEYS.has(person?.presence)) {
+      getPresenceIdentities(person).forEach((identity) => {
+        directory[identity] = person.presence
+      })
     }
   })
 
@@ -242,11 +312,15 @@ const ChatMainPage = ({
   )
 
   const [rooms, setRooms] =
-    useState(sessionRooms)
-
-  const [baseFriends] =
     useState(
-      isGuest ? [] : initialFriends,
+      USE_MOCK_CHAT || isGuest
+        ? sessionRooms
+        : [],
+    )
+
+  const [baseFriends, setBaseFriends] =
+    useState(
+      isGuest ? [] : (USE_MOCK_CHAT ? initialFriends : []),
     )
 
   const [presenceDirectory, setPresenceDirectory] = useState(
@@ -319,38 +393,38 @@ const ChatMainPage = ({
   const friends = useMemo(
     () => baseFriends.map((friend) => ({
       ...friend,
-      presence:
-        presenceDirectory[getPresenceIdentity(friend)] ??
-        friend.presence,
+      presence: resolvePresence(presenceDirectory, friend),
     })),
     [baseFriends, presenceDirectory],
   )
 
-  useEffect(() => {
-    const currentIdentity = getPresenceIdentity(sessionUser)
+  const applyRealtimePresence = useCallback((payload) => {
+    const presence = payload?.presence
+    const identities = getPresenceIdentities(payload)
 
-    const applyRealtimePresence = (payload) => {
-      const identity =
-        payload?.identity ??
-        getPresenceIdentity(payload)
-      const presence = payload?.presence
-
-      if (!identity || !PRESENCE_KEYS.has(presence)) {
-        return
-      }
-
-      setPresenceDirectory((previous) => ({
-        ...previous,
-        [identity]: presence,
-      }))
-
-      if (identity === currentIdentity) {
-        setUserProfile((previous) => ({
-          ...previous,
-          presence,
-        }))
-      }
+    if (identities.length === 0 || !PRESENCE_KEYS.has(presence)) {
+      return
     }
+
+    setPresenceDirectory((previous) => {
+      const next = { ...previous }
+      identities.forEach((identity) => {
+        next[identity] = presence
+      })
+      return next
+    })
+
+    const currentUserIdentities = new Set(getPresenceIdentities(userProfile))
+
+    if (identities.some((identity) => currentUserIdentities.has(identity))) {
+      setUserProfile((previous) => ({
+        ...previous,
+        presence,
+      }))
+    }
+  }, [userProfile.accountId, userProfile.email, userProfile.id])
+
+  useEffect(() => {
 
     const handleWindowPresence = (event) => {
       applyRealtimePresence(event.detail)
@@ -378,7 +452,7 @@ const ChatMainPage = ({
       )
       channel?.close()
     }
-  }, [])
+  }, [applyRealtimePresence])
 
   /*
    * 중앙 콘텐츠:
@@ -410,27 +484,472 @@ const ChatMainPage = ({
     messagesByRoom,
     setMessagesByRoom,
   ] = useState(
-    sessionMessages,
+    USE_MOCK_CHAT
+      ? sessionMessages
+      : {},
   )
 
   const [
     notifications,
     setNotifications,
   ] = useState(
-    initialNotifications,
+    USE_MOCK_CHAT ? initialNotifications : [],
   )
 
   const [pendingInvitesByRoom, setPendingInvitesByRoom] = useState({})
+  const [inviteLinksByRoom, setInviteLinksByRoom] = useState({})
+  const [inviteLinkBusy, setInviteLinkBusy] = useState(false)
+  const [notificationActionBusyId, setNotificationActionBusyId] = useState(null)
+
+  const refreshSocialData = useCallback(async (signal) => {
+    if (USE_MOCK_CHAT || isGuest || !authSession?.accessToken) return
+
+    const [friendList, friendRequests, roomInvites] = await Promise.all([
+      getFriends(authSession.accessToken, signal),
+      getReceivedFriendRequests(authSession.accessToken, signal),
+      getReceivedRoomMemberInvites(authSession.accessToken, signal),
+    ])
+
+    setBaseFriends(friendList)
+    setPresenceDirectory((previous) => ({
+      ...previous,
+      ...createPresenceDirectory(friendList),
+    }))
+    setNotifications([
+      ...friendRequests.map((request) => ({
+        id: `friend-${request.requestId}`,
+        type: 'FRIEND',
+        title: '친구 요청',
+        body: `${request.nickname}님이 친구 요청을 보냈습니다.${request.message ? ` · ${request.message}` : ''}`,
+        time: request.createdAt ? new Date(request.createdAt).toLocaleString('ko-KR') : '방금',
+        read: false,
+        actionable: true,
+        actionKind: 'FRIEND_REQUEST',
+        referenceId: request.requestId,
+      })),
+      ...roomInvites.map((invite) => ({
+        id: `room-${invite.inviteId}`,
+        type: 'INVITE',
+        title: '새 채팅방 초대',
+        body: `${invite.inviterNickname}님이 “${invite.roomName}”에 초대했습니다.`,
+        time: invite.createdAt ? new Date(invite.createdAt).toLocaleString('ko-KR') : '방금',
+        read: false,
+        actionable: true,
+        actionKind: 'ROOM_INVITE',
+        referenceId: invite.inviteId,
+      })),
+    ])
+  }, [authSession?.accessToken, isGuest])
+
+  useEffect(() => {
+    if (USE_MOCK_CHAT || isGuest || !authSession?.accessToken) return undefined
+    const controller = new AbortController()
+    refreshSocialData(controller.signal).catch((error) => {
+      if (error?.name !== 'AbortError') console.error('친구·초대 정보 조회 실패:', error)
+    })
+    const refreshTimer = window.setInterval(() => {
+      if (document.visibilityState === 'visible') {
+        refreshSocialData().catch(() => {})
+      }
+    }, 15000)
+    return () => {
+      controller.abort()
+      window.clearInterval(refreshTimer)
+    }
+  }, [authSession?.accessToken, isGuest, refreshSocialData])
+
+  useEffect(() => {
+    if (USE_MOCK_CHAT || isGuest || !authSession?.accessToken || !selectedRoomId) return undefined
+    const controller = new AbortController()
+    getSentRoomMemberInvites(authSession.accessToken, selectedRoomId, controller.signal)
+      .then((invites) => {
+        setPendingInvitesByRoom((previous) => ({
+          ...previous,
+          [selectedRoomId]: invites.map((invite) => invite.inviteeId),
+        }))
+      })
+      .catch((error) => {
+        if (error?.name !== 'AbortError') console.error('보낸 채팅방 초대 조회 실패:', error)
+      })
+    return () => controller.abort()
+  }, [authSession?.accessToken, isGuest, selectedRoomId])
+
+  const [typingUsers, setTypingUsers] = useState(
+    USE_MOCK_CHAT
+      ? [{ id: 2, nickname: '민수' }]
+      : [],
+  )
+
+  const typingTimersRef = useRef(new Map())
+  const inviteJoinAttemptedRef = useRef(false)
+  const lastReadSentRef = useRef(new Map())
+  const unreadCountUpdatesRef = useRef(new Map())
+
+  useEffect(() => {
+    if (USE_MOCK_CHAT || isGuest || inviteJoinAttemptedRef.current || !authSession?.accessToken) return
+    const segments = window.location.pathname.split('/').filter(Boolean)
+    const inviteIndex = segments.indexOf('invite')
+    const inviteToken = inviteIndex >= 0 ? segments[inviteIndex + 1] : null
+    if (!inviteToken) return
+
+    inviteJoinAttemptedRef.current = true
+    joinRoomByInvite(authSession.accessToken, inviteToken)
+      .then((response) => {
+        const room = normalizeRoom(response)
+        setRooms((previous) => previous.some((item) => item.id === room.id)
+          ? previous.map((item) => item.id === room.id ? room : item)
+          : [room, ...previous])
+        setSelectedRoomId(room.id)
+        setWorkspaceMode('chat')
+        setActiveMenu('chat')
+        window.history.replaceState({}, document.title, '/')
+      })
+      .catch((error) => window.alert(error.message))
+  }, [authSession?.accessToken, isGuest])
+
+  const handleRealtimeMessage = useCallback((payload) => {
+    const incoming = normalizeMessage(payload)
+    const roomId = incoming.roomId
+    if (!roomId) return
+    const unreadUpdateKey = `${roomId}:${incoming.id}`
+    if (unreadCountUpdatesRef.current.has(unreadUpdateKey)) {
+      incoming.unreadCount = unreadCountUpdatesRef.current.get(unreadUpdateKey)
+      unreadCountUpdatesRef.current.delete(unreadUpdateKey)
+    }
+    const isCreatedEvent = ![
+      'MESSAGE_UPDATED',
+      'MESSAGE_DELETED',
+    ].includes(incoming.realtimeEvent)
+
+    setMessagesByRoom((previous) => {
+      const messages = previous[roomId] ?? []
+      const existingIndex = messages.findIndex((message) =>
+        (incoming.id != null && message.id === incoming.id) ||
+        (incoming.clientMessageKey && message.clientMessageKey === incoming.clientMessageKey),
+      )
+
+      if (existingIndex < 0) {
+        return {
+          ...previous,
+          [roomId]: [...messages, incoming],
+        }
+      }
+
+      const nextMessages = [...messages]
+      nextMessages[existingIndex] = {
+        ...messages[existingIndex],
+        ...incoming,
+        reactions:
+          incoming.realtimeEvent && Object.keys(incoming.reactions ?? {}).length === 0
+            ? messages[existingIndex].reactions ?? {}
+            : incoming.reactions,
+        pending: false,
+        failed: false,
+      }
+
+      return {
+        ...previous,
+        [roomId]: nextMessages,
+      }
+    })
+
+    setRooms((previous) =>
+      previous.map((room) =>
+        room.id === roomId
+          ? {
+              ...room,
+              lastMessage:
+                isCreatedEvent
+                  ? incoming.type === 'IMAGE'
+                    ? '사진을 보냈습니다.'
+                    : incoming.content || room.lastMessage
+                  : room.lastMessage,
+              unreadCount:
+                !isCreatedEvent
+                  ? room.unreadCount ?? 0
+                  : roomId === selectedRoomId || incoming.senderId === userProfile.id
+                    ? 0
+                    : (room.unreadCount ?? 0) + 1,
+            }
+          : room,
+      ),
+    )
+  }, [selectedRoomId, userProfile.id])
+
+  const handleRealtimeTyping = useCallback((payload) => {
+    const userId = payload?.userId ?? payload?.senderId
+    const roomId = payload?.roomId
+
+    if (!userId || userId === userProfile.id || roomId !== selectedRoomId) return
+
+    const timerKey = `${roomId}:${userId}`
+    window.clearTimeout(typingTimersRef.current.get(timerKey))
+
+    setTypingUsers((previous) => {
+      const withoutUser = previous.filter((user) => user.id !== userId)
+      return payload.typing === false
+        ? withoutUser
+        : [...withoutUser, { id: userId, nickname: payload.nickname ?? '참여자' }]
+    })
+
+    if (payload.typing !== false) {
+      const timer = window.setTimeout(() => {
+        setTypingUsers((previous) => previous.filter((user) => user.id !== userId))
+        typingTimersRef.current.delete(timerKey)
+      }, 5500)
+      typingTimersRef.current.set(timerKey, timer)
+    }
+  }, [selectedRoomId, userProfile.id])
+
+  const handleRealtimeReaction = useCallback((payload) => {
+    const roomId = payload?.roomId
+    const messageId = payload?.messageId
+    const emoji = payload?.emoji
+    const userIds = Array.isArray(payload?.userIds)
+      ? payload.userIds
+      : []
+
+    if (!roomId || !messageId || !emoji) return
+
+    setMessagesByRoom((previous) => {
+      const roomMessages = previous[roomId] ?? []
+      const messageIndex = roomMessages.findIndex(
+        (message) => String(message.id) === String(messageId),
+      )
+
+      if (messageIndex < 0) return previous
+
+      const nextMessages = [...roomMessages]
+      const target = nextMessages[messageIndex]
+      const reactions = { ...(target.reactions ?? {}) }
+
+      if (userIds.length > 0) reactions[emoji] = userIds
+      else delete reactions[emoji]
+
+      nextMessages[messageIndex] = { ...target, reactions }
+
+      return {
+        ...previous,
+        [roomId]: nextMessages,
+      }
+    })
+  }, [])
+
+  const handleRealtimeRead = useCallback((payload) => {
+    const roomId = payload?.roomId
+    const unreadCounts = payload?.unreadCounts
+
+    if (!roomId || !unreadCounts || typeof unreadCounts !== 'object') return
+
+    setMessagesByRoom((previous) => {
+      const roomMessages = previous[roomId] ?? []
+      if (roomMessages.length > 0) {
+        const knownIds = new Set(roomMessages.map((message) => String(message.id)))
+        Object.entries(unreadCounts).forEach(([messageId, count]) => {
+          if (!knownIds.has(String(messageId))) {
+            unreadCountUpdatesRef.current.set(`${roomId}:${messageId}`, Number(count))
+          }
+        })
+      }
+      let changed = false
+      const nextMessages = roomMessages.map((message) => {
+        const nextCount = unreadCounts[message.id] ?? unreadCounts[String(message.id)]
+        if (nextCount == null) {
+          return message
+        }
+        unreadCountUpdatesRef.current.delete(`${roomId}:${message.id}`)
+        if (Number(nextCount) === Number(message.unreadCount ?? 0)) return message
+        changed = true
+        return { ...message, unreadCount: Number(nextCount) }
+      })
+
+      return changed
+        ? { ...previous, [roomId]: nextMessages }
+        : previous
+    })
+  }, [])
+
+  const handleRealtimeRoomEvent = useCallback((payload) => {
+    const roomId = payload?.roomId
+    const eventType = payload?.eventType
+    if (!roomId || !eventType) return
+
+    if (eventType === 'ROOM_UPDATED') {
+      setRooms((previous) => previous.map((room) => (
+        String(room.id) === String(roomId)
+          ? { ...room, name: payload.roomName || room.name }
+          : room
+      )))
+      return
+    }
+
+    if (eventType === 'MEMBER_LEFT') {
+      setBaseMembers((previous) => previous.filter(
+        (member) => String(member.id) !== String(payload.actorId),
+      ))
+      setRooms((previous) => previous.map((room) => (
+        String(room.id) === String(roomId)
+          ? { ...room, memberCount: Math.max(0, (room.memberCount ?? 1) - 1) }
+          : room
+      )))
+
+      if (String(payload.actorId) !== String(userProfile.id)) return
+    }
+
+    if (
+      eventType === 'ROOM_DELETED' ||
+      (eventType === 'MEMBER_LEFT' && String(payload.actorId) === String(userProfile.id))
+    ) {
+      setRooms((previous) => previous.filter((room) => String(room.id) !== String(roomId)))
+      setMessagesByRoom((previous) => {
+        const next = { ...previous }
+        delete next[roomId]
+        delete next[String(roomId)]
+        return next
+      })
+      setSelectedRoomId((current) => (
+        String(current) === String(roomId) ? null : current
+      ))
+      setWorkspaceMode(isGuest ? 'chat' : 'home')
+      setModal(null)
+    }
+  }, [isGuest, userProfile.id])
+
+  const {
+    connectionState: chatConnectionState,
+    sendMessage: sendRealtimeMessage,
+    sendTyping: sendRealtimeTyping,
+    sendReaction: sendRealtimeReaction,
+    sendRead: sendRealtimeRead,
+    sendPresence: sendRealtimePresence,
+  } = useRealtimeChat({
+    accessToken: USE_MOCK_CHAT ? null : authSession?.accessToken,
+    roomIds: rooms.map((room) => room.id),
+    onMessage: handleRealtimeMessage,
+    onTyping: handleRealtimeTyping,
+    onReaction: handleRealtimeReaction,
+    onRead: handleRealtimeRead,
+    onPresence: applyRealtimePresence,
+    onRoomEvent: handleRealtimeRoomEvent,
+  })
 
   /*
-   * 다른 사용자 입력 상태 Mock.
+   * 서버 CONNECT 이벤트는 구독 완료보다 먼저 도착할 수 있습니다.
+   * 연결이 완성된 뒤 현재 상태를 한 번 더 발행하고 친구/참여자 상태를
+   * 재조회해 새 탭에서도 기존 접속자의 presence 스냅샷을 복구합니다.
    */
-  const [typingUsers] = useState([
-    {
-      id: 2,
-      nickname: '민수',
-    },
-  ])
+  useEffect(() => {
+    if (
+      USE_MOCK_CHAT ||
+      chatConnectionState !== 'connected' ||
+      !authSession?.accessToken
+    ) {
+      return undefined
+    }
+
+    const controller = new AbortController()
+    const refreshTimer = window.setTimeout(() => {
+      sendRealtimePresence({
+        presence: PRESENCE_KEYS.has(userProfile.presence)
+          ? userProfile.presence
+          : 'ONLINE',
+      })
+
+      if (!isGuest) {
+        refreshSocialData(controller.signal).catch((error) => {
+          if (error?.name !== 'AbortError') {
+            console.error('실시간 연결 후 친구 상태 동기화 실패:', error)
+          }
+        })
+      }
+
+      if (selectedRoomId) {
+        getRoomMembers(
+          authSession.accessToken,
+          selectedRoomId,
+          controller.signal,
+        )
+          .then((serverMembers) => {
+            setBaseMembers(serverMembers)
+            setPresenceDirectory((previous) => ({
+              ...previous,
+              ...createPresenceDirectory(serverMembers),
+            }))
+          })
+          .catch((error) => {
+            if (error?.name !== 'AbortError') {
+              console.error('실시간 연결 후 참여자 상태 동기화 실패:', error)
+            }
+          })
+      }
+    }, 120)
+
+    return () => {
+      window.clearTimeout(refreshTimer)
+      controller.abort()
+    }
+  }, [chatConnectionState])
+
+  useEffect(() => {
+    if (USE_MOCK_CHAT || !authSession?.accessToken) return undefined
+
+    const controller = new AbortController()
+
+    getMyRooms(authSession.accessToken, controller.signal)
+      .then((serverRooms) => {
+        setRooms(serverRooms)
+
+        if (isGuest && serverRooms.length === 1) {
+          setSelectedRoomId(serverRooms[0].id)
+          setWorkspaceMode('chat')
+        }
+      })
+      .catch((error) => {
+        if (error?.name !== 'AbortError') {
+          console.error('채팅방 목록 조회 실패:', error)
+        }
+      })
+
+    return () => controller.abort()
+  }, [authSession?.accessToken, isGuest])
+
+  useEffect(() => {
+    if (USE_MOCK_CHAT || !authSession?.accessToken || !selectedRoomId) return undefined
+
+    const controller = new AbortController()
+
+    Promise.all([
+      getRoomMessages(authSession.accessToken, selectedRoomId, controller.signal),
+      getRoomMembers(authSession.accessToken, selectedRoomId, controller.signal),
+    ])
+      .then(([serverMessages, serverMembers]) => {
+        setMessagesByRoom((previous) => ({
+          ...previous,
+          [selectedRoomId]: serverMessages,
+        }))
+        setBaseMembers(serverMembers)
+        setPresenceDirectory((previous) => ({
+          ...previous,
+          ...createPresenceDirectory(serverMembers),
+        }))
+      })
+      .catch((error) => {
+        if (error?.name !== 'AbortError') {
+          console.error('채팅방 데이터 조회 실패:', error)
+        }
+      })
+
+    return () => controller.abort()
+  }, [authSession?.accessToken, selectedRoomId])
+
+  useEffect(() => {
+    setTypingUsers([])
+  }, [selectedRoomId])
+
+  useEffect(() => () => {
+    typingTimersRef.current.forEach((timer) => window.clearTimeout(timer))
+    typingTimersRef.current.clear()
+  }, [])
 
   /*
    * 현재 사용자 입력 상태.
@@ -660,9 +1179,7 @@ const ChatMainPage = ({
           ) {
             return {
               ...member,
-              presence:
-                presenceDirectory[getPresenceIdentity(member)] ??
-                member.presence,
+              presence: resolvePresence(presenceDirectory, member),
             }
           }
 
@@ -699,9 +1216,46 @@ const ChatMainPage = ({
         ] ?? []
       : []
 
+  useEffect(() => {
+    if (
+      USE_MOCK_CHAT ||
+      chatConnectionState !== 'connected' ||
+      !selectedRoom?.id
+    ) {
+      return
+    }
+
+    const latestMessage = [...currentMessages]
+      .reverse()
+      .find((message) => Number.isFinite(Number(message.id)) && !message.pending)
+
+    if (!latestMessage) return
+
+    const roomKey = String(selectedRoom.id)
+    const messageKey = String(latestMessage.id)
+    if (lastReadSentRef.current.get(roomKey) === messageKey) return
+
+    const sent = sendRealtimeRead({
+      roomId: selectedRoom.id,
+      lastReadMessageId: Number(latestMessage.id),
+    })
+
+    if (sent) {
+      lastReadSentRef.current.set(roomKey, messageKey)
+    }
+  }, [
+    chatConnectionState,
+    currentMessages,
+    selectedRoom?.id,
+    sendRealtimeRead,
+  ])
+
   const isOwner =
-    userProfile.role ===
-    'OWNER'
+    selectedRoom?.myRole === 'OWNER' || members.some(
+      (member) =>
+        member.id === userProfile.id &&
+        member.role === 'OWNER',
+    ) || (USE_MOCK_CHAT && userProfile.role === 'OWNER')
 
   const aiAnalyzing =
     selectedRoom
@@ -771,6 +1325,19 @@ const ChatMainPage = ({
     )
   }
 
+  const handleTypingChange = useCallback((typing) => {
+    setLocalTyping(typing)
+
+    if (USE_MOCK_CHAT || !selectedRoomId) return
+
+    sendRealtimeTyping({
+      roomId: selectedRoomId,
+      userId: userProfile.id,
+      nickname: userProfile.nickname,
+      typing,
+    })
+  }, [selectedRoomId, sendRealtimeTyping, userProfile.id, userProfile.nickname])
+
   const handleHome = () => {
     if (isGuest) {
       setSelectedRoomId(
@@ -818,7 +1385,7 @@ const ChatMainPage = ({
       return
     }
 
-    const identity = getPresenceIdentity(userProfile)
+    const identities = getPresenceIdentities(userProfile)
 
     setUserProfile(
       (previous) => ({
@@ -827,14 +1394,18 @@ const ChatMainPage = ({
       }),
     )
 
-    if (identity) {
-      setPresenceDirectory((previous) => ({
-        ...previous,
-        [identity]: presence,
-      }))
+    if (identities.length > 0) {
+      setPresenceDirectory((previous) => {
+        const next = { ...previous }
+        identities.forEach((identity) => {
+          next[identity] = presence
+        })
+        return next
+      })
 
       const payload = {
-        identity,
+        identity: identities[0],
+        userId: userProfile.id,
         accountId: userProfile.accountId,
         email: userProfile.email,
         presence,
@@ -852,6 +1423,10 @@ const ChatMainPage = ({
         channel.postMessage(payload)
         channel.close()
       }
+    }
+
+    if (!USE_MOCK_CHAT) {
+      sendRealtimePresence({ presence })
     }
   }
 
@@ -999,61 +1574,35 @@ const ChatMainPage = ({
     content,
     replyToId = null,
   ) => {
-    if (!selectedRoom) {
-      return
-    }
+    if (!selectedRoom || !content?.trim()) return
 
-    const now =
-      new Date()
-
-    const time = `${String(
-      now.getHours(),
-    ).padStart(2, '0')}:${String(
-      now.getMinutes(),
-    ).padStart(2, '0')}`
-
-    const messageId =
-      Date.now()
-
-    const unreadCount =
-      Math.max(
-        0,
-        members.length - 1,
-      )
-
+    const now = new Date()
+    const clientMessageKey =
+      globalThis.crypto?.randomUUID?.() ??
+      `message-${userProfile.id}-${now.getTime()}`
+    const messageId = `pending-${clientMessageKey}`
+    const unreadCount = Math.max(0, members.length - 1)
     const newMessage = {
       id: messageId,
-
-      senderId:
-        userProfile.id,
-
-      senderName:
-        userProfile.nickname,
-
-      content,
-
-      sentAt: time,
-
+      roomId: selectedRoom.id,
+      senderId: userProfile.id,
+      senderName: userProfile.nickname,
+      content: content.trim(),
+      sentAt: `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`,
       type: 'TEXT',
-
       unreadCount,
-
       replyToId,
+      clientMessageKey,
+      pending: !USE_MOCK_CHAT,
     }
 
-    setMessagesByRoom(
-      (previous) => ({
-        ...previous,
-
-        [selectedRoom.id]: [
-          ...(previous[
-            selectedRoom.id
-          ] ?? []),
-
-          newMessage,
-        ],
-      }),
-    )
+    setMessagesByRoom((previous) => ({
+      ...previous,
+      [selectedRoom.id]: [
+        ...(previous[selectedRoom.id] ?? []),
+        newMessage,
+      ],
+    }))
 
     setRooms((previous) =>
       previous.map((room) =>
@@ -1061,8 +1610,7 @@ const ChatMainPage = ({
         selectedRoom.id
           ? {
               ...room,
-              lastMessage:
-                content,
+              lastMessage: content.trim(),
             }
           : room,
       ),
@@ -1071,25 +1619,64 @@ const ChatMainPage = ({
     setReplyTarget(null)
     setEditingMessage(null)
 
-    if (
-      unreadCount > 0
-    ) {
+    if (USE_MOCK_CHAT && unreadCount > 0) {
       scheduleMockReadReceipts(
         selectedRoom.id,
         messageId,
       )
     }
+
+    if (!USE_MOCK_CHAT) {
+      const sent = sendRealtimeMessage({
+        roomId: selectedRoom.id,
+        messageType: 'TEXT',
+        content: content.trim(),
+        replyToMessageId: replyToId,
+        clientMessageKey,
+      })
+
+      if (!sent) {
+        updateMessageInRoom(selectedRoom.id, messageId, (message) => ({
+          ...message,
+          pending: false,
+          failed: true,
+        }))
+      }
+    }
   }
 
-  const handleSendImage = (
+  const handleSendImage = async (
     attachment,
     replyToId = null,
   ) => {
     if (
       !selectedRoom ||
-      !attachment?.imageUrl
+      !attachment?.file
     ) {
       return
+    }
+
+    let uploaded
+
+    if (USE_MOCK_CHAT) {
+      const imageUrl = await new Promise((resolve, reject) => {
+        const reader = new FileReader()
+        reader.onload = () => resolve(typeof reader.result === 'string' ? reader.result : '')
+        reader.onerror = () => reject(new Error('이미지를 읽지 못했습니다.'))
+        reader.readAsDataURL(attachment.file)
+      })
+      uploaded = {
+        imageUrl,
+        fileName: attachment.fileName,
+        mimeType: attachment.mimeType,
+        size: attachment.size,
+      }
+    } else {
+      uploaded = await uploadChatImage(
+        authSession.accessToken,
+        selectedRoom.id,
+        attachment.file,
+      )
     }
 
     const now = new Date()
@@ -1100,8 +1687,13 @@ const ChatMainPage = ({
       now.getMinutes(),
     ).padStart(2, '0')}`
 
-    const messageId =
-      Date.now()
+    const clientMessageKey =
+      globalThis.crypto?.randomUUID?.() ??
+      `image-${userProfile.id}-${now.getTime()}`
+
+    const messageId = USE_MOCK_CHAT
+      ? Date.now()
+      : `pending-${clientMessageKey}`
 
     const unreadCount =
       Math.max(
@@ -1116,18 +1708,20 @@ const ChatMainPage = ({
       senderName:
         userProfile.nickname,
       content:
-        attachment.fileName ||
+        uploaded.fileName ||
         '사진',
       sentAt: time,
       type: 'IMAGE',
       imageUrl:
-        attachment.imageUrl,
+        uploaded.imageUrl,
       imageMimeType:
-        attachment.mimeType,
+        uploaded.mimeType,
       imageSize:
-        attachment.size,
+        uploaded.size,
       unreadCount,
       replyToId,
+      clientMessageKey,
+      pending: !USE_MOCK_CHAT,
     }
 
     setMessagesByRoom(
@@ -1158,13 +1752,33 @@ const ChatMainPage = ({
     setReplyTarget(null)
     setEditingMessage(null)
 
-    if (
-      unreadCount > 0
-    ) {
+    if (USE_MOCK_CHAT && unreadCount > 0) {
       scheduleMockReadReceipts(
         selectedRoom.id,
         messageId,
       )
+    }
+
+    if (!USE_MOCK_CHAT) {
+      const sent = sendRealtimeMessage({
+        roomId: selectedRoom.id,
+        messageType: 'IMAGE',
+        content: uploaded.fileName || '사진',
+        imageUrl: uploaded.serverImageUrl ?? uploaded.imageUrl,
+        imageMimeType: uploaded.mimeType,
+        imageSize: uploaded.size,
+        replyToMessageId: replyToId,
+        clientMessageKey,
+      })
+
+      if (!sent) {
+        updateMessageInRoom(selectedRoom.id, messageId, (message) => ({
+          ...message,
+          pending: false,
+          failed: true,
+        }))
+        throw new Error('실시간 채팅 연결을 확인한 뒤 다시 보내주세요.')
+      }
     }
   }
 
@@ -1202,7 +1816,7 @@ const ChatMainPage = ({
     setModal('EDIT_MESSAGE')
   }
 
-  const handleSaveEdit = (
+  const handleSaveEdit = async (
     messageId,
     content,
   ) => {
@@ -1210,25 +1824,30 @@ const ChatMainPage = ({
       return
     }
 
-    updateMessageInRoom(
-      selectedRoom.id,
-      messageId,
-      (message) => {
-        if (
-          message.senderId !==
-            userProfile.id ||
-          message.deleted
-        ) {
-          return message
-        }
+    const roomId = selectedRoom.id
 
-        return {
-          ...message,
-          content,
-          edited: true,
-        }
-      },
-    )
+    try {
+      const saved = USE_MOCK_CHAT
+        ? { content, edited: true, deleted: false }
+        : await editChatMessage(
+            authSession.accessToken,
+            roomId,
+            messageId,
+            content,
+          )
+
+      updateMessageInRoom(
+        roomId,
+        messageId,
+        (message) => {
+          if (message.senderId !== userProfile.id || message.deleted) return message
+          return { ...message, ...saved, content, edited: true, pending: false }
+        },
+      )
+    } catch (error) {
+      window.alert(error?.message || '메시지를 수정하지 못했습니다.')
+      return false
+    }
 
     setEditingMessage(null)
     setEditMessageDraft('')
@@ -1272,6 +1891,8 @@ const ChatMainPage = ({
         }
       }),
     )
+
+    return true
   }
 
   const requestDeleteMessage = (
@@ -1296,7 +1917,7 @@ const ChatMainPage = ({
   }
 
   const confirmDeleteMessage =
-    () => {
+    async () => {
       if (
         !selectedRoom ||
         !deleteMessageTarget
@@ -1307,6 +1928,19 @@ const ChatMainPage = ({
 
       const messageId =
         deleteMessageTarget.id
+
+      try {
+        if (!USE_MOCK_CHAT) {
+          await deleteChatMessage(
+            authSession.accessToken,
+            selectedRoom.id,
+            messageId,
+          )
+        }
+      } catch (error) {
+        window.alert(error?.message || '메시지를 삭제하지 못했습니다.')
+        return
+      }
 
       updateMessageInRoom(
         selectedRoom.id,
@@ -1424,6 +2058,14 @@ const ChatMainPage = ({
         }
       },
     )
+
+    if (!USE_MOCK_CHAT) {
+      sendRealtimeReaction({
+        roomId: selectedRoom.id,
+        messageId,
+        emoji,
+      })
+    }
   }
 
 
@@ -1472,11 +2114,39 @@ const ChatMainPage = ({
       }, 3500)
     }
 
-  const handleCreateRoom = ({
+  const handleCreateRoom = async ({
     name,
     topicType,
     maxMembers,
   }) => {
+    if (!USE_MOCK_CHAT && authSession?.accessToken) {
+      try {
+        const newRoom = await createChatRoom(authSession.accessToken, {
+          name,
+          topicType,
+          maxMembers,
+        })
+
+        setRooms((previous) => [
+          newRoom,
+          ...previous.filter((room) => room.id !== newRoom.id),
+        ])
+        setMessagesByRoom((previous) => ({
+          ...previous,
+          [newRoom.id]: previous[newRoom.id] ?? [],
+        }))
+        setModal(null)
+        setActiveMenu('chat')
+        setSelectedRoomId(newRoom.id)
+        setWorkspaceMode('chat')
+        return
+      } catch (error) {
+        console.error('채팅방 생성 실패:', error)
+        window.alert(error?.message ?? '채팅방을 만들지 못했습니다.')
+        return
+      }
+    }
+
     const newRoomId =
       rooms.length > 0
         ? Math.max(
@@ -1568,18 +2238,232 @@ const ChatMainPage = ({
     setKickTarget(null)
   }
 
-  const handleInviteFriend = (friend) => {
+  const handleInviteFriend = async (friend) => {
     if (!friend || !selectedRoomId) return
 
-    setPendingInvitesByRoom((previous) => {
-      const roomInvites = previous[selectedRoomId] ?? []
-      if (roomInvites.includes(friend.id)) return previous
-
-      return {
-        ...previous,
-        [selectedRoomId]: [...roomInvites, friend.id],
+    try {
+      if (!USE_MOCK_CHAT) {
+        await sendRoomMemberInvite(authSession.accessToken, selectedRoomId, friend.id)
       }
+      setPendingInvitesByRoom((previous) => {
+        const roomInvites = previous[selectedRoomId] ?? []
+        if (roomInvites.includes(friend.id)) return previous
+        return { ...previous, [selectedRoomId]: [...roomInvites, friend.id] }
+      })
+    } catch (error) {
+      window.alert(error.message)
+    }
+  }
+
+  const issueRoomInviteLink = async () => {
+    if (!selectedRoomId || inviteLinkBusy) return
+    setInviteLinkBusy(true)
+    try {
+      const link = USE_MOCK_CHAT
+        ? { invitePath: '/invite/demo-token', maxUses: 50 }
+        : await createRoomInviteLink(authSession.accessToken, selectedRoomId, {
+            expiresInHours: 24,
+            maxUses: 50,
+          })
+      setInviteLinksByRoom((previous) => ({ ...previous, [selectedRoomId]: link }))
+      return link
+    } finally {
+      setInviteLinkBusy(false)
+    }
+  }
+
+  const handleCreateInviteLink = async () => {
+    try {
+      await issueRoomInviteLink()
+    } catch (error) {
+      window.alert(error.message)
+    }
+  }
+
+  const handleLoadActiveInviteLink = async () => {
+    if (!selectedRoomId || USE_MOCK_CHAT) return inviteLinksByRoom[selectedRoomId] ?? null
+    const activeLink = await getActiveRoomInviteLink(
+      authSession.accessToken,
+      selectedRoomId,
+    )
+    setInviteLinksByRoom((previous) => {
+      const current = previous[selectedRoomId]
+      const next = activeLink && current?.inviteId === activeLink.inviteId
+        ? { ...activeLink, invitePath: current.invitePath, inviteToken: current.inviteToken }
+        : activeLink
+      return { ...previous, [selectedRoomId]: next }
     })
+    return activeLink
+  }
+
+  const handleRevokeInviteLink = async () => {
+    const inviteLink = inviteLinksByRoom[selectedRoomId]
+    if (!inviteLink?.inviteId) return
+    if (!USE_MOCK_CHAT) {
+      await revokeRoomInviteLink(
+        authSession.accessToken,
+        selectedRoomId,
+        inviteLink.inviteId,
+      )
+    }
+    setInviteLinksByRoom((previous) => ({ ...previous, [selectedRoomId]: null }))
+  }
+
+  const handleUpdateRoomNotification = async (mode) => {
+    let setting
+    if (USE_MOCK_CHAT) {
+      const now = Date.now()
+      const durations = {
+        MUTE_30_MINUTES: 30 * 60 * 1000,
+        MUTE_1_HOUR: 60 * 60 * 1000,
+        MUTE_2_HOURS: 2 * 60 * 60 * 1000,
+      }
+      setting = {
+        notificationSetting: mode === 'MUTE_UNTIL_ENABLED' ? 'OFF' : 'ALL',
+        mutedUntil: durations[mode]
+          ? new Date(now + durations[mode]).toISOString()
+          : null,
+        muted: mode !== 'ENABLED',
+      }
+    } else {
+      setting = await updateRoomNotificationSetting(
+        authSession.accessToken,
+        selectedRoomId,
+        mode,
+      )
+    }
+
+    setRooms((previous) => previous.map((room) => (
+      room.id === selectedRoomId
+        ? {
+            ...room,
+            notificationSetting: setting.notificationSetting,
+            notificationMutedUntil: setting.mutedUntil,
+            notificationsMuted: setting.muted,
+          }
+        : room
+    )))
+  }
+
+  const handleLoadRoomNotification = async () => {
+    if (USE_MOCK_CHAT) return
+    const setting = await getRoomNotificationSetting(
+      authSession.accessToken,
+      selectedRoomId,
+    )
+    setRooms((previous) => previous.map((room) => (
+      room.id === selectedRoomId
+        ? {
+            ...room,
+            notificationSetting: setting.notificationSetting,
+            notificationMutedUntil: setting.mutedUntil,
+            notificationsMuted: setting.muted,
+          }
+        : room
+    )))
+  }
+
+  const handleRenameRoom = async (roomName) => {
+    const updatedRoom = USE_MOCK_CHAT
+      ? { ...selectedRoom, name: roomName }
+      : await updateChatRoom(authSession.accessToken, selectedRoomId, roomName)
+    setRooms((previous) => previous.map((room) => (
+      room.id === selectedRoomId ? { ...room, ...updatedRoom } : room
+    )))
+  }
+
+  const removeRoomFromWorkspace = (roomId) => {
+    setRooms((previous) => previous.filter((room) => room.id !== roomId))
+    setMessagesByRoom((previous) => {
+      const next = { ...previous }
+      delete next[roomId]
+      return next
+    })
+    setSelectedRoomId(null)
+    setModal(null)
+    setWorkspaceMode(isGuest ? 'chat' : 'home')
+  }
+
+  const handleDeleteRoom = async () => {
+    const roomId = selectedRoomId
+    if (!USE_MOCK_CHAT) {
+      await deleteChatRoom(authSession.accessToken, roomId)
+    }
+    removeRoomFromWorkspace(roomId)
+  }
+
+  const handleLeaveRoom = async () => {
+    const roomId = selectedRoomId
+    if (!USE_MOCK_CHAT) {
+      await leaveChatRoom(authSession.accessToken, roomId)
+    }
+    removeRoomFromWorkspace(roomId)
+    if (isGuest) onLogout?.()
+  }
+
+  const handleAcceptNotification = async (notification) => {
+    if (!notification?.actionable) return
+    setNotificationActionBusyId(notification.id)
+    try {
+      if (notification.actionKind === 'FRIEND_REQUEST') {
+        const friend = await acceptFriendRequest(authSession.accessToken, notification.referenceId)
+        setBaseFriends((previous) => (
+          previous.some((item) => item.id === friend.id) ? previous : [...previous, friend]
+        ))
+      } else if (notification.actionKind === 'ROOM_INVITE') {
+        const room = normalizeRoom(
+          await acceptRoomMemberInvite(authSession.accessToken, notification.referenceId),
+        )
+        setRooms((previous) => (
+          previous.some((item) => item.id === room.id)
+            ? previous.map((item) => item.id === room.id ? room : item)
+            : [room, ...previous]
+        ))
+      }
+      setNotifications((previous) => previous.filter((item) => item.id !== notification.id))
+    } catch (error) {
+      window.alert(error.message)
+    } finally {
+      setNotificationActionBusyId(null)
+    }
+  }
+
+  const handleRejectNotification = async (notification) => {
+    if (!notification?.actionable) return
+    setNotificationActionBusyId(notification.id)
+    try {
+      if (notification.actionKind === 'FRIEND_REQUEST') {
+        await rejectFriendRequest(authSession.accessToken, notification.referenceId)
+      } else if (notification.actionKind === 'ROOM_INVITE') {
+        await rejectRoomMemberInvite(authSession.accessToken, notification.referenceId)
+      }
+      setNotifications((previous) => previous.filter((item) => item.id !== notification.id))
+    } catch (error) {
+      window.alert(error.message)
+    } finally {
+      setNotificationActionBusyId(null)
+    }
+  }
+
+  const handleRemoveFriend = async (friend) => {
+    if (!window.confirm(`${friend.nickname}님을 친구 목록에서 삭제할까요?`)) return
+    try {
+      await removeFriend(authSession.accessToken, friend.id)
+      setBaseFriends((previous) => previous.filter((item) => item.id !== friend.id))
+    } catch (error) {
+      window.alert(error.message)
+    }
+  }
+
+  const handleBlockFriend = async (friend) => {
+    const reason = window.prompt(`${friend.nickname}님을 차단할 사유를 입력하세요. (선택)`, '')
+    if (reason === null) return
+    try {
+      await blockFriend(authSession.accessToken, friend.id, reason)
+      setBaseFriends((previous) => previous.filter((item) => item.id !== friend.id))
+    } catch (error) {
+      window.alert(error.message)
+    }
   }
 
   const handleDeleteNotification =
@@ -1621,9 +2505,7 @@ const ChatMainPage = ({
                 true,
               )
             }
-            onOpenRoomMenu={isGuest
-              ? null
-              : () => setModal('ROOM_MENU')}
+            onOpenRoomMenu={() => setModal('ROOM_MENU')}
           />
 
           <div className="chat-body">
@@ -1681,7 +2563,7 @@ const ChatMainPage = ({
                   handleRecommend
                 }
                 onTypingChange={
-                  setLocalTyping
+                  handleTypingChange
                 }
                 onCancelContext={
                   cancelMessageContext
@@ -1716,6 +2598,9 @@ const ChatMainPage = ({
               friends={friends}
               onInviteFriend={handleInviteFriend}
               pendingInviteIds={pendingInvitesByRoom[selectedRoomId] ?? []}
+              inviteLink={inviteLinksByRoom[selectedRoomId]}
+              inviteLinkBusy={inviteLinkBusy}
+              onCreateInviteLink={handleCreateInviteLink}
             />
           </div>
         </div>
@@ -1871,6 +2756,8 @@ const ChatMainPage = ({
                 onBack={
                   closeWorkspacePage
                 }
+                accessToken={authSession?.accessToken}
+                onRequestSent={() => refreshSocialData().catch(() => {})}
               />
             </div>
           </div>
@@ -1945,6 +2832,9 @@ const ChatMainPage = ({
                       ),
                   )
                 }
+                onAccept={handleAcceptNotification}
+                onReject={handleRejectNotification}
+                actionBusyId={notificationActionBusyId}
               />
             </div>
           </div>
@@ -2004,6 +2894,9 @@ const ChatMainPage = ({
       data-theme={roomTheme.key}
       data-color-mode={
         colorMode
+      }
+      data-chat-connection={
+        chatConnectionState
       }
       style={{
         '--theme-accent':
@@ -2069,6 +2962,8 @@ const ChatMainPage = ({
             'friend-add',
           )
         }
+        onRemoveFriend={handleRemoveFriend}
+        onBlockFriend={handleBlockFriend}
         onNotifications={() =>
           openWorkspacePage(
             'notifications',
@@ -2131,6 +3026,9 @@ const ChatMainPage = ({
               friends={friends}
               onInviteFriend={handleInviteFriend}
               pendingInviteIds={pendingInvitesByRoom[selectedRoomId] ?? []}
+              inviteLink={inviteLinksByRoom[selectedRoomId]}
+              inviteLinkBusy={inviteLinkBusy}
+              onCreateInviteLink={handleCreateInviteLink}
             />
           </div>
         )}
@@ -2357,8 +3255,6 @@ const ChatMainPage = ({
           'EDIT_MESSAGE'
         }
         title="메시지 수정"
-        subtitle="전송한 메시지의 내용을 변경합니다."
-        eyebrow="MESSAGE ACTION"
         icon={<PencilIcon />}
         className="message-action-modal"
         onClose={() => {
@@ -2399,11 +3295,6 @@ const ChatMainPage = ({
               }}
             />
           </label>
-
-          <div className="message-action-note">
-            <span>i</span>
-            <p>수정한 메시지에는 대화 상대가 확인할 수 있도록 ‘수정됨’ 표시가 남습니다.</p>
-          </div>
 
           <div className="modal-action-row">
             <button
@@ -2446,8 +3337,6 @@ const ChatMainPage = ({
           'DELETE_MESSAGE'
         }
         title="메시지 삭제"
-        subtitle="삭제 후에는 메시지 내용을 복구할 수 없습니다."
-        eyebrow="MESSAGE ACTION"
         icon={<TrashIcon />}
         className="message-action-modal message-delete-modal"
         onClose={() => {
@@ -2463,11 +3352,6 @@ const ChatMainPage = ({
           <div className="delete-message-preview">
             <span>삭제할 메시지</span>
             <p>{deleteMessageTarget?.content}</p>
-          </div>
-
-          <div className="message-action-note danger">
-            <span>!</span>
-            <p>대화 위치는 유지되지만 내용은 ‘삭제된 메시지입니다’로 대체됩니다.</p>
           </div>
 
           <div className="modal-action-row">
@@ -2499,41 +3383,22 @@ const ChatMainPage = ({
         </div>
       </AppModal>
 
-      <AppModal
-        open={
-          modal ===
-          'ROOM_MENU'
-        }
-        title={
-          selectedRoom?.name ??
-          '채팅방'
-        }
-        subtitle="채팅방 설정과 관리 기능입니다."
-        onClose={() =>
-          setModal(null)
-        }
-        size="small"
-      >
-        <div className="room-menu-list">
-          <button type="button">
-            채팅방 정보
-          </button>
-
-          <button type="button">
-            초대 링크 관리
-          </button>
-
-          <button type="button">
-            알림 설정
-          </button>
-
-          {isOwner && (
-            <button type="button">
-              채팅방 설정
-            </button>
-          )}
-        </div>
-      </AppModal>
+      <RoomMenuModal
+        open={modal === 'ROOM_MENU'}
+        room={selectedRoom}
+        memberCount={members.length || selectedRoom?.memberCount || 0}
+        isOwner={isOwner}
+        inviteLink={inviteLinksByRoom[selectedRoomId]}
+        onClose={() => setModal(null)}
+        onLoadInviteLink={handleLoadActiveInviteLink}
+        onCreateInviteLink={issueRoomInviteLink}
+        onRevokeInviteLink={handleRevokeInviteLink}
+        onLoadNotification={handleLoadRoomNotification}
+        onUpdateNotification={handleUpdateRoomNotification}
+        onRenameRoom={handleRenameRoom}
+        onDeleteRoom={handleDeleteRoom}
+        onLeaveRoom={handleLeaveRoom}
+      />
 
       <AppModal
         open={

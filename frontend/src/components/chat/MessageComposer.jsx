@@ -272,6 +272,16 @@ const MessageComposer = ({
     onTypingChange?.(
       isTyping,
     )
+
+    if (!isTyping) {
+      return undefined
+    }
+
+    const heartbeat = window.setInterval(() => {
+      onTypingChange?.(true)
+    }, 2000)
+
+    return () => window.clearInterval(heartbeat)
   }, [
     isTyping,
     onTypingChange,
@@ -346,6 +356,24 @@ const MessageComposer = ({
   }, [
     emojiOpen,
   ])
+
+  useEffect(() => {
+    if (!menuOpen && !emojiOpen) return undefined
+
+    const closeFloatingMenus = (event) => {
+      if (
+        event.target.closest?.('.composer-menu') ||
+        event.target.closest?.('.composer-emoji-picker')
+      ) {
+        return
+      }
+      setMenuOpen(false)
+      setEmojiOpen(false)
+    }
+
+    document.addEventListener('pointerdown', closeFloatingMenus)
+    return () => document.removeEventListener('pointerdown', closeFloatingMenus)
+  }, [menuOpen, emojiOpen])
 
   const clearContext = () => {
     if (
@@ -439,7 +467,7 @@ const MessageComposer = ({
     onCancelContext?.()
   }
 
-  const handleImageSelect = (
+  const handleImageSelect = async (
     event,
   ) => {
     const file =
@@ -483,49 +511,25 @@ const MessageComposer = ({
     setImageError('')
     setImageProcessing(true)
 
-    const reader =
-      new FileReader()
-
-    reader.onload = () => {
-      const imageUrl =
-        typeof reader.result ===
-        'string'
-          ? reader.result
-          : ''
-
-      setImageProcessing(false)
-
-      if (!imageUrl) {
-        setImageError(
-          '이미지를 읽지 못했습니다. 다시 시도해주세요.',
-        )
-        return
-      }
-
-      onSendImage?.(
+    try {
+      await onSendImage?.(
         {
-          fileName:
-            file.name,
-          mimeType:
-            file.type,
+          file,
+          fileName: file.name,
+          mimeType: file.type,
           size: file.size,
-          imageUrl,
         },
-        replyTarget?.id ??
-          null,
+        replyTarget?.id ?? null,
       )
-
       onCancelContext?.()
-    }
-
-    reader.onerror = () => {
-      setImageProcessing(false)
+      setMenuOpen(false)
+    } catch (error) {
       setImageError(
-        '이미지를 읽지 못했습니다. 다시 시도해주세요.',
+        error?.message || '이미지를 보내지 못했습니다. 다시 시도해주세요.',
       )
+    } finally {
+      setImageProcessing(false)
     }
-
-    reader.readAsDataURL(file)
   }
 
   const handleKeyDown = (

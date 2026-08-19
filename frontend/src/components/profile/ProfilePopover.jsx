@@ -73,9 +73,6 @@ const ProfilePopover = ({
   const currentPresence = getPresence(userPresence)
   const isGuestAccount =
     isGuest || user.accountType === 'GUEST'
-  const isKakaoAccount =
-    user.accountType === 'SOCIAL' ||
-    user.kakaoLinked === true
 
   const closePopover = () => {
     setPresenceMenuOpen(
@@ -158,14 +155,6 @@ const ProfilePopover = ({
               <strong>
                 {isGuestAccount ? '일반회원으로 전환' : '프로필 편집'}
               </strong>
-
-              <small>
-                {isGuestAccount
-                  ? '친구, 알림, 채팅방 기능 이용'
-                  : isKakaoAccount
-                    ? '상태 메시지'
-                    : '사진, 닉네임, 상태 메시지'}
-              </small>
             </div>
 
             <span className="profile-action-chevron">
@@ -195,7 +184,6 @@ const ProfilePopover = ({
 
             <div>
               <strong>{currentPresence.label}</strong>
-              <small>상태 변경</small>
             </div>
 
             <span
@@ -243,7 +231,6 @@ const ProfilePopover = ({
 
                   <div>
                     <strong>{presence.label}</strong>
-                    <span>{presence.description}</span>
                   </div>
 
                   {userPresence === key && (
@@ -268,7 +255,6 @@ const ProfilePopover = ({
 
             <div>
               <strong>{isGuestAccount ? '게스트 나가기' : '로그아웃'}</strong>
-              <small>{isGuestAccount ? '초대방 참여 종료' : '현재 계정에서 로그아웃'}</small>
             </div>
           </button>
         </div>

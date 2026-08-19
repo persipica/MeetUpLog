@@ -41,6 +41,14 @@ export const BellIcon = (props) => (
   </IconFrame>
 )
 
+export const BellOffIcon = (props) => (
+  <IconFrame {...props}>
+    <path d="M8.1 6.1a5.5 5.5 0 0 1 9.4 4.1c0 2.2.4 3.5.9 4.4" />
+    <path d="M5.6 14.8c.5-.9.9-2.2.9-4.6 0-.5.1-1 .2-1.5" />
+    <path d="M4.5 16.6h10.1M10 19a2.2 2.2 0 0 0 4 0M4 4l16 16" />
+  </IconFrame>
+)
+
 export const UsersIcon = (props) => (
   <IconFrame {...props}>
     <circle cx="9" cy="8" r="3" />
