@@ -1,8 +1,12 @@
 .env
 __pycache__/
 *.pyc
-.pytest_cache/
-vendor/
-models/
-data/raw/
-data/state/
+.venv/
+*.egg-info/
+
+# 말뭉치 원본은 라이선스가 있는 배포 데이터라 커밋하지 않는다.
+# build_corpus_data.py가 이 폴더를 읽어 data/ 파생 파일을 생성한다.
+corpus_raw/
+
+# train_relevance_classifier.py가 생성하는 파인튜닝 체크포인트 (무거움, opt-in)
+checkpoints/

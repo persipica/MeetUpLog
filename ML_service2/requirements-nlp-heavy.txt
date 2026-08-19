@@ -1,0 +1,20 @@
+# 선택적(opt-in) 의존성: config.py의 ENABLE_TYPO_CORRECTION /
+# ENABLE_SPACING_CORRECTION / ENABLE_SBERT_SIMILARITY를 켤 때만 필요하다.
+# 기본 requirements.txt에는 포함하지 않았다 (torch 등 용량이 커서 3주 MVP의
+# 빠른 배포/재현성을 해치지 않기 위함). 실제로 정확도 개선이 확인되면
+# requirements.txt로 승격하는 것을 권장한다.
+
+torch>=2.2
+transformers>=4.40
+sentencepiece>=0.2
+sentence-transformers>=2.7
+
+# train_relevance_classifier.py(KcELECTRA 파인튜닝, ENABLE_TRANSFORMER_
+# RELEVANCE_CLASSIFIER)를 실행할 때만 추가로 필요. 추론(TransformerRelevanceClassifier)
+# 에는 datasets가 필요 없다 - 위 torch/transformers만으로 충분하다.
+datasets>=2.19
+
+# ElectraSpacer(github.com/jaeyeongs/ElectraSpacer)는 PyPI 배포가 아니라
+# 리포지토리 자체(체크포인트 포함)를 내려받아 PYTHONPATH에 추가하는 구조라
+# requirements 파일로는 설치할 수 없다. 아래처럼 별도로 준비할 것:
+#   git clone https://github.com/jaeyeongs/ElectraSpacer

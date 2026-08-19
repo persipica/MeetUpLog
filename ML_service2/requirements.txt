@@ -1,0 +1,6 @@
+fastapi>=0.110
+pydantic>=2.6
+uvicorn>=0.29
+requests>=2.31
+scikit-learn>=1.4
+python-dotenv>=1.0

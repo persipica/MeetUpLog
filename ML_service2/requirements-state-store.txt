@@ -1,0 +1,5 @@
+# 선택적(opt-in) 의존성: config.py의 ENABLE_REDIS_STATE_STORE=true로 켤 때만
+# 필요하다. 기본값(false)에서는 InMemoryStateStore를 쓰므로 이 파일은
+# 설치하지 않아도 된다. state_store.py 참고.
+
+redis>=5.0
