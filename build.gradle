@@ -35,6 +35,17 @@ dependencies {
 	testCompileOnly 'org.projectlombok:lombok'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 	testAnnotationProcessor 'org.projectlombok:lombok'
+<<<<<<< HEAD
+=======
+	// JWT (JSON Web Token) 라이브러리
+	implementation 'io.jsonwebtoken:jjwt-api:0.12.5'
+	runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.12.5'
+	runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.12.5'
+	// @Valid, @NotBlank, @Size 같은 유효성 검사(Validation) 기능
+	implementation 'org.springframework.boot:spring-boot-starter-validation'
+	// 실시간 채팅
+	implementation 'org.springframework.boot:spring-boot-starter-websocket'
+>>>>>>> be9c16f9b9331b9b19db7b639b0ffdad74551cce
 }
 
 tasks.named('test') {
