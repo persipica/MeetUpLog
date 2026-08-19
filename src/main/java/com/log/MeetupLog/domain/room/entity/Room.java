@@ -19,7 +19,7 @@ import java.util.List;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @EntityListeners(AuditingEntityListener.class)
-public class ChatRoom {
+public class Room {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -62,12 +62,12 @@ public class ChatRoom {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-    @OneToMany(mappedBy = "chatRoom", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<ChatRoomMember> members = new ArrayList<>();
+    @OneToMany(mappedBy = "room", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<RoomMember> members = new ArrayList<>();
 
     @Builder
-    public ChatRoom(RoomType roomType, String roomName, String roomImageUrl, String description,
-                    User createdBy, DecisionCreateScope decisionCreateScope, Integer maxMembers, RoomStatus roomStatus) {
+    public Room(RoomType roomType, String roomName, String roomImageUrl, String description,
+                User createdBy, DecisionCreateScope decisionCreateScope, Integer maxMembers, RoomStatus roomStatus) {
         this.roomType = roomType != null ? roomType : RoomType.GROUP;
         this.roomName = roomName;
         this.roomImageUrl = roomImageUrl;
@@ -84,4 +84,9 @@ public class ChatRoom {
             this.createdAt = LocalDateTime.now();
         }
     }
+
+    public void closeRoom() {
+        this.roomStatus = RoomStatus.CLOSED;
+    }
+
 }

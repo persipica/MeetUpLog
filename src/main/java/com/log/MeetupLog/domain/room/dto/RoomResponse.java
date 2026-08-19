@@ -1,6 +1,6 @@
 package com.log.MeetupLog.domain.room.dto;
 
-import com.log.MeetupLog.domain.room.entity.ChatRoom;
+import com.log.MeetupLog.domain.room.entity.Room;
 import com.log.MeetupLog.domain.room.entity.RoomStatus;
 import com.log.MeetupLog.domain.room.entity.RoomType;
 import lombok.Builder;
@@ -10,7 +10,7 @@ import java.time.LocalDateTime;
 
 @Getter
 @Builder
-public class ChatRoomResponse {
+public class RoomResponse {
 
     private Long roomId;
     private RoomType roomType;
@@ -24,8 +24,8 @@ public class ChatRoomResponse {
     private String createdByNickname;
     private LocalDateTime createdAt;
 
-    public static ChatRoomResponse from(ChatRoom room, int currentMembers) {
-        return ChatRoomResponse.builder()
+    public static RoomResponse from(Room room, int currentMembers) {
+        return RoomResponse.builder()
                 .roomId(room.getRoomId())
                 .roomType(room.getRoomType())
                 .roomName(room.getRoomName())

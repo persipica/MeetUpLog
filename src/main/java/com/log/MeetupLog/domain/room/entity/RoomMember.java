@@ -18,7 +18,7 @@ import java.time.LocalDateTime;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @EntityListeners(AuditingEntityListener.class)
-public class ChatRoomMember {
+public class RoomMember {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -27,7 +27,7 @@ public class ChatRoomMember {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "room_id", nullable = false)
-    private ChatRoom chatRoom;
+    private Room room;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
@@ -59,12 +59,30 @@ public class ChatRoomMember {
     private String roomUserUnique; // 방ID_유저ID 조합 키 (예: "1_4")
 
     @Builder
-    public ChatRoomMember(ChatRoom chatRoom, User user, RoomRole roomRole, MemberStatus memberStatus, NotificationSetting notificationSetting) {
-        this.chatRoom = chatRoom;
+    public RoomMember(Room room, User user, RoomRole roomRole, MemberStatus memberStatus, NotificationSetting notificationSetting) {
+        this.room = room;
         this.user = user;
         this.roomRole = roomRole != null ? roomRole : RoomRole.MEMBER;
         this.memberStatus = memberStatus != null ? memberStatus : MemberStatus.ACTIVE;
         this.notificationSetting = notificationSetting != null ? notificationSetting : NotificationSetting.ALL;
-        this.roomUserUnique = (chatRoom != null && user != null) ? (chatRoom.getRoomId() + "_" + user.getUserId()) : null;
+        this.roomUserUnique = (room != null && user != null) ? (room.getRoomId() + "_" + user.getUserId()) : null;
     }
+
+    // 방 퇴장 처리
+    public void leave() {
+        this.memberStatus = MemberStatus.LEFT;
+        this.leftAt = LocalDateTime.now();
+    }
+
+    // 방장 위임 등 역할 변경
+    public void changeRole(RoomRole newRole) {
+        this.roomRole = newRole;
+    }
+
+    // 재입장 처리 (과거에 나갔던 방에 다시 들어오는 경우)
+    public void rejoin() {
+        this.memberStatus = MemberStatus.ACTIVE;
+        this.leftAt = null;
+    }
+
 }

@@ -5,10 +5,14 @@ import io.jsonwebtoken.security.Keys;
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
+import java.util.Collections;
 import java.util.Date;
 
 @Slf4j
@@ -53,6 +57,21 @@ public class JwtTokenProvider {
         Claims claims = parseClaims(token);
         return Long.parseLong(claims.getSubject());
     }
+    // 토큰에서 Authentication 객체 생성 (Spring Security & STOMP 인터셉터용)
+    public Authentication getAuthentication(String token) {
+        Long userId = getUserIdFromToken(token);
+        Claims claims = parseClaims(token);
+        String role = (String) claims.get("role");
+        if (role == null) {
+            role = "ROLE_USER";
+        } else if (!role.startsWith("ROLE_")) {
+            role = "ROLE_" + role;
+        }
+
+        SimpleGrantedAuthority authority = new SimpleGrantedAuthority(role);
+        return new UsernamePasswordAuthenticationToken(String.valueOf(userId), token, Collections.singletonList(authority));
+    }
+
 
     // 토큰 유효성 검증(위조, 시간만료) 시도.
     public boolean validateToken(String token) {

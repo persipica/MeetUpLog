@@ -8,7 +8,7 @@ import lombok.NoArgsConstructor;
 
 @Getter
 @NoArgsConstructor
-public class ChatRoomCreateRequest {
+public class RoomCreateRequest {
 
     @NotBlank(message = "모임 방 이름은 필수입니다.")
     private String roomName;
