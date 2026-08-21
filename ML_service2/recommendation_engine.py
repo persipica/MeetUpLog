@@ -82,6 +82,12 @@ def _user_satisfaction(movie: MovieCandidate, user: UserPreferenceState) -> Tupl
         if user.movies[movie.movie_id] > 0:
             matched.append("직접 언급한 후보")
 
+    for actor in movie.cast:
+        if actor in user.actors:
+            scores.append(user.actors[actor])
+            if user.actors[actor] > 0:
+                matched.append(f"배우:{actor}")
+
     if not scores:
         # 취향 정보가 없는 사용자는 중립(0.5)으로 취급해 그룹 점수를 왜곡하지 않는다.
         return 0.5, matched

@@ -47,6 +47,7 @@ class UserPreferenceState:
     genres: Dict[str, float] = field(default_factory=dict)
     moods: Dict[str, float] = field(default_factory=dict)
     movies: Dict[str, float] = field(default_factory=dict)
+    actors: Dict[str, float] = field(default_factory=dict)
     constraints: Constraints = field(default_factory=Constraints)
 
     # 원본 히스토리 (시간 가중치 재계산용, FR-AI-06)
@@ -61,6 +62,7 @@ class UserPreferenceState:
             "genres": self.genres,
             "moods": self.moods,
             "movies": self.movies,
+            "actors": self.actors,
             "constraints": {
                 "maxRuntime": self.constraints.max_runtime,
                 "excludeAdult": self.constraints.exclude_adult,
@@ -93,6 +95,7 @@ class MovieCandidate:
     poster_path: Optional[str] = None
     release_year: Optional[int] = None       # TMDB release_date 앞 4자리
     production_companies: List[str] = field(default_factory=list)  # TMDB 상세조회 시에만 채워짐
+    cast: List[str] = field(default_factory=list)  # 주연 배우 이름 (TMDB credits, 상세조회 시에만 채워짐)
     source: str = "catalog"            # "catalog" | "chat_candidate"
 
 

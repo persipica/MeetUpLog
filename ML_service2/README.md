@@ -1,9 +1,7 @@
 # MeetupLog AI Service
 
-그룹 채팅 대화를 분석해 영화를 추천하는 MeetupLog의 AI 파트입니다
-(기획서 11장의 일정 조율 모듈은 이 코드베이스의 범위에 포함되지 않습니다).
-기획서 8~10, 12~13장("자동 AI 분석", "AI 설계", "AI Service" 계층)을
-FastAPI 기준으로 구현했습니다.
+그룹 채팅 대화를 분석해 영화를 추천하는 MeetupLog의 AI 파트
+FastAPI 기준으로 구현.
 
 ⚠️ **아키텍처가 한 번 바뀌었습니다.** Main Backend(Spring Boot) DB 스키마
 (`meetuplog_schema.sql`)를 실제로 설계해보니 `message_analyses`/
@@ -76,11 +74,11 @@ FastAPI는 상태를 스스로 들고 있지 않습니다. Main Backend가 DB
 
 ### `POST /analyze-message` - 메시지 1건 분석
 
-| 요청 필드 | 설명 |
-|---|---|
-| `text`, `sent_at`, `room_id`, `user_id`, `message_id` | 분석할 메시지 |
-| `prior_focus` | 그 방의 최신 `message_analyses.focus_json` (없으면 `null`) |
-| `prior_preferences` | 그 발화자의 기존 `user_preference_states` 행들 (시간가중 블렌딩용) |
+| 요청 필드                                             | 설명                                                               |
+| ----------------------------------------------------- | ------------------------------------------------------------------ |
+| `text`, `sent_at`, `room_id`, `user_id`, `message_id` | 분석할 메시지                                                      |
+| `prior_focus`                                         | 그 방의 최신 `message_analyses.focus_json` (없으면 `null`)         |
+| `prior_preferences`                                   | 그 발화자의 기존 `user_preference_states` 행들 (시간가중 블렌딩용) |
 
 응답은 `message_analyses` 테이블 한 행과 거의 1:1(`relevant_flag`,
 `relevance_score`, `intent_code`, `entities_json`, `constraints_json`,
@@ -118,26 +116,26 @@ FastAPI는 상태를 스스로 들고 있지 않습니다. Main Backend가 DB
 
 ## 파일 구성
 
-| 파일 | 역할 |
-|---|---|
-| `config.py` | 환경설정 로드(.env), API 키 지연검증, 추천 가중치, 시간감쇠·관련성 임계값, feature flag |
-| `time_utils.py` | timezone-aware UTC 시각 헬퍼 |
-| `models.py` | Preference State, MovieCandidate, 추천 결과 등 데이터 모델 |
-| `movie_catalog.py` | TMDB 카탈로그 수집(TMDB 공식 장르 taxonomy 정렬 + 키워드 기반 비공식 장르 보강), KOFIC 등급 보강(동명 영화 disambiguation 포함), 무드 태깅, 제목 오타 보정 |
-| `nlp_pipeline.py` | 관련성 판별, 절 단위 장르/무드/제약 추출, Focus 문맥 해석, 발화 의도 분류(`classify_intent`), 무상태 분석 진입점(`analyze_message`) + 예전 방식의 시간가중 State 누적(`apply_message_to_state`, demo.py용) |
-| `preference_eav.py` | `user_preference_states`(EAV) ↔ `UserPreferenceState`(dict) 변환, 메시지 신호 + DB 기존값의 시간가중 블렌딩 |
-| `slang_lexicon.py` | 신조어/줄임말("꿀잼", "노잼", "ㄹㅇ" 등)을 일반 어휘로 정규화 |
-| `corpus_typo_corrector.py` | 코퍼스에서 마이닝·검증한 경량 구어체 정규화 사전 (기본 사용) |
-| `text_normalization.py` | 맞춤법(ET5)·띄어쓰기(ElectraSpacer) 교정, SBERT 문장 임베딩 래퍼 (모두 opt-in) |
-| `relevance_classifier.py` | TF-IDF+LogisticRegression 학습형 관련성 분류기 (코퍼스 데이터 + 수작업 seed) + KcELECTRA 파인튜닝 대체 경로(opt-in) |
-| `recommendation_engine.py` | HARD 제약 필터링, 5요소 스코어링, 4가지 추천 모드 결정 |
-| `api.py` | FastAPI 엔드포인트 — `POST /analyze-message`(메시지 1건 분석, 무상태), `POST /recommend`(EAV 기반 추천) |
-| `state_store.py` | (옵션/레거시) 라운드 State를 FastAPI가 직접 들고 있는 방식 — 기본 경로에서는 안 쓰임, 상단 docstring 참고 |
-| `train_relevance_classifier.py` | KcELECTRA 등으로 관련성 분류기를 파인튜닝하는 오프라인 스크립트 (opt-in) |
-| `verify_hf_models.py` | ET5/ElectraSpacer/SBERT opt-in 모델을 실제로 로드해보는 스모크 테스트 스크립트 |
-| `demo.py` | 외부 API 없이 모의 데이터로 전체 흐름(예전 방식 + 새 무상태 방식 모두)을 검증하는 스크립트 |
-| `build_corpus_data.py` | 원본 말뭉치(`corpus_raw/`) 또는 MeetupLog 채팅 로그(`--format meetuplog`)에서 `data/` 파생 데이터를 (재)생성하는 스크립트 |
-| `data/` | 코퍼스에서 추출한 파생 학습 데이터 |
+| 파일                            | 역할                                                                                                                                                                                                       |
+| ------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `config.py`                     | 환경설정 로드(.env), API 키 지연검증, 추천 가중치, 시간감쇠·관련성 임계값, feature flag                                                                                                                    |
+| `time_utils.py`                 | timezone-aware UTC 시각 헬퍼                                                                                                                                                                               |
+| `models.py`                     | Preference State, MovieCandidate, 추천 결과 등 데이터 모델                                                                                                                                                 |
+| `movie_catalog.py`              | TMDB 카탈로그 수집(TMDB 공식 장르 taxonomy 정렬 + 키워드 기반 비공식 장르 보강), KOFIC 등급 보강(동명 영화 disambiguation 포함), 무드 태깅, 제목 오타 보정                                                 |
+| `nlp_pipeline.py`               | 관련성 판별, 절 단위 장르/무드/제약 추출, Focus 문맥 해석, 발화 의도 분류(`classify_intent`), 무상태 분석 진입점(`analyze_message`) + 예전 방식의 시간가중 State 누적(`apply_message_to_state`, demo.py용) |
+| `preference_eav.py`             | `user_preference_states`(EAV) ↔ `UserPreferenceState`(dict) 변환, 메시지 신호 + DB 기존값의 시간가중 블렌딩                                                                                                |
+| `slang_lexicon.py`              | 신조어/줄임말("꿀잼", "노잼", "ㄹㅇ" 등)을 일반 어휘로 정규화                                                                                                                                              |
+| `corpus_typo_corrector.py`      | 코퍼스에서 마이닝·검증한 경량 구어체 정규화 사전 (기본 사용)                                                                                                                                               |
+| `text_normalization.py`         | 맞춤법(ET5)·띄어쓰기(ElectraSpacer) 교정, SBERT 문장 임베딩 래퍼 (모두 opt-in)                                                                                                                             |
+| `relevance_classifier.py`       | TF-IDF+LogisticRegression 학습형 관련성 분류기 (코퍼스 데이터 + 수작업 seed) + KcELECTRA 파인튜닝 대체 경로(opt-in)                                                                                        |
+| `recommendation_engine.py`      | HARD 제약 필터링, 5요소 스코어링, 4가지 추천 모드 결정                                                                                                                                                     |
+| `api.py`                        | FastAPI 엔드포인트 — `POST /analyze-message`(메시지 1건 분석, 무상태), `POST /recommend`(EAV 기반 추천)                                                                                                    |
+| `state_store.py`                | (옵션/레거시) 라운드 State를 FastAPI가 직접 들고 있는 방식 — 기본 경로에서는 안 쓰임, 상단 docstring 참고                                                                                                  |
+| `train_relevance_classifier.py` | KcELECTRA 등으로 관련성 분류기를 파인튜닝하는 오프라인 스크립트 (opt-in)                                                                                                                                   |
+| `verify_hf_models.py`           | ET5/ElectraSpacer/SBERT opt-in 모델을 실제로 로드해보는 스모크 테스트 스크립트                                                                                                                             |
+| `demo.py`                       | 외부 API 없이 모의 데이터로 전체 흐름(예전 방식 + 새 무상태 방식 모두)을 검증하는 스크립트                                                                                                                 |
+| `build_corpus_data.py`          | 원본 말뭉치(`corpus_raw/`) 또는 MeetupLog 채팅 로그(`--format meetuplog`)에서 `data/` 파생 데이터를 (재)생성하는 스크립트                                                                                  |
+| `data/`                         | 코퍼스에서 추출한 파생 학습 데이터                                                                                                                                                                         |
 
 ---
 
@@ -156,26 +154,26 @@ cp .env.example .env
 
 **Feature flag** (`config.py`, 전부 환경변수로 오버라이드 가능):
 
-| 플래그 | 기본값 | 설명 |
-|---|---|---|
-| `ENABLE_CORPUS_TYPO_CORRECTION` | `true` | 코퍼스 검증된 경량 구어체 정규화 (외부 다운로드 불필요) |
-| `ENABLE_TYPO_CORRECTION` | `false` | HF ET5 맞춤법 교정 모델 (무거움, 이 환경에서 미검증) |
-| `ENABLE_SPACING_CORRECTION` | `false` | ElectraSpacer 띄어쓰기 교정 (별도 리포 클론 필요) |
-| `ENABLE_SBERT_SIMILARITY` | `false` | SBERT 문장 임베딩 기반 텍스트 유사도 (무거움, 이 환경에서 미검증) |
+| 플래그                          | 기본값  | 설명                                                              |
+| ------------------------------- | ------- | ----------------------------------------------------------------- |
+| `ENABLE_CORPUS_TYPO_CORRECTION` | `true`  | 코퍼스 검증된 경량 구어체 정규화 (외부 다운로드 불필요)           |
+| `ENABLE_TYPO_CORRECTION`        | `false` | HF ET5 맞춤법 교정 모델 (무거움, 이 환경에서 미검증)              |
+| `ENABLE_SPACING_CORRECTION`     | `false` | ElectraSpacer 띄어쓰기 교정 (별도 리포 클론 필요)                 |
+| `ENABLE_SBERT_SIMILARITY`       | `false` | SBERT 문장 임베딩 기반 텍스트 유사도 (무거움, 이 환경에서 미검증) |
 
 ---
 
 ## 기획서 대응表
 
-| 기획서 항목 | 구현 위치 |
-|---|---|
-| 관련성 필터 / 증분 분석 (8~9장, FR-AI-01~02) | `nlp_pipeline.is_relevant()` — 일반 대화는 State에 반영 안 함, 새 메시지만 분석 |
-| 최신 의견 우선 (FR-AI-06) | `nlp_pipeline.time_weight()` — half-life 지수 감쇠, `config.TIME_DECAY_HALF_LIFE_DAYS`로 조절 |
-| 추천 점수 5요소 (10장 표) | `recommendation_engine.score_candidates()` — 그룹만족도 42% / 공정성 28%(`min()`) / 텍스트유사도 18% / 대중성 7% / 평점 5% |
-| HARD 제약 (Free Slot Engine과 동일 사상) | `recommendation_engine._violates_hard_constraints()` |
-| 4가지 추천 모드 (10장) | `recommendation_engine.decide_mode()` — CONSENSUS / PREFERENCE_DISCOVERY / CONFLICT_DISCOVERY / LOW_EVIDENCE_DISCOVERY |
-| 오타 보정 / 미등록 제목 (FR-AI-04) | `movie_catalog.match_title()` — 확신도(기본 0.72) 미만이면 UNKNOWN_TITLE 유지 |
-| 문맥 해석 (FR-AI-05) | `nlp_pipeline.ConversationFocus` + `resolve_with_focus()` — 방(room) 전체가 공유 |
+| 기획서 항목                                  | 구현 위치                                                                                                                  |
+| -------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| 관련성 필터 / 증분 분석 (8~9장, FR-AI-01~02) | `nlp_pipeline.is_relevant()` — 일반 대화는 State에 반영 안 함, 새 메시지만 분석                                            |
+| 최신 의견 우선 (FR-AI-06)                    | `nlp_pipeline.time_weight()` — half-life 지수 감쇠, `config.TIME_DECAY_HALF_LIFE_DAYS`로 조절                              |
+| 추천 점수 5요소 (10장 표)                    | `recommendation_engine.score_candidates()` — 그룹만족도 42% / 공정성 28%(`min()`) / 텍스트유사도 18% / 대중성 7% / 평점 5% |
+| HARD 제약 (Free Slot Engine과 동일 사상)     | `recommendation_engine._violates_hard_constraints()`                                                                       |
+| 4가지 추천 모드 (10장)                       | `recommendation_engine.decide_mode()` — CONSENSUS / PREFERENCE_DISCOVERY / CONFLICT_DISCOVERY / LOW_EVIDENCE_DISCOVERY     |
+| 오타 보정 / 미등록 제목 (FR-AI-04)           | `movie_catalog.match_title()` — 확신도(기본 0.72) 미만이면 UNKNOWN_TITLE 유지                                              |
+| 문맥 해석 (FR-AI-05)                         | `nlp_pipeline.ConversationFocus` + `resolve_with_focus()` — 방(room) 전체가 공유                                           |
 
 ---
 
@@ -375,14 +373,14 @@ MeetupLog 실제 채팅 로그로 바꿔서 다시 만들고 싶을 때 그대�
 위험했다** — 빈도·일관성 기준을 통과했어도 표준어에서 이미 다른 뜻을 가진
 단어가 섞여 있었다:
 
-| 자동 채택된 위험한 규칙 | 실제 문제 |
-|---|---|
-| `가지` → `가지고` (96% 일관) | "두 가지"(단위명사)를 깨뜨림 |
-| `아이` → `아니` (100%) | "아이"(어린이)를 깨뜨림 |
-| `그리고` → `그러고` (100%) | 접속사 "그리고"(and)를 깨뜨림 |
-| `이자` → `이제` (100%) | "이자"(금융 이자)를 깨뜨림 |
-| `네` → `근데` | "네"(yes/formal you)를 깨뜨림 |
-| `중에` → `중의` | "~하는 중에"(동안)와 "~중의"(중에서)는 다른 뜻 |
+| 자동 채택된 위험한 규칙      | 실제 문제                                      |
+| ---------------------------- | ---------------------------------------------- |
+| `가지` → `가지고` (96% 일관) | "두 가지"(단위명사)를 깨뜨림                   |
+| `아이` → `아니` (100%)       | "아이"(어린이)를 깨뜨림                        |
+| `그리고` → `그러고` (100%)   | 접속사 "그리고"(and)를 깨뜨림                  |
+| `이자` → `이제` (100%)       | "이자"(금융 이자)를 깨뜨림                     |
+| `네` → `근데`                | "네"(yes/formal you)를 깨뜨림                  |
+| `중에` → `중의`              | "~하는 중에"(동안)와 "~중의"(중에서)는 다른 뜻 |
 
 전부 수작업으로 재검토해 블록리스트로 제외했고, 1글자 어절은 문맥
 의존도가 너무 커서 원칙적으로 전부 제외했다(유일한 예외: `쫌`→`좀`).
@@ -390,11 +388,11 @@ MeetupLog 실제 채팅 로그로 바꿔서 다시 만들고 싶을 때 그대�
 
 **검증** (학습에 쓰지 않은 홀드아웃 500문장, 문자열 유사도 difflib ratio):
 
-| 지표 | 교정 전 | 교정 후 |
-|---|---|---|
-| 원문=정답 정확히 일치 | 0.0% | 54.0% |
-| 평균 문자열 유사도 | 0.933 | 0.968 |
-| 악화된 문장 | - | **0.0%** |
+| 지표                  | 교정 전 | 교정 후  |
+| --------------------- | ------- | -------- |
+| 원문=정답 정확히 일치 | 0.0%    | 54.0%    |
+| 평균 문자열 유사도    | 0.933   | 0.968    |
+| 악화된 문장           | -       | **0.0%** |
 
 외부 모델 다운로드가 필요 없고 실제로 검증된 유일한 정규화 경로라
 `config.ENABLE_CORPUS_TYPO_CORRECTION` 기본값을 `true`로 뒀다.
@@ -404,11 +402,11 @@ MeetupLog 실제 채팅 로그로 바꿔서 다시 만들고 싶을 때 그대�
 "영화"/"감독"/"배우"/"극장" 등 명시적 신호가 있는 실제 발화(양성)와, 그런
 신호가 없고 문화/취미 주제도 아닌 발화(음성)를 각 500개 추출했다.
 
-| 학습 데이터 | 코퍼스 테스트 정확도 | 수작업 seed(신조어 포함) 정확도 |
-|---|---|---|
-| 수작업 seed(40줄)만 | 57.3% | - |
-| 코퍼스(700개)만 | 93.0% | 70.9% (신조어 재현율 급락) |
-| **코퍼스 + 수작업 seed (결합, 채택)** | 92.3% | **92.7%** |
+| 학습 데이터                           | 코퍼스 테스트 정확도 | 수작업 seed(신조어 포함) 정확도 |
+| ------------------------------------- | -------------------- | ------------------------------- |
+| 수작업 seed(40줄)만                   | 57.3%                | -                               |
+| 코퍼스(700개)만                       | 93.0%                | 70.9% (신조어 재현율 급락)      |
+| **코퍼스 + 수작업 seed (결합, 채택)** | 92.3%                | **92.7%**                       |
 
 코퍼스만 쓰면 정확도는 오르지만 격식 있는 구어 코퍼스 특성상 "꿀잼"류
 신조어를 절반 가까이 놓쳤다. 결합했더니 둘 다 90%대로 나와서 기본으로
@@ -504,14 +502,14 @@ MeetupLog 실제 채팅 로그로 바꿔서 다시 만들고 싶을 때 그대�
    사용자가 실제 HF 토큰으로 `router.huggingface.co/hf-inference`를 두 차례
    직접 호출해 다음을 실측으로 확인해줬다:
    - `j5ng/et5-typos-corrector`는 `400 Model not supported by provider
-     hf-inference` — API로는 확정적으로 불가능하다(재시도해도 바뀔 문제가
+hf-inference` — API로는 확정적으로 불가능하다(재시도해도 바뀔 문제가
      아님). `corpus_typo_corrector.py`가 계속 정답이다.
    - `jhgan/ko-sroberta-multitask`는 처음엔 `feature-extraction` 형식
      (`{"inputs": [...]}`)으로 보냈더니 `400`이 났는데, 알고 보니 이 모델은
      벡터가 아니라 문장 쌍 유사도를 주는 `SentenceSimilarityPipeline`
      (`{"inputs": {"source_sentence":.., "sentences":[..]}}`)으로 배포돼
      있었다 - 에러 메시지로 정확한 원인을 확인하고 `text_normalization.
-     SentenceEmbedder`를 `similarity_matrix()` 방식으로 다시 짜서 `200`과
+SentenceEmbedder`를 `similarity_matrix()` 방식으로 다시 짜서 `200`과
      실제 유사도 값(`[0.333, 0.067]`)을 받는 것까지 확인했다.
    - 도중에 `api-inference.huggingface.co`(폐지된 구 도메인, HTTP 410)를
      쓰고 있던 버그도 발견해서 `router.huggingface.co`로 고쳤다 - 처음 DNS
@@ -521,6 +519,7 @@ MeetupLog 실제 채팅 로그로 바꿔서 다시 만들고 싶을 때 그대�
    HF Inference API 대상이 아니고, 로컬 검증도 여전히 안 된 상태다.
    `verify_hf_models.py`가 세 모델 다 커버하니, ElectraSpacer 리포를 클론해
    로컬에 두고 검증하고 싶다면 그대로 실행하면 된다.
+
 7. **`corpus_typo_corrector.py`의 사전 특성 — ✅ 재적용 도구 준비 완료.**
    `build_corpus_data.py`가 이제 `--format {nikl,meetuplog}`를 지원하도록
    일반화됐다. `iter_utterances_meetuplog()`가 MeetupLog 실 채팅 로그 기반
@@ -538,7 +537,7 @@ MeetupLog 실제 채팅 로그로 바꿔서 다시 만들고 싶을 때 그대�
    변환과, DB에 히스토리가 없는 상태에서 시간가중 값을 갱신하는
    `blend_preference_update()`(온라인 근사, 원본 히스토리 재계산과 100%
    동일하진 않음 - 모듈 docstring 참고)를 제공한다. ⚠️ **`target_type=
-   CONSTRAINT`일 때 `target_value`를 `"키:값"` 문자열로 인코딩하는 규약**
+CONSTRAINT`일 때 `target_value`를 `"키:값"` 문자열로 인코딩하는 규약**
    (`max_runtime:120` 등)은 테이블 정의서에 없어서 이번에 임의로 정한
    것이다 — DB에 제약값을 담을 별도 컬럼이 없어서 나온 임시방편이니, 실제
    Main Backend 구현 전에 팀과 이 규약을 맞출지 스키마를 바꿀지 확인할 것.
@@ -550,10 +549,9 @@ MeetupLog 실제 채팅 로그로 바꿔서 다시 만들고 싶을 때 그대�
    추천했는지"를 알고 있어야 하는 문제라, `/recommend` 요청에 "제외할
    movie_id 목록" 같은 필드를 추가하는 방향으로 다음에 풀 것을 제안한다.
 10. **`movie_embeddings` 배치 저장 — ⚠️ 미해결.** `text_normalization.
-    SentenceEmbedder`는 여전히 요청마다 즉석으로 임베딩을 계산하고, DB의
+SentenceEmbedder`는 여전히 요청마다 즉석으로 임베딩을 계산하고, DB의
     `movie_embeddings` 테이블에 미리 계산해 저장하는 배치 파이프라인은
     아직 없다. SBERT 자체가 이 환경에서 실검증 안 된 상태(#6)라 우선순위가
     낮지만, #6이 풀리면 `build_corpus_data.py`와 비슷한 구조의
     `build_movie_embeddings.py`(카탈로그 전체를 순회하며 임베딩 계산 →
     `movie_embeddings` 테이블 형식으로 저장)를 다음에 만들 것을 제안한다.
-

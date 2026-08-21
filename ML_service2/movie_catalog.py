@@ -18,8 +18,18 @@ from typing import Dict, List, Optional
 import requests
 
 import config
-from config import KOFIC_BASE_URL, TMDB_BASE_URL, TMDB_LANGUAGE, TMDB_REGION, require_key
+from config import KOFIC_BASE_URL, TMDB_BASE_URL, TMDB_IMAGE_BASE_URL, TMDB_LANGUAGE, TMDB_REGION, require_key
 from models import MovieCandidate
+
+
+def _build_poster_url(poster_path: Optional[str]) -> Optional[str]:
+    """TMDB가 주는 poster_path는 "/abc123.jpg" 같은 상대 경로다 - 그 자체로는
+    <img src="">에 못 쓰므로 TMDB_IMAGE_BASE_URL(https://image.tmdb.org/t/p/w500)
+    을 붙여 완전한 URL로 만든다. 포스터가 아예 없는 영화는 poster_path가
+    None이라 그대로 None을 돌려준다 - 프론트가 fallback 이미지를 보여준다."""
+    if not poster_path:
+        return None
+    return f"{TMDB_IMAGE_BASE_URL}{poster_path}"
 
 # ---------------------------------------------------------------------------
 # TMDB 공식 장르 taxonomy (movie, ko-KR) - /genre/movie/list 응답을 그대로 옮긴 참조값
@@ -42,6 +52,12 @@ def is_tmdb_native_genre(name: str) -> bool:
     """이 이름이 TMDB 공식 장르 목록에 있는지 - GENRE_KEYWORDS 카테고리를
     새로 추가할 때 이 함수로 미리 확인하면 taxonomy 불일치를 예방할 수 있다."""
     return name in TMDB_GENRE_NAMES_KO
+
+
+# 영화 1편당 저장할 주연 배우 수 (TMDB credits.cast는 크레딧 순서대로 오므로
+# 앞쪽 N명이 곧 주연/비중 큰 배우). 너무 크게 잡으면 find_mentioned_actors()가
+# 흔한 이름의 단역까지 스캔 대상으로 삼아 오탐이 늘어난다.
+CAST_TOP_N = 6
 
 
 # ---------------------------------------------------------------------------
@@ -175,10 +191,11 @@ class TMDBClient:
     def fetch_detail(self, movie_id: str) -> MovieCandidate:
         """상영시간(runtime) 등 상세 정보가 필요할 때 개별 조회.
         KOFIC 등급 매칭용 production_companies와, 장르 taxonomy에 없는
-        재난/무협/히어로 등을 채우는 TMDB 키워드도 이 엔드포인트에서만
-        얻을 수 있다(목록/검색 API에는 없음) - append_to_response=keywords."""
+        재난/무협/히어로 등을 채우는 TMDB 키워드, 그리고 배우 매칭용 주연진
+        (credits.cast)도 이 엔드포인트에서만 얻을 수 있다(목록/검색 API에는
+        없음) - append_to_response=keywords,credits."""
         genre_map = self.genre_map()
-        data = self._get(f"/movie/{movie_id}", {"append_to_response": "keywords"})
+        data = self._get(f"/movie/{movie_id}", {"append_to_response": "keywords,credits"})
         item = {
             **data,
             "genre_ids": [g["id"] for g in data.get("genres", [])],
@@ -186,7 +203,15 @@ class TMDBClient:
         keyword_names = [
             k.get("name", "") for k in data.get("keywords", {}).get("keywords", [])
         ]
-        return self._to_candidate(item, genre_map, runtime=data.get("runtime"), keywords=keyword_names)
+        # 주연 상위 N명만 쓴다 - 단역까지 전부 넣으면 채팅 원문 스캔(find_mentioned_actors)
+        # 비용도 커지고, 오탐(흔한 이름의 단역 배우) 가능성도 늘어난다.
+        cast_names = [
+            c.get("name", "") for c in data.get("credits", {}).get("cast", [])[:CAST_TOP_N]
+            if c.get("name")
+        ]
+        return self._to_candidate(
+            item, genre_map, runtime=data.get("runtime"), keywords=keyword_names, cast=cast_names,
+        )
 
     def search(self, title: str) -> List[MovieCandidate]:
         """채팅 속 영화 제목 인식(FR-AI-04)에서 후보 매칭용."""
@@ -200,6 +225,7 @@ class TMDBClient:
         genre_map: Dict[int, str],
         runtime: Optional[int] = None,
         keywords: Optional[List[str]] = None,
+        cast: Optional[List[str]] = None,
     ) -> MovieCandidate:
         genre_names = [genre_map.get(gid, "") for gid in item.get("genre_ids", [])]
         genre_names = [g for g in genre_names if g]
@@ -233,9 +259,10 @@ class TMDBClient:
             popularity=float(item.get("popularity", 0.0)),
             vote_average=float(item.get("vote_average", 0.0)),
             is_adult=bool(item.get("adult", False)),
-            poster_path=item.get("poster_path"),
+            poster_path=_build_poster_url(item.get("poster_path")),
             release_year=release_year,
             production_companies=production_companies,
+            cast=cast or [],
         )
 
 
@@ -432,6 +459,60 @@ MAJOR_DISTRIBUTOR_ALIASES: Dict[str, str] = {
 # 제목 매칭 (오타 보정 포함) - FR-AI-04
 # ---------------------------------------------------------------------------
 
+def core_title(title: str) -> str:
+    """"스파이더맨: 브랜드 뉴 데이"에서 부제를 뗀 "스파이더맨"만 돌려준다.
+    채팅에서는 부제까지 정확히 안 치는 경우가 대부분이라(예: "스파이더맨 보고싶다"),
+    콜론/대시 앞부분만으로 원문 메시지에 포함돼 있는지 검사하는 데 쓴다."""
+    for sep in (":", "：", " - "):
+        if sep in title:
+            return title.split(sep, 1)[0].strip()
+    return title.strip()
+
+
+def find_mentioned_titles(text: str, catalog: List[MovieCandidate], min_core_len: int = 2) -> List[MovieCandidate]:
+    """따옴표 없이 그냥 채팅 원문에 섞여 나온 카탈로그 영화 제목을 찾는다
+    (예: "요즘 나온 스파이더맨 영화 보고싶다" -> 카탈로그의 "스파이더맨: 브랜드
+    뉴 데이"). core_title()로 부제를 뗀 뒤 원문에 부분 문자열로 포함돼 있는지만
+    본다 - SequenceMatcher 전체 비교(match_title)는 "제목만 딱 친 경우"엔
+    잘 맞지만 문장 속에 섞인 경우엔 비율이 낮게 나와 못 잡기 때문이다.
+    min_core_len 미만인 너무 짧은 핵심 제목(오탐 위험)은 건너뛴다."""
+    matches = []
+    for movie in catalog:
+        core = core_title(movie.title)
+        if len(core) < min_core_len:
+            continue
+        if core in text:
+            matches.append(movie)
+    return matches
+
+
+def find_mentioned_actors(text: str, catalog: List[MovieCandidate], min_name_len: int = 2) -> Dict[str, List[str]]:
+    """채팅 원문에 카탈로그 영화들의 출연 배우 이름이 섞여 있는지 찾는다.
+    movie_id 기반 매칭인 영화 제목과 달리, 배우는 여러 영화에 걸쳐 나오는
+    "이름" 자체가 선호 대상(target_value)이라 영화별이 아니라 카탈로그 전체
+    cast를 모아 배우 이름 -> 그 배우가 나온 영화 제목 목록으로 반환한다
+    (매칭된 영화 제목은 로그/설명용이고, 실제 PreferenceRow는 이름만 쓴다).
+
+    ⚠️ TMDB credits의 person.name은 언어 파라미터와 무관하게 고정 필드라,
+    일부 배우는 로마자 표기("Song Kang-ho")로만 나올 수 있다 - 그 경우
+    한국어 채팅("송강호 나오는 영화")과는 문자열이 달라 못 잡는다. TMDB에
+    한글 이름으로 등록된 배우(주로 인지도 높은 한국 배우)는 정상 매칭된다.
+    """
+    name_to_movies: Dict[str, List[str]] = {}
+    for movie in catalog:
+        for name in movie.cast:
+            name = name.strip()
+            if len(name) < min_name_len:
+                continue
+            name_to_movies.setdefault(name, []).append(movie.title)
+
+    return {
+        name: titles
+        for name, titles in name_to_movies.items()
+        if name in text
+    }
+
+
 def match_title(query: str, catalog: List[MovieCandidate], confidence_threshold: float = 0.72):
     """카탈로그 제목들과 문자열 유사도를 비교해 가장 가까운 영화를 찾는다.
     확신도가 threshold 미만이면 None(UNKNOWN_TITLE 처리)을 반환한다.
@@ -475,7 +556,14 @@ class MovieCatalog:
         tmdb = TMDBClient()
         movies = tmdb.fetch_popular(pages=pages)
         if enrich_keywords:
-            movies = [tmdb.fetch_detail(m.movie_id) for m in movies]
+            # fetch_popular()의 페이지 호출과 달리 여기는 영화 1편당 1회씩
+            # 상세조회가 나가므로(최대 100편), fetch_popular와 같은 수준으로
+            # 살짝 sleep을 둬 레이트리밋에 덜 걸리게 한다.
+            enriched = []
+            for m in movies:
+                enriched.append(tmdb.fetch_detail(m.movie_id))
+                time.sleep(0.05)
+            movies = enriched
         if enrich_kofic:
             kofic = KoficClient()
             movies = [kofic.enrich_age_rating(m) for m in movies]
@@ -492,3 +580,12 @@ class MovieCatalog:
 
     def find_by_title(self, title: str):
         return match_title(title, self.all())
+
+    def find_mentioned(self, text: str) -> List[MovieCandidate]:
+        """채팅 원문(text)에 따옴표 없이 섞여 나온 카탈로그 영화들을 전부 찾는다."""
+        return find_mentioned_titles(text, self.all())
+
+    def find_mentioned_actors(self, text: str) -> Dict[str, List[str]]:
+        """채팅 원문(text)에 섞여 나온 카탈로그 출연 배우 이름을 전부 찾는다.
+        반환값: {배우 이름: [그 배우가 나온 카탈로그 영화 제목들]}"""
+        return find_mentioned_actors(text, self.all())

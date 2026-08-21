@@ -55,6 +55,7 @@ from time_utils import utc_now
 TARGET_TYPE_MOVIE = "MOVIE"
 TARGET_TYPE_GENRE = "GENRE"
 TARGET_TYPE_MOOD = "MOOD"
+TARGET_TYPE_ACTOR = "ACTOR"
 TARGET_TYPE_CONSTRAINT = "CONSTRAINT"
 
 POLARITY_LIKE = "LIKE"
@@ -137,6 +138,8 @@ def eav_rows_to_user_states(rows: List[PreferenceRow]) -> Dict[str, UserPreferen
             state.moods[row.target_value] = round(score, 4)
         elif row.target_type == TARGET_TYPE_MOVIE:
             state.movies[row.target_value] = round(score, 4)
+        elif row.target_type == TARGET_TYPE_ACTOR:
+            state.actors[row.target_value] = round(score, 4)
         elif row.target_type == TARGET_TYPE_CONSTRAINT:
             key, value = parse_constraint_value(row.target_value)
             if key == CONSTRAINT_KEY_MAX_RUNTIME:
